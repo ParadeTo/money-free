@@ -1,97 +1,87 @@
-/**
- * 图表状态管理
- * 
- * 使用 Zustand 管理图表相关状态：
- * - 选中的股票代码
- * - K线周期（日K/周K）
- * - 选中的技术指标
- * - 显示选项（成交量、成交额）
- * - 绘图工具状态
- */
-
 import { create } from 'zustand';
-import type { Period, IndicatorType } from '../types/stock';
-import type { DrawingType, Drawing } from '../types/drawing';
+import { persist } from 'zustand/middleware';
+
+export type Period = 'daily' | 'weekly';
+export type IndicatorType = 'ma' | 'kdj' | 'rsi' | 'volume' | 'amount';
+export type DrawingTool = 'none' | 'trendline' | 'horizontal' | 'vertical' | 'rect';
+export type TimeRange = '1M' | '3M' | '6M' | '1Y' | '2Y' | '5Y' | 'ALL';
+export type SubChartIndicator = 'rsi' | 'kdj' | 'none';
+export type VolumeChartIndicator = 'volume' | 'amount' | 'none';
 
 interface ChartState {
-  // 当前股票
-  stockCode: string | null;
-  
-  // K线周期
+  stockCode: string;
   period: Period;
-  
-  // 选中的指标
+  timeRange: TimeRange;
   selectedIndicators: IndicatorType[];
-  
-  // 显示选项
-  showVolume: boolean;
-  showTurnover: boolean;
-  
-  // 绘图工具
-  activeTool: 'none' | DrawingType;
-  drawings: Drawing[];
+  showMA: boolean;
+  subChart1Indicator: SubChartIndicator;
+  subChart2Indicator: VolumeChartIndicator;
+  activeTool: DrawingTool;
   
   // Actions
   setStockCode: (code: string) => void;
   setPeriod: (period: Period) => void;
+  setTimeRange: (range: TimeRange) => void;
   setSelectedIndicators: (indicators: IndicatorType[]) => void;
-  toggleVolume: () => void;
-  toggleTurnover: () => void;
-  setActiveTool: (tool: 'none' | DrawingType) => void;
-  setDrawings: (drawings: Drawing[]) => void;
-  addDrawing: (drawing: Drawing) => void;
-  removeDrawing: (drawingId: string) => void;
+  toggleIndicator: (indicator: IndicatorType) => void;
+  setShowMA: (show: boolean) => void;
+  setSubChart1Indicator: (indicator: SubChartIndicator) => void;
+  setSubChart2Indicator: (indicator: VolumeChartIndicator) => void;
+  setActiveTool: (tool: DrawingTool) => void;
   reset: () => void;
 }
 
 const initialState = {
-  stockCode: null,
+  stockCode: '',
   period: 'daily' as Period,
-  selectedIndicators: ['MA50', 'MA150', 'MA200'] as IndicatorType[],
-  showVolume: true,
-  showTurnover: false,
-  activeTool: 'none' as 'none' | DrawingType,
-  drawings: [] as Drawing[],
+  timeRange: '1Y' as TimeRange,
+  selectedIndicators: ['ma', 'rsi', 'volume'] as IndicatorType[],
+  showMA: true,
+  subChart1Indicator: 'rsi' as SubChartIndicator,
+  subChart2Indicator: 'volume' as VolumeChartIndicator,
+  activeTool: 'none' as DrawingTool,
 };
 
-export const useChartStore = create<ChartState>((set) => ({
-  ...initialState,
-  
-  setStockCode: (code) => set({ stockCode: code }),
-  
-  setPeriod: (period) => 
-    set(() => {
-      // 切换周期时，自动切换默认MA指标
-      const defaultIndicators = period === 'daily'
-        ? ['MA50', 'MA150', 'MA200'] as IndicatorType[]
-        : ['MA10', 'MA30', 'MA40'] as IndicatorType[];
-      
-      return {
-        period,
-        selectedIndicators: defaultIndicators,
-      };
+export const useChartStore = create<ChartState>()(
+  persist(
+    (set) => ({
+      ...initialState,
+
+      setStockCode: (code) => set({ stockCode: code }),
+
+      setPeriod: (period) => set({ period }),
+
+      setTimeRange: (range) => set({ timeRange: range }),
+
+      setSelectedIndicators: (indicators) => set({ selectedIndicators: indicators }),
+
+      toggleIndicator: (indicator) =>
+        set((state) => ({
+          selectedIndicators: state.selectedIndicators.includes(indicator)
+            ? state.selectedIndicators.filter((i) => i !== indicator)
+            : [...state.selectedIndicators, indicator],
+        })),
+
+      setShowMA: (show) => set({ showMA: show }),
+
+      setSubChart1Indicator: (indicator) => set({ subChart1Indicator: indicator }),
+
+      setSubChart2Indicator: (indicator) => set({ subChart2Indicator: indicator }),
+
+      setActiveTool: (tool) => set({ activeTool: tool }),
+
+      reset: () => set(initialState),
     }),
-  
-  setSelectedIndicators: (indicators) => 
-    set({ selectedIndicators: indicators }),
-  
-  toggleVolume: () => 
-    set((state) => ({ showVolume: !state.showVolume })),
-  
-  toggleTurnover: () => 
-    set((state) => ({ showTurnover: !state.showTurnover })),
-  
-  setActiveTool: (tool) => set({ activeTool: tool }),
-  
-  setDrawings: (drawings) => set({ drawings }),
-  
-  addDrawing: (drawing) => 
-    set((state) => ({ drawings: [...state.drawings, drawing] })),
-  
-  removeDrawing: (drawingId) => 
-    set((state) => ({ 
-      drawings: state.drawings.filter((d) => d.id !== drawingId) 
-    })),
-  
-  reset: () => set(initialState),
-}));
+    {
+      name: 'chart-storage',
+      partialize: (state) => ({
+        period: state.period,
+        timeRange: state.timeRange,
+        selectedIndicators: state.selectedIndicators,
+        showMA: state.showMA,
+        subChart1Indicator: state.subChart1Indicator,
+        subChart2Indicator: state.subChart2Indicator,
+      }),
+    }
+  )
+);

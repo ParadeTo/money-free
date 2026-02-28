@@ -349,7 +349,7 @@ money-free/
 - **ORM**: Prisma 6.x
 - **数据库**: SQLite 3.40+
 - **任务队列**: Bull + Redis
-- **数据源**: Tushare Pro (HTTP API)
+- **数据源**: Tushare Pro (HTTP API) - 使用前复权（qfq）数据
 
 ### Frontend
 - **框架**: React 18+
@@ -360,5 +360,5 @@ money-free/
 
 ### Bridge
 - **语言**: Python 3.11+
-- **数据源**: AkShare (备用数据源)
+- **数据源**: AkShare (备用数据源) - 使用前复权（qfq）数据
 - **调用方式**: child_process (开发环境)

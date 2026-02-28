@@ -9,11 +9,13 @@ class DrawingService {
   private readonly baseUrl = '/drawings';
 
   async createDrawing(request: CreateDrawingRequest): Promise<Drawing> {
-    return await api.post<Drawing>(this.baseUrl, request);
+    const response = await api.post(this.baseUrl, request);
+    return response.data;
   }
 
   async getDrawings(stockCode: string, period: 'daily' | 'weekly'): Promise<Drawing[]> {
-    return await api.get<Drawing[]>(this.baseUrl, { params: { stockCode, period } });
+    const response = await api.get(this.baseUrl, { params: { stockCode, period } });
+    return response.data;
   }
 
   async deleteDrawing(drawingId: string): Promise<void> {

@@ -1,0 +1,90 @@
+.container {
+  padding: 10px 16px;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.mainInfo {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.priceSection {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  padding-right: 20px;
+  border-right: 1px solid #e8e8e8;
+}
+
+.price {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.change {
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dataList {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.dataItem {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.label {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.45);
+  font-weight: 400;
+}
+
+.value {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.88);
+  font-weight: 500;
+}
+
+.divider {
+  width: 1px;
+  height: 14px;
+  background: #d9d9d9;
+}
+
+@media (max-width: 1024px) {
+  .price {
+    font-size: 24px;
+  }
+  
+  .change {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .mainInfo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .priceSection {
+    border-right: none;
+    padding-right: 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e8e8e8;
+    width: 100%;
+  }
+}

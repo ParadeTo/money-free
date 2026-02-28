@@ -1,283 +1,141 @@
-/**
- * K线图表页面
- * 
- * 集成所有组件，提供完整的股票K线分析界面
- */
-
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Spin, Alert, Button } from 'antd';
+import { Spin, Alert } from 'antd';
+import { useState } from 'react';
 import { StockSearch } from '../components/StockSearch';
 import { KLineChart } from '../components/KLineChart';
-import { IndicatorSelector } from '../components/IndicatorSelector';
-import { PeriodToggle } from '../components/PeriodToggle';
-import { DrawingToolbar } from '../components/DrawingToolbar';
+import { ChartToolbar } from '../components/ChartToolbar';
+import { ChartDataDisplay } from '../components/ChartDataDisplay';
+import { IndicatorValueDisplay } from '../components/IndicatorValueDisplay';
 import { useKLineData } from '../hooks/useKLineData';
 import { useIndicators } from '../hooks/useIndicators';
 import { useChartStore } from '../store/chart.store';
-import { stockService } from '../services/stock.service';
-import styles from '../styles/chart-page.module.css';
-import type { Stock } from '../types/stock';
-import { useState } from 'react';
+import type { Stock, KLineData } from '../types';
+import styles from './KLineChartPage.module.css';
 
 export function KLineChartPage() {
-  const { stockCode } = useParams<{ stockCode: string }>();
+  const { stockCode } = useParams<{ stockCode?: string }>();
   const navigate = useNavigate();
-  
-  const [stockInfo, setStockInfo] = useState<Stock | null>(null);
-  const [loadingStock, setLoadingStock] = useState(false);
-  
+  const [currentData, setCurrentData] = useState<KLineData | undefined>();
+
   const {
     period,
-    selectedIndicators,
-    showVolume,
-    showTurnover,
-    activeTool,
-    setPeriod,
-    setSelectedIndicators,
+    timeRange,
+    showMA,
+    subChart1Indicator,
+    subChart2Indicator,
     setStockCode,
   } = useChartStore();
+
+  // 当路由参数变化时更新 store
+  useEffect(() => {
+    if (stockCode) {
+      setStockCode(stockCode);
+      // 重置当前显示的数据
+      setCurrentData(undefined);
+    }
+  }, [stockCode, setStockCode]);
 
   // 加载K线数据
   const {
     data: klineData,
     loading: klineLoading,
     error: klineError,
-    refresh: refreshKLine,
-  } = useKLineData(stockCode || '', period);
+  } = useKLineData(stockCode || '', period, timeRange);
 
   // 加载技术指标数据
   const {
-    indicators,
+    data: indicatorData,
+    markers,
     loading: indicatorLoading,
     error: indicatorError,
-    refresh: refreshIndicators,
-  } = useIndicators(stockCode || '', period, selectedIndicators);
+  } = useIndicators(stockCode || '', period, subChart1Indicator, subChart2Indicator, showMA, timeRange);
 
-  // 加载股票信息
+  const handleStockSelect = (stock: Stock) => {
+    navigate(`/chart/${stock.stockCode}`);
+  };
+
+  const handleDataHover = (data: KLineData | undefined) => {
+    setCurrentData(data || (klineData.length > 0 ? klineData[klineData.length - 1] : undefined));
+  };
+
+  // 当数据加载完成后，设置默认显示最新数据
   useEffect(() => {
-    if (!stockCode) return;
+    if (klineData.length > 0 && !currentData) {
+      setCurrentData(klineData[klineData.length - 1]);
+    }
+  }, [klineData, currentData]);
 
-    const loadStockInfo = async () => {
-      try {
-        setLoadingStock(true);
-        const info = await stockService.getStockDetail(stockCode);
-        setStockInfo(info);
-        setStockCode(stockCode);
-      } catch (error) {
-        console.error('加载股票信息失败:', error);
-      } finally {
-        setLoadingStock(false);
-      }
-    };
-
-    loadStockInfo();
-  }, [stockCode, setStockCode]);
-
-  const handleStockSelect = (code: string) => {
-    navigate(`/chart/${code}`);
-  };
-
-  const handleRefresh = () => {
-    refreshKLine();
-    refreshIndicators();
-  };
-
-  if (!stockCode) {
-    return (
-      <div className={styles.page}>
-        <div className={styles.header}>
-          <div className={styles.headerContent}>
-            <div className={styles.stockSearch}>
-              <StockSearch onSelect={handleStockSelect} />
-            </div>
-          </div>
-        </div>
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: 'calc(100vh - 64px)',
-          color: '#a0aec0'
-        }}>
-          <div style={{ textAlign: 'center' }}>
-            <h2>请搜索并选择股票</h2>
-            <p>输入股票代码或名称进行搜索</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const loading = klineLoading || indicatorLoading || loadingStock;
+  const loading = klineLoading || indicatorLoading;
   const error = klineError || indicatorError;
 
+  // 设置默认显示最新数据
+  const displayData = currentData || (klineData.length > 0 ? klineData[klineData.length - 1] : undefined);
+
   return (
-    <div className={styles.page}>
-      {/* 顶部导航栏 */}
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <div className={styles.stockSearch}>
-            <StockSearch onSelect={handleStockSelect} />
-          </div>
-          <div className={styles.headerActions}>
-            <PeriodToggle value={period} onChange={setPeriod} />
-            <Button type="primary" onClick={handleRefresh}>
-              刷新数据
-            </Button>
-          </div>
+    <div className={styles.container}>
+      <div className={styles.searchBar}>
+        <StockSearch onSelect={handleStockSelect} />
+      </div>
+
+      {!stockCode ? (
+        <div className={styles.emptyState}>
+          <Alert
+            message="请搜索并选择股票"
+            description="使用上方搜索框输入股票代码或名称进行搜索"
+            type="info"
+            showIcon
+          />
         </div>
-      </header>
-
-      {/* 主内容区 */}
-      <main className={styles.mainContent}>
-        {/* 左侧：图表区 */}
-        <div className={styles.chartSection}>
-          {/* 股票信息卡片 */}
-          {stockInfo && (
-            <div className={styles.stockInfoCard}>
-              <div className={styles.stockInfoHeader}>
-                <div className={styles.stockCode}>{stockInfo.stock_code}</div>
-                <div className={styles.stockName}>{stockInfo.stock_name}</div>
-              </div>
-              <div className={styles.stockMetrics}>
-                {stockInfo.latest_price && (
-                  <div className={styles.metric}>
-                    <div className={styles.metricLabel}>最新价</div>
-                    <div className={`${styles.metricValue} ${
-                      (stockInfo.price_change || 0) > 0 ? styles.positive :
-                      (stockInfo.price_change || 0) < 0 ? styles.negative :
-                      styles.neutral
-                    }`}>
-                      ¥{stockInfo.latest_price.toFixed(2)}
-                    </div>
-                  </div>
-                )}
-                {stockInfo.price_change !== undefined && (
-                  <div className={styles.metric}>
-                    <div className={styles.metricLabel}>涨跌额</div>
-                    <div className={`${styles.metricValue} ${
-                      stockInfo.price_change > 0 ? styles.positive :
-                      stockInfo.price_change < 0 ? styles.negative :
-                      styles.neutral
-                    }`}>
-                      {stockInfo.price_change > 0 ? '+' : ''}
-                      {stockInfo.price_change.toFixed(2)}
-                    </div>
-                  </div>
-                )}
-                {stockInfo.price_change_percent !== undefined && (
-                  <div className={styles.metric}>
-                    <div className={styles.metricLabel}>涨跌幅</div>
-                    <div className={`${styles.metricValue} ${
-                      stockInfo.price_change_percent > 0 ? styles.positive :
-                      stockInfo.price_change_percent < 0 ? styles.negative :
-                      styles.neutral
-                    }`}>
-                      {stockInfo.price_change_percent > 0 ? '+' : ''}
-                      {stockInfo.price_change_percent.toFixed(2)}%
-                    </div>
-                  </div>
-                )}
-                <div className={styles.metric}>
-                  <div className={styles.metricLabel}>市值</div>
-                  <div className={`${styles.metricValue} ${styles.neutral}`}>
-                    {stockInfo.market_cap.toFixed(2)}亿
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 图表容器 */}
-          <div className={styles.chartContainer}>
-            {loading && (
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
-                height: '550px' 
-              }}>
-                <Spin size="large" tip="加载数据中..." />
-              </div>
-            )}
-            
-            {error && (
-              <Alert
-                message="加载失败"
-                description={error.message}
-                type="error"
-                showIcon
-                style={{ margin: '1rem 0' }}
-              />
-            )}
-            
-            {!loading && !error && klineData.length > 0 && (
-              <KLineChart
-                data={klineData}
-                indicators={indicators}
-                period={period}
-                showVolume={showVolume}
-                showTurnover={showTurnover}
-                selectedIndicators={selectedIndicators}
-              />
-            )}
-            
-            {!loading && !error && klineData.length === 0 && (
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
-                height: '550px',
-                color: '#a0aec0'
-              }}>
-                暂无K线数据
-              </div>
-            )}
-          </div>
+      ) : loading ? (
+        <div className={styles.loadingState}>
+          <Spin size="large" tip="加载数据中..." />
         </div>
-
-        {/* 右侧：控制面板 */}
-        <aside className={styles.sidebar}>
-          <div className={styles.controlCard}>
-            <div className={styles.cardTitle}>绘图工具</div>
-            <DrawingToolbar />
-            {activeTool !== 'none' && (
-              <div style={{ 
-                marginTop: '12px', 
-                padding: '8px 12px', 
-                background: 'rgba(102, 126, 234, 0.1)',
-                borderRadius: '6px',
-                fontSize: '12px',
-                color: '#667eea',
-              }}>
-                绘图模式已激活
-              </div>
-            )}
-          </div>
-          
-          <div className={styles.controlCard}>
-            <div className={styles.cardTitle}>技术指标</div>
-            <IndicatorSelector
-              selectedIndicators={selectedIndicators}
+      ) : error ? (
+        <div className={styles.emptyState}>
+          <Alert
+            message="加载失败"
+            description={error.message || '无法加载股票数据，请稍后重试'}
+            type="error"
+            showIcon
+          />
+        </div>
+      ) : klineData.length === 0 ? (
+        <div className={styles.emptyState}>
+          <Alert
+            message="暂无数据"
+            description={`股票 ${stockCode} 暂无K线数据，请先运行数据脚本获取数据`}
+            type="warning"
+            showIcon
+          />
+        </div>
+      ) : (
+        <div className={styles.chartContainer}>
+          <ChartToolbar />
+          <ChartDataDisplay data={displayData} stockName={stockCode} />
+          <IndicatorValueDisplay 
+            currentData={displayData}
+            indicators={indicatorData}
+            period={period}
+            showMA={showMA}
+          />
+          <div className={styles.chartWrapper}>
+            <KLineChart
+              data={klineData}
+              indicators={indicatorData}
               period={period}
-              onChange={setSelectedIndicators}
+              showMA={showMA}
+              subChart1Indicator={subChart1Indicator}
+              subChart2Indicator={subChart2Indicator}
+              week52High={markers?.high52Week}
+              week52Low={markers?.low52Week}
+              onDataHover={handleDataHover}
             />
           </div>
-
-          <div className={styles.controlCard}>
-            <div className={styles.cardTitle}>图表设置</div>
-            <div className={styles.controlGroup}>
-              <div style={{ fontSize: '0.875rem', color: '#a0aec0' }}>
-                当前周期：{period === 'daily' ? '日K' : '周K'}
-              </div>
-              <div style={{ fontSize: '0.875rem', color: '#a0aec0' }}>
-                数据点数：{klineData.length}
-              </div>
-            </div>
-          </div>
-        </aside>
-      </main>
+        </div>
+      )}
     </div>
   );
 }
+
+export default KLineChartPage;

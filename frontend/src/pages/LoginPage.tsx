@@ -3,8 +3,7 @@ import { Form, Input, Button, Card, Typography, Alert } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useAuth } from '../hooks/useAuth';
 import { LoginRequest } from '../types';
-
-const { Title } = Typography;
+import styles from './LoginPage.module.css';
 
 export const LoginPage: React.FC = () => {
   const { login, isLoading, error, clearError } = useAuth();
@@ -19,77 +18,78 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    }}>
-      <Card style={{ width: 400, boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <Title level={2}>股票分析工具</Title>
-          <Typography.Text type="secondary">请登录您的账户</Typography.Text>
+    <div className={styles.container}>
+      <Card className={styles.loginCard} bordered={false}>
+        <div className={styles.header}>
+          <h1 className={styles.title}>股票分析工具</h1>
+          <p className={styles.subtitle}>请登录您的账户</p>
         </div>
 
-        {error && (
-          <Alert
-            message={error}
-            type="error"
-            closable
-            onClose={clearError}
-            style={{ marginBottom: 16 }}
-          />
-        )}
-
-        <Form
-          form={form}
-          name="login"
-          onFinish={handleSubmit}
-          autoComplete="off"
-          size="large"
-        >
-          <Form.Item
-            name="username"
-            rules={[{ required: true, message: '请输入用户名' }]}
-          >
-            <Input
-              prefix={<UserOutlined />}
-              placeholder="请输入用户名"
-              autoComplete="username"
+        <div className={styles.formContainer}>
+          {error && (
+            <Alert
+              message={error}
+              type="error"
+              closable
+              onClose={clearError}
+              className={styles.alert}
+              showIcon
             />
-          </Form.Item>
+          )}
 
-          <Form.Item
-            name="password"
-            rules={[
-              { required: true, message: '请输入密码' },
-              { min: 6, message: '密码至少6位' },
-            ]}
+          <Form
+            form={form}
+            name="login"
+            onFinish={handleSubmit}
+            autoComplete="off"
+            size="large"
+            layout="vertical"
           >
-            <Input.Password
-              prefix={<LockOutlined />}
-              placeholder="请输入密码"
-              autoComplete="current-password"
-            />
-          </Form.Item>
-
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              block
-              loading={isLoading}
+            <Form.Item
+              name="username"
+              label="用户名"
+              rules={[{ required: true, message: '请输入用户名' }]}
             >
-              {isLoading ? '登录中...' : '登录'}
-            </Button>
-          </Form.Item>
-        </Form>
+              <Input
+                prefix={<UserOutlined style={{ color: 'rgba(0,0,0,0.25)' }} />}
+                placeholder="请输入用户名"
+                autoComplete="username"
+              />
+            </Form.Item>
 
-        <div style={{ textAlign: 'center', marginTop: 16 }}>
-          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+            <Form.Item
+              name="password"
+              label="密码"
+              rules={[
+                { required: true, message: '请输入密码' },
+                { min: 6, message: '密码至少6位' },
+              ]}
+            >
+              <Input.Password
+                prefix={<LockOutlined style={{ color: 'rgba(0,0,0,0.25)' }} />}
+                placeholder="请输入密码"
+                autoComplete="current-password"
+              />
+            </Form.Item>
+
+            <Form.Item style={{ marginBottom: 0 }}>
+              <Button
+                type="primary"
+                htmlType="submit"
+                block
+                loading={isLoading}
+                size="large"
+              >
+                {isLoading ? '登录中...' : '登录'}
+              </Button>
+            </Form.Item>
+          </Form>
+        </div>
+
+        <div className={styles.footer}>
+          <p className={styles.footerText}>
             默认账号: admin / admin123
-          </Typography.Text>
+          </p>
         </div>
       </Card>
     </div>

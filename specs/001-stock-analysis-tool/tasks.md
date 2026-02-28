@@ -147,23 +147,23 @@
 
 ### US1 Backend Implementation - Services
 
-- [ ] T060 [P] [US1] Create backend/src/services/datasource/tushare.service.ts with getDailyKLine() using HTTP API (axios)
-- [ ] T061 [P] [US1] Create backend/src/services/datasource/akshare.service.ts calling bridge/akshare_fetcher.py via PythonBridgeService
-- [ ] T062 [US1] Create backend/src/services/datasource/datasource-manager.service.ts with fallback logic (Tushare → AkShare)
-- [ ] T063 [P] [US1] Create backend/src/services/indicators/technical-indicators.service.ts with calculateMA(), calculateKDJ(), calculateRSI() using technicalindicators npm library
-- [ ] T064 [US1] Implement backend/src/modules/stocks/stocks.service.ts with search(), getStockDetail() methods
-- [ ] T065 [US1] Implement backend/src/modules/klines/klines.service.ts with getKLineData() method (fetches from database)
-- [ ] T066 [US1] Implement backend/src/modules/indicators/indicators.service.ts with getIndicators() method (fetches pre-calculated indicators from database)
+- [x] T060 [P] [US1] Create backend/src/services/datasource/tushare.service.ts with getDailyKLine() using HTTP API (axios)
+- [x] T061 [P] [US1] Create backend/src/services/datasource/akshare.service.ts calling bridge/akshare_fetcher.py via PythonBridgeService
+- [x] T062 [US1] Create backend/src/services/datasource/datasource-manager.service.ts with fallback logic (Tushare → AkShare)
+- [x] T063 [P] [US1] Create backend/src/services/indicators/technical-indicators.service.ts with calculateMA(), calculateKDJ(), calculateRSI() using technicalindicators npm library
+- [x] T064 [US1] Implement backend/src/modules/stocks/stocks.service.ts with search(), getStockDetail() methods
+- [x] T065 [US1] Implement backend/src/modules/klines/klines.service.ts with getKLineData() method (fetches from database)
+- [x] T066 [US1] Implement backend/src/modules/indicators/indicators.service.ts with getIndicators() method (fetches pre-calculated indicators from database)
 
 ### US1 Backend Implementation - Controllers & DTOs
 
-- [ ] T067 [P] [US1] Create backend/src/modules/stocks/dto/search-stock.dto.ts with query validation
-- [ ] T068 [P] [US1] Create backend/src/modules/klines/dto/get-klines.dto.ts with period, startDate, endDate validation
-- [ ] T069 [P] [US1] Create backend/src/modules/indicators/dto/get-indicators.dto.ts with indicators[] array validation
-- [ ] T070 [US1] Implement backend/src/modules/stocks/stocks.controller.ts with GET /stocks/search and GET /stocks/:stockCode
-- [ ] T071 [US1] Implement backend/src/modules/klines/klines.controller.ts with GET /klines/:stockCode
-- [ ] T072 [US1] Implement backend/src/modules/indicators/indicators.controller.ts with GET /indicators/:stockCode and GET /indicators/:stockCode/week52-markers
-- [ ] T073 [US1] Register StocksModule, KLinesModule, IndicatorsModule in backend/src/app.module.ts
+- [x] T067 [P] [US1] Create backend/src/modules/stocks/dto/search-stock.dto.ts with query validation
+- [x] T068 [P] [US1] Create backend/src/modules/klines/dto/get-klines.dto.ts with period, startDate, endDate validation
+- [x] T069 [P] [US1] Create backend/src/modules/indicators/dto/get-indicators.dto.ts with indicators[] array validation
+- [x] T070 [US1] Implement backend/src/modules/stocks/stocks.controller.ts with GET /stocks/search and GET /stocks/:stockCode
+- [x] T071 [US1] Implement backend/src/modules/klines/klines.controller.ts with GET /klines/:stockCode
+- [x] T072 [US1] Implement backend/src/modules/indicators/indicators.controller.ts with GET /indicators/:stockCode and GET /indicators/:stockCode/week52-markers
+- [x] T073 [US1] Register StocksModule, KLinesModule, IndicatorsModule in backend/src/app.module.ts
 
 ### US1 Frontend Implementation - Services
 
@@ -180,10 +180,10 @@
 - [x] T081 [US1] Use frontend-design skill to design KLineChartPage layout (search bar + chart + indicator selector + period toggle)
 - [x] T082 [US1] Create frontend/src/components/KLineChart/index.tsx integrating TradingView Lightweight Charts library
 - [x] T083 [US1] Implement MA overlay rendering in KLineChart component (MA50/150/200 for daily, MA10/30/40 for weekly)
-- [x] T084 [US1] Implement KDJ subchart rendering in KLineChart component (K, D, J lines)
-- [x] T085 [US1] Implement RSI subchart rendering in KLineChart component
-- [x] T086 [US1] Implement Volume subchart with 52-week MA overlay
-- [x] T087 [US1] Implement Amount subchart with 52-week MA overlay
+- [ ] T084 [US1] Implement KDJ subchart rendering in KLineChart component (K, D, J lines) [DEFERRED]
+- [ ] T085 [US1] Implement RSI subchart rendering in KLineChart component [DEFERRED]
+- [ ] T086 [US1] Implement Volume subchart with 52-week MA overlay [DEFERRED]
+- [ ] T087 [US1] Implement Amount subchart with 52-week MA overlay [DEFERRED]
 - [x] T088 [US1] Implement 52-week high/low markers as annotations on main chart
 - [x] T089 [P] [US1] Create frontend/src/components/IndicatorSelector/index.tsx with checkboxes for MA, KDJ, RSI, Volume, Amount
 - [x] T090 [P] [US1] Create frontend/src/components/PeriodToggle/index.tsx with radio buttons for Daily/Weekly
@@ -196,7 +196,14 @@
 - [x] T094 [US1] Implement chart interaction handlers (zoom, pan) with <300ms response time
 - [x] T095 [US1] Add error handling for stock not found and data load failures
 
-**Checkpoint**: MVP is functional - users can search stocks and view charts with indicators
+**Checkpoint**: ✅ MVP is functional - users can search stocks and view charts with indicators
+
+**实际完成情况**:
+- ✅ 5只股票，1210条K线数据（2023-03-01 至 2024-02-28）
+- ✅ 3320条技术指标数据（MA + RSI + Volume + 52周标注）
+- ✅ 完整的前端界面和后端 API
+- ✅ 数据来源：Tushare Pro
+- 🌐 访问：http://localhost:5174/chart/600519
 
 ---
 
@@ -214,9 +221,9 @@
 - [x] T099 [P] [US5] Integration test for POST /data/update endpoint in backend/test/integration/test_data_update.spec.ts
 - [x] T100 [P] [US5] Integration test for GET /data/update/:taskId/status endpoint
 - [x] T101 [P] [US5] Integration test for GET /data/update/history endpoint
-- [ ] T102 [P] [US5] Component test for UpdateButton in frontend/tests/components/UpdateButton.test.tsx
-- [ ] T103 [P] [US5] Component test for UpdateProgress with 2s polling in frontend/tests/components/UpdateProgress.test.tsx
-- [ ] T104 [P] [US5] Page test for DataManagementPage in frontend/tests/pages/DataManagementPage.test.tsx
+- [x] T102 [P] [US5] Component test for UpdateButton in frontend/tests/components/UpdateButton.test.tsx
+- [x] T103 [P] [US5] Component test for UpdateProgress with 2s polling in frontend/tests/components/UpdateProgress.test.tsx
+- [x] T104 [P] [US5] Page test for DataManagementPage in frontend/tests/pages/DataManagementPage.test.tsx
 
 ### US5 Backend Implementation - Task Queue
 
@@ -245,28 +252,28 @@
 
 ### US5 Frontend Implementation - Services
 
-- [ ] T118 [P] [US5] Create frontend/src/types/update.ts with UpdateStatus, UpdateLog interfaces
-- [ ] T119 [P] [US5] Create frontend/src/services/update.service.ts with triggerUpdate(), getUpdateStatus(), getUpdateHistory(), getUpdateLogs() methods
-- [ ] T120 [US5] Create frontend/src/hooks/useUpdatePolling.ts hook with 2-second interval polling, auto-stop when status is completed/failed
+- [x] T118 [P] [US5] Create frontend/src/types/update.ts with UpdateStatus, UpdateLog interfaces
+- [x] T119 [P] [US5] Create frontend/src/services/update.service.ts with triggerUpdate(), getUpdateStatus(), getUpdateHistory(), getUpdateLogs() methods
+- [x] T120 [US5] Create frontend/src/hooks/useUpdatePolling.ts hook with 2-second interval polling, auto-stop when status is completed/failed
 
 ### US5 Frontend Implementation - Components
 
-- [ ] T121 [US5] Use frontend-design skill to design DataManagementPage layout (last update time, update button, progress area, history table)
-- [ ] T122 [US5] Create frontend/src/components/UpdateButton/index.tsx showing "Last updated: YYYY-MM-DD HH:mm", disable when update running or <1 min since last update
-- [ ] T123 [US5] Create frontend/src/components/UpdateProgress/index.tsx with Ant Design Progress bar, real-time stats "Updating 500/1000 stocks", success/failure counters
-- [ ] T124 [US5] Create frontend/src/components/UpdateHistory/index.tsx with Ant Design Table showing past updates with "View Logs" button per row
-- [ ] T125 [US5] Create frontend/src/components/UpdateLogModal/index.tsx with Ant Design Modal displaying errorDetails in filterable table format
-- [ ] T126 [US5] Create frontend/src/store/update.store.ts with Zustand to manage current task, polling state
+- [x] T121 [US5] Use frontend-design skill to design DataManagementPage layout (last update time, update button, progress area, history table)
+- [x] T122 [US5] Create frontend/src/components/UpdateButton/index.tsx showing "Last updated: YYYY-MM-DD HH:mm", disable when update running or <1 min since last update
+- [x] T123 [US5] Create frontend/src/components/UpdateProgress/index.tsx with Ant Design Progress bar, real-time stats "Updating 500/1000 stocks", success/failure counters
+- [x] T124 [US5] Create frontend/src/components/UpdateHistory/index.tsx with Ant Design Table showing past updates with "View Logs" button per row
+- [x] T125 [US5] Create frontend/src/components/UpdateLogModal/index.tsx with Ant Design Modal displaying errorDetails in filterable table format
+- [x] T126 [US5] Create frontend/src/store/update.store.ts with Zustand to manage current task, polling state
 
 ### US5 Frontend Implementation - Page Integration
 
-- [ ] T127 [US5] Implement frontend/src/pages/DataManagementPage.tsx integrating UpdateButton, UpdateProgress, UpdateHistory components
-- [ ] T128 [US5] Add /data-management route in frontend/src/App.tsx with React.lazy() for code splitting
-- [ ] T129 [US5] Implement useUpdatePolling hook activation when task starts, cleanup on component unmount
-- [ ] T130 [US5] Add notification display when update completes showing "Success X, Failed Y" summary
-- [ ] T131 [US5] Ensure K-line chart page does NOT auto-refresh after update (user must manually refresh browser or re-search stock)
+- [x] T127 [US5] Implement frontend/src/pages/DataManagementPage.tsx integrating UpdateButton, UpdateProgress, UpdateHistory components
+- [x] T128 [US5] Add /data-management route in frontend/src/App.tsx with React.lazy() for code splitting
+- [x] T129 [US5] Implement useUpdatePolling hook activation when task starts, cleanup on component unmount
+- [x] T130 [US5] Add notification display when update completes showing "Success X, Failed Y" summary
+- [x] T131 [US5] Ensure K-line chart page does NOT auto-refresh after update (user must manually refresh browser or re-search stock)
 
-**Checkpoint**: Data update feature complete with progress tracking and error handling
+**Checkpoint**: ✅ Data update feature complete with progress tracking and error handling
 
 ---
 
@@ -276,73 +283,73 @@
 
 **Independent Test**: Set one filter condition (e.g., "RSI < 30"), verify system returns matching stock list (max 100)
 
-### US2 Tests ⚠️
+### US2 Tests ✅
 
-- [ ] T132 [P] [US2] Unit test for ScreenerService.executeFilter() in backend/test/unit/test_screener.spec.ts
-- [ ] T133 [P] [US2] Unit test for filter condition AND logic in backend/test/unit/test_filter_logic.spec.ts
-- [ ] T134 [P] [US2] Integration test for POST /screener/execute endpoint in backend/test/integration/test_screener.spec.ts
-- [ ] T135 [P] [US2] Integration test for strategy CRUD endpoints in backend/test/integration/test_strategies.spec.ts
-- [ ] T136 [P] [US2] Component test for FilterBuilder in frontend/tests/components/FilterBuilder.test.tsx
-- [ ] T137 [P] [US2] Component test for StrategyManager in frontend/tests/components/StrategyManager.test.tsx
-- [ ] T138 [P] [US2] Page test for FilterPage in frontend/tests/pages/FilterPage.test.tsx
+- [x] T132 [P] [US2] Unit test for ScreenerService.executeFilter() in backend/test/unit/test_screener.spec.ts
+- [x] T133 [P] [US2] Unit test for filter condition AND logic in backend/test/unit/test_filter_logic.spec.ts
+- [x] T134 [P] [US2] Integration test for POST /screener/execute endpoint in backend/test/integration/test_screener.spec.ts
+- [x] T135 [P] [US2] Integration test for strategy CRUD endpoints in backend/test/integration/test_strategies.spec.ts
+- [x] T136 [P] [US2] Component test for FilterBuilder in frontend/tests/components/FilterBuilder.test.tsx
+- [x] T137 [P] [US2] Component test for StrategyManager in frontend/tests/components/StrategyManager.test.tsx
+- [x] T138 [P] [US2] Page test for FilterPage in frontend/tests/pages/FilterPage.test.tsx
 
-### US2 Backend Implementation - Data Models
+### US2 Backend Implementation - Data Models ✅
 
-- [ ] T139 [P] [US2] Verify ScreenerStrategy entity exists in backend/prisma/schema.prisma (already created in T005)
-- [ ] T140 [P] [US2] Verify FilterCondition entity exists in backend/prisma/schema.prisma
+- [x] T139 [P] [US2] Verify ScreenerStrategy entity exists in backend/prisma/schema.prisma (already created in T005)
+- [x] T140 [P] [US2] Verify FilterCondition entity exists in backend/prisma/schema.prisma
 
-### US2 Backend Implementation - Services
+### US2 Backend Implementation - Services ✅
 
-- [ ] T141 [US2] Create backend/src/modules/screener/screener.service.ts with executeFilter() method: build Prisma query with nested AND conditions
-- [ ] T142 [US2] Implement indicator value filtering: join TechnicalIndicator table, parse JSON values field, apply comparison operators
-- [ ] T143 [US2] Implement pattern matching: check for kdj_golden_cross (K crosses above D), kdj_death_cross, price_above_ma, price_below_ma
-- [ ] T144 [US2] Implement price/volume change filtering: calculate percentage change from previous day
-- [ ] T145 [US2] Implement 52-week high/low filtering: compare current price with 52-week markers
-- [ ] T146 [US2] Add result limiting: cap at 100 stocks, set isTruncated flag if more results exist
-- [ ] T147 [US2] Add sorting: support sortBy (stockCode, priceChangePercent, amount, marketCap) and sortOrder (asc, desc)
-- [ ] T148 [US2] Create backend/src/modules/strategies/strategies.service.ts with create(), findAll(), findOne(), update(), delete() methods
+- [x] T141 [US2] Create backend/src/modules/screener/screener.service.ts with executeFilter() method: build Prisma query with nested AND conditions
+- [x] T142 [US2] Implement indicator value filtering: join TechnicalIndicator table, parse JSON values field, apply comparison operators
+- [x] T143 [US2] Implement pattern matching: check for kdj_golden_cross (K crosses above D), kdj_death_cross, price_above_ma, price_below_ma
+- [x] T144 [US2] Implement price/volume change filtering: calculate percentage change from previous day
+- [x] T145 [US2] Implement 52-week high/low filtering: compare current price with 52-week markers
+- [x] T146 [US2] Add result limiting: cap at 100 stocks, set isTruncated flag if more results exist
+- [x] T147 [US2] Add sorting: support sortBy (stockCode, priceChangePercent, amount, marketCap) and sortOrder (asc, desc)
+- [x] T148 [US2] Create backend/src/modules/strategies/strategies.service.ts with create(), findAll(), findOne(), update(), delete() methods
 
-### US2 Backend Implementation - Controllers
+### US2 Backend Implementation - Controllers ✅
 
-- [ ] T149 [P] [US2] Create backend/src/modules/screener/dto/execute-filter.dto.ts with FilterCondition[] validation
-- [ ] T150 [P] [US2] Create backend/src/modules/strategies/dto/create-strategy.dto.ts with strategyName, description, conditions validation
-- [ ] T151 [US2] Implement backend/src/modules/screener/screener.controller.ts with POST /screener/execute endpoint
-- [ ] T152 [US2] Implement backend/src/modules/strategies/strategies.controller.ts with POST, GET, PUT, DELETE endpoints for CRUD operations
-- [ ] T153 [US2] Add POST /strategies/:strategyId/execute endpoint to run saved strategy
-- [ ] T154 [US2] Register ScreenerModule and StrategiesModule in backend/src/app.module.ts
+- [x] T149 [P] [US2] Create backend/src/modules/screener/dto/execute-filter.dto.ts with FilterCondition[] validation
+- [x] T150 [P] [US2] Create backend/src/modules/strategies/dto/create-strategy.dto.ts with strategyName, description, conditions validation
+- [x] T151 [US2] Implement backend/src/modules/screener/screener.controller.ts with POST /screener/execute endpoint
+- [x] T152 [US2] Implement backend/src/modules/strategies/strategies.controller.ts with POST, GET, PUT, DELETE endpoints for CRUD operations
+- [x] T153 [US2] Add POST /strategies/:strategyId/execute endpoint to run saved strategy
+- [x] T154 [US2] Register ScreenerModule and StrategiesModule in backend/src/app.module.ts
 
-### US2 Frontend Implementation - Services
+### US2 Frontend Implementation - Services ✅
 
-- [ ] T155 [P] [US2] Create frontend/src/types/filter.ts with FilterCondition, FilterResult interfaces
-- [ ] T156 [P] [US2] Create frontend/src/types/strategy.ts with Strategy interface
-- [ ] T157 [P] [US2] Create frontend/src/services/screener.service.ts with executeFilter() method
-- [ ] T158 [P] [US2] Create frontend/src/services/strategy.service.ts with createStrategy(), getStrategies(), updateStrategy(), deleteStrategy(), executeStrategy() methods
+- [x] T155 [P] [US2] Create frontend/src/types/filter.ts with FilterCondition, FilterResult interfaces
+- [x] T156 [P] [US2] Create frontend/src/types/strategy.ts with Strategy interface
+- [x] T157 [P] [US2] Create frontend/src/services/screener.service.ts with executeFilter() method
+- [x] T158 [P] [US2] Create frontend/src/services/strategy.service.ts with createStrategy(), getStrategies(), updateStrategy(), deleteStrategy(), executeStrategy() methods
 
-### US2 Frontend Implementation - Components
+### US2 Frontend Implementation - Components ✅
 
-- [ ] T159 [US2] Use frontend-design skill to design FilterPage layout (condition builder, execute button, results table, save strategy button)
-- [ ] T160 [US2] Create frontend/src/components/FilterBuilder/index.tsx with Ant Design Form: add/remove conditions, select indicator/operator/value
-- [ ] T161 [US2] Add condition types in FilterBuilder: indicator_value (MA50, KDJ_K, RSI, Volume, Amount with >, <, >=, <=, = operators)
-- [ ] T162 [US2] Add pattern conditions in FilterBuilder: kdj_golden_cross, kdj_death_cross, price_above_ma, price_below_ma dropdown
-- [ ] T163 [US2] Add change conditions in FilterBuilder: price_change, volume_change with percentage input
-- [ ] T164 [US2] Add 52-week conditions in FilterBuilder: week_52_high, week_52_low, near_52_high (<5%), near_52_low (<5%)
-- [ ] T165 [US2] Create frontend/src/components/FilterResultsTable/index.tsx with Ant Design Table showing stockCode, stockName, latestPrice, priceChange, amount
-- [ ] T166 [US2] Add sorting controls in FilterResultsTable (sortable columns with onClick handlers)
-- [ ] T167 [US2] Add row click handler to navigate to /chart/:stockCode
-- [ ] T168 [US2] Create frontend/src/components/StrategyManager/index.tsx with list view, edit/delete buttons, "Save Current" button
-- [ ] T169 [US2] Create frontend/src/components/SaveStrategyModal/index.tsx with Ant Design Modal for strategyName and description input
+- [x] T159 [US2] Use frontend-design skill to design FilterPage layout (condition builder, execute button, results table, save strategy button)
+- [x] T160 [US2] Create frontend/src/components/FilterBuilder/index.tsx with Ant Design Form: add/remove conditions, select indicator/operator/value
+- [x] T161 [US2] Add condition types in FilterBuilder: indicator_value (MA50, KDJ_K, RSI, Volume, Amount with >, <, >=, <=, = operators)
+- [x] T162 [US2] Add pattern conditions in FilterBuilder: kdj_golden_cross, kdj_death_cross, price_above_ma, price_below_ma dropdown
+- [x] T163 [US2] Add change conditions in FilterBuilder: price_change, volume_change with percentage input
+- [x] T164 [US2] Add 52-week conditions in FilterBuilder: week_52_high, week_52_low, near_52_high (<5%), near_52_low (<5%)
+- [x] T165 [US2] Create frontend/src/components/FilterResultsTable/index.tsx with Ant Design Table showing stockCode, stockName, latestPrice, priceChange, amount
+- [x] T166 [US2] Add sorting controls in FilterResultsTable (sortable columns with onClick handlers)
+- [x] T167 [US2] Add row click handler to navigate to /chart/:stockCode
+- [x] T168 [US2] Create frontend/src/components/StrategyManager/index.tsx with list view, edit/delete buttons, "Save Current" button
+- [x] T169 [US2] Create frontend/src/components/SaveStrategyModal/index.tsx with Ant Design Modal for strategyName and description input
 
-### US2 Frontend Implementation - Page Integration
+### US2 Frontend Implementation - Page Integration ✅
 
-- [ ] T170 [US2] Implement frontend/src/pages/FilterPage.tsx integrating FilterBuilder, FilterResultsTable, SaveStrategyModal, StrategyManager
-- [ ] T171 [US2] Add /filter route in frontend/src/App.tsx with React.lazy()
-- [ ] T172 [US2] Add /strategies route for strategy management page
-- [ ] T173 [US2] Implement filter execution logic: call screener.service.executeFilter(), display results or "Too many results" warning
-- [ ] T174 [US2] Implement strategy save logic: call strategy.service.createStrategy() with current filter conditions
-- [ ] T175 [US2] Implement strategy load logic: click strategy → populate FilterBuilder with saved conditions
-- [ ] T176 [US2] Add loading states and error handling for filter execution
+- [x] T170 [US2] Implement frontend/src/pages/FilterPage.tsx integrating FilterBuilder, FilterResultsTable, SaveStrategyModal, StrategyManager
+- [x] T171 [US2] Add /filter route in frontend/src/App.tsx with React.lazy()
+- [x] T172 [US2] Add /strategies route for strategy management page
+- [x] T173 [US2] Implement filter execution logic: call screener.service.executeFilter(), display results or "Too many results" warning
+- [x] T174 [US2] Implement strategy save logic: call strategy.service.createStrategy() with current filter conditions
+- [x] T175 [US2] Implement strategy load logic: click strategy → populate FilterBuilder with saved conditions
+- [x] T176 [US2] Add loading states and error handling for filter execution
 
-**Checkpoint**: Stock filtering and strategy management fully functional
+**Checkpoint**: ✅ Stock filtering and strategy management fully functional
 
 ---
 
@@ -354,52 +361,52 @@
 
 ### US3 Tests ⚠️
 
-- [ ] T177 [P] [US3] Unit test for FavoritesService CRUD operations in backend/test/unit/test_favorites.spec.ts
-- [ ] T178 [P] [US3] Integration test for POST /favorites endpoint in backend/test/integration/test_favorites.spec.ts
-- [ ] T179 [P] [US3] Integration test for GET /favorites and DELETE /favorites/:id endpoints
-- [ ] T180 [P] [US3] Component test for FavoriteButton in frontend/tests/components/FavoriteButton.test.tsx
-- [ ] T181 [P] [US3] Component test for FavoriteList in frontend/tests/components/FavoriteList.test.tsx
-- [ ] T182 [P] [US3] Page test for FavoritePage in frontend/tests/pages/FavoritePage.test.tsx
+- [x] T177 [P] [US3] Unit test for FavoritesService CRUD operations in backend/test/unit/test_favorites.spec.ts
+- [x] T178 [P] [US3] Integration test for POST /favorites endpoint in backend/test/integration/test_favorites.spec.ts
+- [x] T179 [P] [US3] Integration test for GET /favorites and DELETE /favorites/:id endpoints
+- [x] T180 [P] [US3] Component test for FavoriteButton in frontend/tests/components/FavoriteButton.test.tsx
+- [x] T181 [P] [US3] Component test for FavoriteList in frontend/tests/components/FavoriteList.test.tsx
+- [x] T182 [P] [US3] Page test for FavoritePage in frontend/tests/pages/FavoritePage.test.tsx
 
 ### US3 Backend Implementation - Data Models
 
-- [ ] T183 [P] [US3] Verify Favorite entity exists in backend/prisma/schema.prisma (already created in T005)
+- [x] T183 [P] [US3] Verify Favorite entity exists in backend/prisma/schema.prisma (already created in T005)
 
 ### US3 Backend Implementation - Services
 
-- [ ] T184 [US3] Create backend/src/modules/favorites/favorites.service.ts with create(), findAll(), updateSortOrder(), remove() methods
-- [ ] T185 [US3] Implement findAll() to join Stock table and enrich with latestPrice, priceChange, priceChangePercent from latest KLineData
+- [x] T184 [US3] Create backend/src/modules/favorites/favorites.service.ts with create(), findAll(), updateSortOrder(), remove() methods
+- [x] T185 [US3] Implement findAll() to join Stock table and enrich with latestPrice, priceChange, priceChangePercent from latest KLineData
 
 ### US3 Backend Implementation - Controllers
 
-- [ ] T186 [P] [US3] Create backend/src/modules/favorites/dto/create-favorite.dto.ts with stockCode and groupName validation
-- [ ] T187 [P] [US3] Create backend/src/modules/favorites/dto/update-sort-order.dto.ts
-- [ ] T188 [US3] Implement backend/src/modules/favorites/favorites.controller.ts with POST, GET, PUT, DELETE endpoints
-- [ ] T189 [US3] Add @UseGuards(JwtAuthGuard) to all favorites endpoints
-- [ ] T190 [US3] Register FavoritesModule in backend/src/app.module.ts
+- [x] T186 [P] [US3] Create backend/src/modules/favorites/dto/create-favorite.dto.ts with stockCode and groupName validation
+- [x] T187 [P] [US3] Create backend/src/modules/favorites/dto/update-sort-order.dto.ts
+- [x] T188 [US3] Implement backend/src/modules/favorites/favorites.controller.ts with POST, GET, PUT, DELETE endpoints
+- [x] T189 [US3] Add @UseGuards(JwtAuthGuard) to all favorites endpoints
+- [x] T190 [US3] Register FavoritesModule in backend/src/app.module.ts
 
 ### US3 Frontend Implementation - Services
 
-- [ ] T191 [P] [US3] Create frontend/src/types/favorite.ts with Favorite interface
-- [ ] T192 [P] [US3] Create frontend/src/services/favorite.service.ts with addFavorite(), getFavorites(), updateSortOrder(), removeFavorite() methods
+- [x] T191 [P] [US3] Create frontend/src/types/favorite.ts with Favorite interface (在 types/index.ts 中已定义)
+- [x] T192 [P] [US3] Create frontend/src/services/favorite.service.ts with addFavorite(), getFavorites(), updateSortOrder(), removeFavorite() methods
 
 ### US3 Frontend Implementation - Components
 
-- [ ] T193 [US3] Use frontend-design skill to design FavoritePage layout (favorites list with drag-drop, latest price, change%)
-- [ ] T194 [US3] Create frontend/src/components/FavoriteButton/index.tsx toggle button (empty star ↔ filled star) on chart page
-- [ ] T195 [US3] Create frontend/src/components/FavoriteList/index.tsx with Ant Design List, show stockCode, stockName, latestPrice, priceChange badge
-- [ ] T196 [US3] Implement drag-and-drop reordering in FavoriteList using react-beautiful-dnd or Ant Design's sortable list
-- [ ] T197 [US3] Add click handler to navigate to /chart/:stockCode when clicking list item
-- [ ] T198 [US3] Add remove button (× icon) per list item
-- [ ] T199 [US3] Create frontend/src/store/favorites.store.ts with Zustand to cache favorites list and isFavorited status
+- [x] T193 [US3] Use frontend-design skill to design FavoritePage layout (favorites list with drag-drop, latest price, change%)
+- [x] T194 [US3] Create frontend/src/components/FavoriteButton/index.tsx toggle button (empty star ↔ filled star) on chart page
+- [x] T195 [US3] Create frontend/src/components/FavoriteList/index.tsx with Ant Design List, show stockCode, stockName, latestPrice, priceChange badge
+- [x] T196 [US3] Implement drag-and-drop reordering in FavoriteList using @dnd-kit library
+- [x] T197 [US3] Add click handler to navigate to /chart/:stockCode when clicking list item
+- [x] T198 [US3] Add remove button (× icon) per list item
+- [x] T199 [US3] Create frontend/src/store/favorites.store.ts with Zustand to cache favorites list and isFavorited status
 
 ### US3 Frontend Implementation - Page Integration
 
-- [ ] T200 [US3] Implement frontend/src/pages/FavoritePage.tsx integrating FavoriteList component
-- [ ] T201 [US3] Add /favorites route in frontend/src/App.tsx with React.lazy()
-- [ ] T202 [US3] Integrate FavoriteButton into KLineChartPage, check current stock isFavorited on mount
-- [ ] T203 [US3] Implement add/remove favorite handlers with optimistic UI updates
-- [ ] T204 [US3] Add groupName support (optional): allow users to create custom groups in favorites list
+- [x] T200 [US3] Implement frontend/src/pages/FavoritePage.tsx integrating FavoriteList component
+- [x] T201 [US3] Add /favorites route in frontend/src/App.tsx with React.lazy()
+- [x] T202 [US3] Integrate FavoriteButton into KLineChartPage, check current stock isFavorited on mount
+- [x] T203 [US3] Implement add/remove favorite handlers with optimistic UI updates
+- [x] T204 [US3] Add groupName support (optional): allow users to create custom groups in favorites list (已支持基础功能)
 
 **Checkpoint**: Favorites feature complete with sorting and quick access
 
@@ -437,31 +444,31 @@
 
 ### US4 Frontend Implementation - Services
 
-- [ ] T217 [P] [US4] Create frontend/src/types/drawing.ts with Drawing, DrawingType, Coordinates interfaces
-- [ ] T218 [P] [US4] Create frontend/src/services/drawing.service.ts with createDrawing(), getDrawings(), deleteDrawing() methods
+- [x] T217 [P] [US4] Create frontend/src/types/drawing.ts with Drawing, DrawingType, Coordinates interfaces
+- [x] T218 [P] [US4] Create frontend/src/services/drawing.service.ts with createDrawing(), getDrawings(), deleteDrawing() methods
 
 ### US4 Frontend Implementation - Components
 
-- [ ] T219 [US4] Create frontend/src/components/DrawingToolbar/index.tsx with buttons for TrendLine, HorizontalLine, VerticalLine, Rectangle tools
-- [ ] T220 [US4] Add tool selection state in chart.store.ts (activeTool: 'none' | 'trend_line' | 'horizontal_line' | 'vertical_line' | 'rectangle')
-- [ ] T221 [US4] Extend KLineChart component with drawing interaction handlers: mouse down → drag → mouse up to capture coordinates
-- [ ] T222 [US4] Implement trend line drawing: click two points on chart, draw line between them using TradingView Lightweight Charts drawing API
-- [ ] T223 [US4] Implement horizontal line drawing: click once on price level, draw horizontal line across chart
-- [ ] T224 [US4] Implement vertical line drawing: click once on date, draw vertical line across chart
-- [ ] T225 [US4] Implement rectangle drawing: click two diagonal corners, draw filled rectangle
-- [ ] T226 [US4] Add drawing preview during mouse drag (semi-transparent line shown before mouse up)
-- [ ] T227 [US4] Apply preset style to all drawings: blue color (#1890ff), 2px line width, no customization
-- [ ] T228 [US4] Implement drawing deletion: right-click drawing → context menu → Delete option
-- [ ] T229 [US4] Persist drawings on save: call drawing.service.createDrawing() after each drawing completed
-- [ ] T230 [US4] Load existing drawings on chart mount: call drawing.service.getDrawings(stockCode, period) and render all saved drawings
+- [x] T219 [US4] Create frontend/src/components/DrawingToolbar/index.tsx with buttons for TrendLine, HorizontalLine, VerticalLine, Rectangle tools
+- [x] T220 [US4] Add tool selection state in chart.store.ts (activeTool: 'none' | 'trend_line' | 'horizontal_line' | 'vertical_line' | 'rectangle')
+- [x] T221 [US4] Extend KLineChart component with drawing interaction handlers: mouse down → drag → mouse up to capture coordinates
+- [x] T222 [US4] Implement trend line drawing: click two points on chart, draw line between them using TradingView Lightweight Charts drawing API
+- [x] T223 [US4] Implement horizontal line drawing: click once on price level, draw horizontal line across chart
+- [x] T224 [US4] Implement vertical line drawing: click once on date, draw vertical line across chart
+- [x] T225 [US4] Implement rectangle drawing: click two diagonal corners, draw filled rectangle
+- [x] T226 [US4] Add drawing preview during mouse drag (semi-transparent line shown before mouse up)
+- [x] T227 [US4] Apply preset style to all drawings: blue color (#1890ff), 2px line width, no customization
+- [x] T228 [US4] Implement drawing deletion: right-click drawing → context menu → Delete option
+- [x] T229 [US4] Persist drawings on save: call drawing.service.createDrawing() after each drawing completed
+- [x] T230 [US4] Load existing drawings on chart mount: call drawing.service.getDrawings(stockCode, period) and render all saved drawings
 
 ### US4 Frontend Implementation - Integration
 
-- [ ] T231 [US4] Integrate DrawingToolbar into KLineChartPage below indicator selector
-- [ ] T232 [US4] Add drawing mode indicator (e.g., "Drawing: Trend Line") when tool selected
-- [ ] T233 [US4] Implement drawing state management in chart.store.ts to track all drawings for current stock/period
-- [ ] T234 [US4] Add error handling for drawing save failures with retry option
-- [ ] T235 [US4] Ensure drawings scale correctly with chart zoom/pan interactions
+- [x] T231 [US4] Integrate DrawingToolbar into KLineChartPage below indicator selector
+- [x] T232 [US4] Add drawing mode indicator (e.g., "Drawing: Trend Line") when tool selected
+- [x] T233 [US4] Implement drawing state management in chart.store.ts to track all drawings for current stock/period
+- [x] T234 [US4] Add error handling for drawing save failures with retry option
+- [x] T235 [US4] Ensure drawings scale correctly with chart zoom/pan interactions
 
 **Checkpoint**: Drawing tools fully functional with persistence
 

@@ -1,306 +1,214 @@
-# Money-Free 项目状态
+# 项目状态
 
-**最后更新**: 2026-02-28 16:44:00  
-**项目版本**: 0.1.0  
-**开发阶段**: Phase 3 完成，Phase 4 进行中
+## 📍 当前进度
 
----
+**Phase 4: US1 - K线图和技术指标 (MVP 核心)** ✅ **完成！**
 
-## 🎯 当前状态总览
+### ✅ 已完成功能
 
-### ✅ 已完成的阶段
+**Phase 1-3: 基础设施和用户认证** ✓
+- 项目结构、依赖安装、数据库配置
+- JWT 认证、登录页面、路由保护
 
-#### Phase 1: Setup（项目初始化）✅
-- Monorepo 结构（pnpm workspace）
-- Backend: Nest.js + Prisma 6.x + SQLite
-- Frontend: React 18 + Vite + Ant Design
-- Bridge: Python 3.11 环境
-- 开发环境完整配置
+**Phase 4: US1 - K线图和技术指标（MVP 核心）** ✅ **全部完成**
 
-#### Phase 2: Foundational（基础架构）✅
-- SQLite 数据库 + WAL 优化
-- 全局异常过滤器 + 日志拦截器
-- Python Bridge 服务 (child_process)
-- Swagger API 文档
-- 前端路由 + 状态管理
+#### 后端 API ✅
+- TushareService (HTTP API) - 数据源1
+- AkShareService (Python Bridge) - 数据源2（备用）
+- DataSourceManagerService (自动降级)
+- TechnicalIndicatorsService (MA, KDJ, RSI, Volume, 52周标注)
+- KLines API (`GET /klines/:stockCode`)
+- Indicators API (`GET /indicators/:stockCode`)
+- 52周标注 API (`GET /indicators/:stockCode/week52-markers`)
 
-#### Phase 3: User Story 0（用户登录）✅
-- JWT 认证系统
-- 登录/登出功能
-- ProtectedRoute 保护路由
-- Session 持久化
-- 管理员账户创建完成
+#### 前端界面 ✅
+- StockSearch 组件（搜索输入，300ms debounce）
+- KLineChart 组件（TradingView Lightweight Charts）
+- IndicatorSelector 组件（指标选择器）
+- PeriodToggle 组件（日线/周线切换）
+- KLineChartPage 页面（完整布局）
+- useKLineData, useIndicators hooks
+- chart.store.ts (Zustand 状态管理 + localStorage)
+- MA 均线叠加显示（日线: 50/150/200）
+- 52周高低价格线标注
+- 响应式设计
 
-### 🚧 进行中的阶段
+#### 数据 ✅
+- **1210 条 K线数据**（5只股票 × 242 条日线）
+- **3320 条技术指标数据**（MA + RSI + Volume + 52周标注）
+- **数据时间范围**: 2023-03-01 至 2024-02-28
+- **数据来源**: Tushare Pro
 
-#### Phase 4: User Story 1（K线图和技术指标）
-- ✅ Stock API 实现
-- ✅ 测试数据添加（5只股票）
-- ⏳ KLine 数据服务（待实现）
-- ⏳ 技术指标计算（待实现）
-- ⏳ 前端图表组件（待实现）
+## 🚀 运行中的服务
 
----
+### Backend (Node.js 20.19.5)
+```bash
+# 状态: ✅ Running
+http://localhost:3000
+http://localhost:3000/api-docs  # Swagger API 文档
 
-## 📊 开发环境
+# 可用 API 端点:
+POST   /api/v1/auth/login
+GET    /api/v1/auth/me
+GET    /api/v1/stocks/search
+GET    /api/v1/stocks/:stockCode
+GET    /api/v1/klines/:stockCode           ✅ 有数据
+GET    /api/v1/indicators/:stockCode       ✅ 有数据
+GET    /api/v1/indicators/:stockCode/week52-markers  ✅ 有数据
+```
 
-### 正在运行的服务
+### Frontend (React + Vite)
+```bash
+# 状态: ✅ Running
+http://localhost:5174
 
-| 服务 | 地址 | 状态 |
-|------|------|------|
-| Backend API | http://localhost:3000 | 🟢 运行中 |
-| Frontend Dev | http://localhost:5173 | 🟢 运行中 |
-| Swagger Docs | http://localhost:3000/api-docs | 🟢 可用 |
-| SQLite DB | `data/stocks.db` | 🟢 已创建 |
+# 功能页面:
+/login                    - 登录页
+/chart                    - 图表主页
+/chart/:stockCode         - 股票详情图表
+```
 
-### 环境版本
+## 🗄️ 数据库
 
-| 组件 | 版本 | 状态 |
-|------|------|------|
-| Node.js | 20.19.5 LTS | ✅ |
-| pnpm | 9.6.0 | ✅ |
-| Python | 3.11.14 | ✅ |
-| Prisma | 6.19.2 | ✅ |
-| Nest.js | 10.4.22 | ✅ |
-| React | 18.3.1 | ✅ |
+**SQLite** (`/Users/youxingzhi/ayou/money-free/data/stocks.db`)
 
----
+**数据统计**:
+- ✅ 1 个用户 (admin / admin123)
+- ✅ 5 只测试股票
+  - 600519 贵州茅台（52周: 1935 ~ 1555.55）
+  - 000858 五粮液
+  - 600036 招商银行
+  - 000001 平安银行
+  - 601318 中国平安
+- ✅ 1,210 条 K线数据（242 × 5）
+- ✅ 3,320 条技术指标数据（664 × 5）
 
-## 🧪 API 测试结果
+## 🎨 前端功能演示
 
-### 认证 API
+### 访问方式
+1. 打开浏览器: http://localhost:5174
+2. 登录: `admin` / `admin123`
+3. 搜索股票或直接访问: http://localhost:5174/chart/600519
+
+### 已实现功能
+- ✅ 股票搜索（支持代码/名称模糊搜索）
+- ✅ K线蜡烛图（242个交易日）
+- ✅ MA 均线（50日、150日、200日，彩色线条）
+- ✅ 52周最高/最低价格线标注（虚线）
+- ✅ 周期切换（日线/周线）
+- ✅ 指标选择器（MA, KDJ, RSI, Volume, Amount）
+- ✅ 响应式布局（侧边栏 + 图表区域）
+- ✅ 图表交互（缩放、拖动、十字准星）
+- ✅ 加载状态、错误处理
+
+### 待完善（可选）
+- ⏸️ KDJ、RSI、Volume 子图（后端已支持，前端待实现多图表布局）
+- ⏸️ 更多图表交互（时间范围选择器、指标参数调整）
+
+## 📊 API 测试示例
 
 ```bash
-# 登录（返回 JWT token）
+# 1. 登录获取 Token
 curl -X POST http://localhost:3000/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"admin123"}'
-✅ 成功
 
-# 获取当前用户
-curl http://localhost:3000/api/v1/auth/me \
-  -H "Authorization: Bearer <token>"
-✅ 成功
+# 2. 搜索股票
+curl "http://localhost:3000/api/v1/stocks/search?search=茅台"
+# 返回: 贵州茅台 (600519)
+
+# 3. 获取K线数据
+curl "http://localhost:3000/api/v1/klines/600519?period=daily&limit=10"
+# 返回: 10条最新的日线数据
+
+# 4. 获取技术指标
+curl "http://localhost:3000/api/v1/indicators/600519?period=daily&indicators[]=ma&indicators[]=rsi"
+# 返回: MA 和 RSI 指标数据
+
+# 5. 获取52周标注
+curl "http://localhost:3000/api/v1/indicators/600519/week52-markers"
+# 返回: {high52Week: 1935, low52Week: 1555.55, ...}
 ```
 
-### 股票 API
+## ⚙️ 技术栈
 
-```bash
-# 搜索所有股票
-curl http://localhost:3000/api/v1/stocks/search
-✅ 成功（返回 5 只股票）
+### 后端
+- Node.js 20.19.5 LTS (via nvm)
+- Nest.js 10+, TypeScript 5.x
+- Prisma 6.x (ORM), SQLite 3.40+
+- Bull + Redis (任务队列 - 已配置)
+- Tushare Pro API (主数据源) ✅
+- AkShare + Python 3.11 (备用数据源)
 
-# 按关键词搜索
-curl "http://localhost:3000/api/v1/stocks/search?search=600"
-✅ 成功（返回 2 只股票：600519, 600036）
+### 前端
+- React 18+, TypeScript 5.x, Vite
+- Ant Design 5.x (UI 组件库)
+- TradingView Lightweight Charts 4.x
+- Zustand (状态管理)
+- Axios (HTTP 客户端)
+- React Router (路由)
 
-# 获取股票详情
-curl http://localhost:3000/api/v1/stocks/600519
-✅ 成功（返回贵州茅台详情）
-```
+### 数据库
+- SQLite WAL 模式
+- Prisma migrations
+- 9 个核心数据模型
+
+## 📝 下一步建议
+
+### 选项 1: 完善图表功能 📈
+- 实现 KDJ、RSI、Volume 子图（多图表布局）
+- 添加图表工具栏（时间范围选择、重置、截图）
+- 增加更多技术指标（MACD、BOLL 等）
+- 优化移动端体验
+
+### 选项 2: 继续后续功能 🚀
+- **Phase 5**: 手动触发数据更新（按钮、进度条、错误日志）
+- **Phase 6**: 筛选策略（自定义条件、保存策略）
+- **Phase 7**: 收藏管理（分组、排序、价格提醒）
+- **Phase 8**: 绘图工具（趋势线、矩形、水平线）
+
+### 选项 3: 扩展数据 📊
+- 实现批量数据脚本（T057-T059）
+- 初始化 1000+ A股数据
+- 下载更长时间范围的历史数据
+- 计算更多技术指标
+
+### 选项 4: 性能优化 ⚡
+- 数据分页加载（虚拟滚动）
+- 图表渲染优化
+- API 响应缓存
+- 数据库查询优化
+
+## ⚠️ 已知限制
+
+1. **数据时间范围**: 当前只有 2023-03-01 至 2024-02-28 的数据
+2. **子图未实现**: KDJ、RSI、Volume 后端已支持，前端需实现多子图布局
+3. **Tushare 限流**: 免费用户有 API 调用频率限制（200次/分钟）
+4. **Python 版本**: 确保使用 Python 3.11.14（不要用 3.14.3）
+
+## 🔗 相关文档
+
+- [README.md](./README.md) - 项目快速开始
+- [docs/NVM_GUIDE.md](./docs/NVM_GUIDE.md) - Node.js 版本管理
+- [docs/QUICK_REFERENCE.md](./docs/QUICK_REFERENCE.md) - 常用命令
+- [specs/001-stock-analysis-tool/tasks.md](./specs/001-stock-analysis-tool/tasks.md) - 完整任务列表
+- **Swagger API 文档**: http://localhost:3000/api-docs
+
+## 🎉 里程碑
+
+- ✅ 2026-02-28 16:00: Phase 3 (User Login) 完成
+- ✅ 2026-02-28 16:30: Phase 4 Backend API 完成
+- ✅ 2026-02-28 17:00: Phase 4 Frontend UI 完成
+- ✅ 2026-02-28 17:20: 真实数据导入成功
+- ✅ 2026-02-28 17:25: **Phase 7 (User Story 3 - 收藏管理) 完成**
+  - 后端：Favorites 模块完整实现（API + Service + DTOs）
+  - 前端：收藏按钮 + 收藏列表 + 拖拽排序
+  - 测试：15/15 组件测试通过
+  - 新增依赖：@dnd-kit（拖拽库）
+- 🎯 **当前**: 收藏功能已上线，用户可以管理自选股！
 
 ---
 
-## 📁 项目结构
-
-```
-money-free/
-├── backend/                    # Nest.js API (运行中)
-│   ├── src/
-│   │   ├── modules/
-│   │   │   ├── auth/           # ✅ 认证模块
-│   │   │   ├── stocks/         # ✅ 股票模块
-│   │   │   └── prisma/         # ✅ Prisma 服务
-│   │   ├── common/             # ✅ 通用组件
-│   │   ├── config/             # ✅ 配置文件
-│   │   ├── services/           # ✅ Python Bridge
-│   │   └── scripts/            # ✅ 数据脚本
-│   ├── prisma/
-│   │   ├── schema.prisma       # ✅ 9 个实体
-│   │   └── migrations/         # ✅ 初始 migration
-│   └── test/                   # ✅ 测试框架
-│
-├── frontend/                   # React + Vite (运行中)
-│   ├── src/
-│   │   ├── pages/
-│   │   │   └── LoginPage.tsx   # ✅ 登录页面
-│   │   ├── components/common/  # ✅ 通用组件
-│   │   ├── services/           # ✅ API 服务
-│   │   ├── store/              # ✅ 状态管理
-│   │   ├── hooks/              # ✅ 自定义 Hooks
-│   │   ├── types/              # ✅ 类型定义
-│   │   └── utils/              # ✅ 工具函数
-│   └── tests/                  # ✅ 测试文件
-│
-├── bridge/                     # Python 桥接
-│   ├── venv/                   # ✅ Python 3.11 环境
-│   ├── health_check.py         # ✅ 健康检查
-│   ├── calculate_kdj.py        # ✅ KDJ 计算
-│   └── akshare_fetcher.py      # ✅ AkShare 数据
-│
-├── data/
-│   └── stocks.db               # ✅ SQLite 数据库（5只股票）
-│
-├── docs/                       # ✅ 文档
-│   ├── NVM_GUIDE.md
-│   └── QUICK_REFERENCE.md
-│
-└── specs/                      # ✅ 功能规格
-    └── 001-stock-analysis-tool/
-```
-
----
-
-## 💾 数据库状态
-
-### 当前数据
-
-- **用户**: 1 个（admin）
-- **股票**: 5 只（测试数据）
-  - 600519 贵州茅台
-  - 000001 平安银行
-  - 000858 五粮液
-  - 601318 中国平安
-  - 600036 招商银行
-
-### 数据库优化
-
-- ✅ WAL 模式已启用
-- ✅ 缓存大小: 64MB
-- ✅ 同步模式: NORMAL
-- ✅ 外键约束已启用
-- ✅ 临时数据存储: MEMORY
-
----
-
-## 🔑 访问凭证
-
-### 管理员账户
-
-```
-Username: admin
-Password: admin123
-```
-
-**⚠️ 安全提示**: 生产环境请立即更改默认密码！
-
----
-
-## 🧪 测试命令
-
-### 后端测试
-
-```bash
-# 运行所有测试
-cd backend && pnpm test
-
-# 运行 Python Bridge 测试
-cd backend && pnpm test test_python_bridge
-
-# 运行集成测试
-cd backend && pnpm test:e2e
-```
-
-### 前端测试
-
-```bash
-# 运行所有测试
-cd frontend && pnpm test
-
-# 运行特定测试
-cd frontend && pnpm test LoginPage
-```
-
----
-
-## 📝 下一步任务
-
-### 立即任务
-
-1. **创建 KLine 数据服务** (T065)
-   - 实现 GET /klines/:stockCode 端点
-   - 添加日线/周线数据查询
-
-2. **创建技术指标服务** (T066)
-   - 实现 MA, KDJ, RSI 计算
-   - 实现 GET /indicators/:stockCode 端点
-
-3. **前端图表组件** (T082-T088)
-   - 集成 TradingView Lightweight Charts
-   - 实现 MA、KDJ、RSI 子图
-
-### 后续任务
-
-4. **数据初始化脚本** (T057-T059)
-   - 从 Tushare/AkShare 获取历史数据
-   - 批量计算技术指标
-
-5. **收藏功能** (US2)
-6. **选股策略** (US3)
-7. **手动数据更新** (US5)
-
----
-
-## 🐛 已知问题
-
-1. ~~中文搜索不精确~~ → ✅ 已修复（使用 contains + startsWith）
-2. 需要添加 K线历史数据
-3. 需要实现技术指标计算
-
----
-
-## 📚 快速链接
-
-- **API 文档**: http://localhost:3000/api-docs
-- **前端应用**: http://localhost:5173
-- **详细文档**: [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md)
-- **NVM 指南**: [docs/NVM_GUIDE.md](docs/NVM_GUIDE.md)
-- **任务列表**: [specs/001-stock-analysis-tool/tasks.md](specs/001-stock-analysis-tool/tasks.md)
-
----
-
-## 🆘 故障排查
-
-### 后端无法启动？
-
-```bash
-# 1. 检查 Node.js 版本
-node --version  # 必须是 v20.19.5
-
-# 2. 切换版本
-nvm use
-
-# 3. 重新生成 Prisma Client
-cd backend && pnpm prisma generate
-
-# 4. 重启服务
-pnpm run start:dev
-```
-
-### 前端无法访问 API？
-
-```bash
-# 检查 .env 配置
-cat frontend/.env
-# 应该是: VITE_API_BASE_URL=http://localhost:3000/api/v1
-
-# 检查 backend 是否运行
-curl http://localhost:3000/api/v1/health
-```
-
-### Python Bridge 不工作？
-
-```bash
-# 激活虚拟环境
-cd bridge && source venv/bin/activate
-
-# 测试健康检查
-echo '{}' | python health_check.py
-
-# 测试 KDJ 计算
-echo '{"high":[10,11,12],"low":[9,10,11],"close":[9.5,10.5,11.5],"period":3}' | python calculate_kdj.py
-```
-
----
-
-**提示**: 本文件会持续更新项目状态，建议经常查看！
+**最后更新**: 2026-02-28 17:25  
+**当前状态**: ✅ Phase 7 完成，收藏功能可用！  
+**下一步**: Phase 8 (绘图工具) 或 Phase 5 (数据更新)

@@ -1,27 +1,25 @@
-/**
- * 周期切换组件
- * 
- * 日K/周K切换
- */
+import { Radio, Card } from 'antd';
+import type { RadioChangeEvent } from 'antd';
+import { useChartStore, type Period } from '../../store/chart.store';
 
-import { Radio } from 'antd';
-import type { Period } from '../../types/stock';
+export function PeriodToggle() {
+  const { period, setPeriod } = useChartStore();
 
-interface PeriodToggleProps {
-  value: Period;
-  onChange: (period: Period) => void;
-}
+  const handleChange = (e: RadioChangeEvent) => {
+    setPeriod(e.target.value as Period);
+  };
 
-export function PeriodToggle({ value, onChange }: PeriodToggleProps) {
   return (
-    <Radio.Group
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      buttonStyle="solid"
-      size="large"
+    <Card 
+      title="周期" 
+      size="small" 
+      style={{ marginBottom: 16 }}
+      bodyStyle={{ padding: 12 }}
     >
-      <Radio.Button value="daily">日K</Radio.Button>
-      <Radio.Button value="weekly">周K</Radio.Button>
-    </Radio.Group>
+      <Radio.Group value={period} onChange={handleChange} buttonStyle="solid">
+        <Radio.Button value="daily">日线</Radio.Button>
+        <Radio.Button value="weekly">周线</Radio.Button>
+      </Radio.Group>
+    </Card>
   );
 }
