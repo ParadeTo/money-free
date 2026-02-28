@@ -1,0 +1,107 @@
+# === Node.js / JavaScript / TypeScript ===
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+.cache/
+.parcel-cache/
+.vite/
+
+# Dependency directories
+jspm_packages/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# Logs
+*.log
+logs/
+
+# TypeScript
+*.tsbuildinfo
+.tscache/
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+ENV/
+env/
+.env
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# === Database ===
+# SQLite databases (exclude from git, keep in data/)
+data/*.db
+data/*.db-shm
+data/*.db-wal
+*.sqlite
+*.sqlite3
+*.db
+
+# === IDE and Editors ===
+.DS_Store
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+Thumbs.db
+
+# === Testing ===
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+.playwright/
+
+# === Temporary files ===
+*.tmp
+*.temp
+.cache/
+
+# === Docker ===
+.dockerignore
+
+# === OS ===
+.DS_Store
+Thumbs.db

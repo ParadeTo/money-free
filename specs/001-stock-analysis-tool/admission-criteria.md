@@ -34,81 +34,119 @@
 
 ### 1. 初始化筛选
 
-```python
-# scripts/fetch_and_filter_stocks.py
+```typescript
+// backend/src/scripts/init-stocks.ts
 
-from datetime import datetime, timedelta
+import { PrismaClient } from '@prisma/client';
+import { ADMISSION_CRITERIA } from '../config/admission.config';
 
-def apply_admission_criteria(stocks):
-    """应用准入标准筛选股票"""
-    admitted_stocks = []
+const prisma = new PrismaClient();
+
+async function applyAdmissionCriteria(stocks: any[]): Promise<any[]> {
+  const admittedStocks = [];
+  
+  for (const stock of stocks) {
+    let admissionStatus = 'active';
+    let rejectionReason = '';
     
-    for stock in stocks:
-        # 检查1: 市值 > 50亿
-        if stock.market_cap < 5_000_000_000:
-            stock.admission_status = 'rejected'
-            stock.rejection_reason = '市值不足50亿'
-            continue
-        
-        # 检查2: 日均成交额 > 1000万 (最近30天)
-        if stock.avg_amount_30d < 10_000_000:
-            stock.admission_status = 'rejected'
-            stock.rejection_reason = '流动性不足'
-            continue
-        
-        # 检查3: 排除ST股票
-        if 'ST' in stock.name or '*ST' in stock.name:
-            stock.admission_status = 'rejected'
-            stock.rejection_reason = 'ST股票'
-            continue
-        
-        # 检查4: 上市时间 > 5年
-        list_years = (datetime.now().date() - stock.list_date).days / 365
-        if list_years < 5:
-            stock.admission_status = 'rejected'
-            stock.rejection_reason = f'上市不足5年（仅{list_years:.1f}年）'
-            continue
-        
-        # 通过所有检查
-        stock.admission_status = 'admitted'
-        admitted_stocks.append(stock)
+    // 检查1: 市值 > 50亿（单位：亿元）
+    if (stock.market_cap < 50) {
+      admissionStatus = 'inactive';
+      rejectionReason = '市值不足50亿';
+      continue;
+    }
     
-    return admitted_stocks
+    // 检查2: 日均成交额 > 1000万（单位：万元）
+    if (stock.avg_turnover < 1000) {
+      admissionStatus = 'inactive';
+      rejectionReason = '流动性不足';
+      continue;
+    }
+    
+    // 检查3: 排除ST股票
+    if (stock.name.includes('ST') || stock.name.includes('*ST')) {
+      admissionStatus = 'inactive';
+      rejectionReason = 'ST股票';
+      continue;
+    }
+    
+    // 检查4: 上市时间 > 5年
+    const listYears = (Date.now() - new Date(stock.list_date).getTime()) / (365 * 24 * 60 * 60 * 1000);
+    if (listYears < 5) {
+      admissionStatus = 'inactive';
+      rejectionReason = `上市不足5年（仅${listYears.toFixed(1)}年）`;
+      continue;
+    }
+    
+    // 通过所有检查
+    admittedStocks.push({
+      ...stock,
+      admissionStatus: 'active'
+    });
+  }
+  
+  return admittedStocks;
+}
 ```
 
 ### 2. 定期重新评估
 
 **每月1日自动执行**:
 
-```python
-# scripts/monthly_admission_review.py
+```typescript
+// backend/src/jobs/monthly-admission-review.service.ts
 
-def monthly_review():
-    """每月重新评估所有股票的准入标准"""
+@Injectable()
+export class MonthlyAdmissionReviewService {
+  private readonly logger = new Logger(MonthlyAdmissionReviewService.name);
+
+  constructor(
+    private readonly prisma: PrismaClient,
+    private readonly stockService: StockService,
+  ) {}
+
+  async monthlyReview(): Promise<void> {
+    this.logger.log('开始每月准入标准重新评估');
     
-    # 1. 更新所有股票的市值和成交额数据
-    update_stock_metrics()
+    // 1. 更新所有股票的市值和成交额数据
+    await this.stockService.updateStockMetrics();
     
-    # 2. 重新评估现有股票
-    for stock in get_all_stocks():
-        old_status = stock.admission_status
-        new_status = check_admission(stock)
-        
-        if old_status == 'admitted' and new_status == 'rejected':
-            # 曾经符合，现在不符合
-            stock.admission_status = 'rejected'
-            log_warning(f"Stock {stock.code} no longer meets criteria")
-            # 保留历史数据，不删除
-        
-        elif old_status == 'rejected' and new_status == 'admitted':
-            # 曾经不符合，现在符合
-            stock.admission_status = 'admitted'
-            log_info(f"Stock {stock.code} now meets criteria")
-            # 开始下载历史数据
-            fetch_historical_data(stock.code)
+    // 2. 重新评估现有股票
+    const allStocks = await this.prisma.stock.findMany();
     
-    # 3. 检查新上市股票
-    check_new_listings()
+    for (const stock of allStocks) {
+      const oldStatus = stock.admissionStatus;
+      const newStatus = this.checkAdmission(stock);
+      
+      if (oldStatus === 'active' && newStatus === 'inactive') {
+        // 曾经符合，现在不符合
+        await this.prisma.stock.update({
+          where: { stockCode: stock.stockCode },
+          data: { admissionStatus: 'inactive' }
+        });
+        this.logger.warn(`股票 ${stock.stockCode} 不再符合准入标准`);
+        // 保留历史数据，不删除
+      } else if (oldStatus === 'inactive' && newStatus === 'active') {
+        // 曾经不符合，现在符合
+        await this.prisma.stock.update({
+          where: { stockCode: stock.stockCode },
+          data: { admissionStatus: 'active' }
+        });
+        this.logger.log(`股票 ${stock.stockCode} 现在符合准入标准`);
+        // 开始下载历史数据
+        await this.stockService.fetchHistoricalData(stock.stockCode);
+      }
+    }
+    
+    // 3. 检查新上市股票
+    await this.checkNewListings();
+  }
+
+  private checkAdmission(stock: Stock): 'active' | 'inactive' {
+    // 使用 admission.config.ts 中的 checkAdmission 函数
+    return checkAdmission(stock) ? 'active' : 'inactive';
+  }
+}
 ```
 
 ---
@@ -175,14 +213,44 @@ def monthly_review():
 
 如果需要调整准入标准（放宽或收紧），修改配置文件：
 
-```python
-# backend/src/config/admission.py
+```typescript
+// backend/src/config/admission.config.ts
 
-ADMISSION_CRITERIA = {
-    "market_cap_min": 5_000_000_000,      # 最小市值（元）
-    "avg_amount_30d_min": 10_000_000,     # 最小日均成交额（元）
-    "exclude_st": True,                    # 是否排除ST股票
-    "min_listing_years": 5,                # 最小上市年限
+export const ADMISSION_CRITERIA = {
+  marketCapMin: 50_0000_0000,        // 最小市值（元）= 50亿
+  avgAmount30dMin: 1000_0000,        // 最小日均成交额（元）= 1000万
+  excludeST: true,                   // 是否排除ST股票
+  minListingYears: 5,                // 最小上市年限
+};
+
+export function checkAdmission(stock: {
+  marketCap: number;
+  avgTurnover: number;
+  stockCode: string;
+  listDate: Date;
+}): boolean {
+  // 1. 检查市值
+  if (stock.marketCap < ADMISSION_CRITERIA.marketCapMin / 1e8) {
+    return false; // marketCap 单位是亿元
+  }
+  
+  // 2. 检查成交额
+  if (stock.avgTurnover < ADMISSION_CRITERIA.avgAmount30dMin / 1e4) {
+    return false; // avgTurnover 单位是万元
+  }
+  
+  // 3. 排除 ST 股票
+  if (ADMISSION_CRITERIA.excludeST && stock.stockCode.includes('ST')) {
+    return false;
+  }
+  
+  // 4. 检查上市年限
+  const listingYears = new Date().getFullYear() - stock.listDate.getFullYear();
+  if (listingYears < ADMISSION_CRITERIA.minListingYears) {
+    return false;
+  }
+  
+  return true;
 }
 ```
 

@@ -84,7 +84,7 @@ TUSHARE_TOKEN=your-actual-token-here
 
 ```bash
 cd backend
-python scripts/test_tushare_connection.py
+npm run test:tushare
 ```
 
 成功输出:
@@ -95,16 +95,64 @@ python scripts/test_tushare_connection.py
 ✓ 当前积分: 120
 ```
 
+**Node.js 实现示例**:
+
+```typescript
+// backend/src/services/datasource/tushare.service.ts
+import { Injectable, Logger } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
+import { firstValueFrom } from 'rxjs';
+
+@Injectable()
+export class TushareService {
+  private readonly logger = new Logger(TushareService.name);
+  private readonly baseURL = 'http://api.waditu.com';
+  private readonly token: string;
+
+  constructor(
+    private readonly http: HttpService,
+    private readonly config: ConfigService
+  ) {
+    this.token = this.config.get<string>('TUSHARE_TOKEN');
+  }
+
+  async getDailyKLine(tsCode: string, startDate: string, endDate: string) {
+    const response = await firstValueFrom(
+      this.http.post(this.baseURL, {
+        api_name: 'daily',
+        token: this.token,
+        params: { ts_code: tsCode, start_date: startDate, end_date: endDate },
+        fields: 'ts_code,trade_date,open,high,low,close,vol,amount'
+      })
+    );
+    
+    if (response.data.code !== 0) {
+      throw new Error(`Tushare API error: ${response.data.msg}`);
+    }
+    
+    return response.data.data.items;
+  }
+}
+```
+
 ---
 
-## 2. AkShare 配置 (备用数据源)
+## 2. AkShare 配置 (备用数据源 - Python Bridge)
 
 ### 2.1 安装
 
-AkShare 已包含在 `requirements.txt` 中:
+AkShare 通过 Python Bridge 调用，需要在 `bridge/` 目录安装:
 
 ```bash
-pip install akshare
+cd bridge
+pip install -r requirements.txt
+```
+
+**requirements.txt** 包含:
+```txt
+akshare==1.12.0
+pandas==2.1.0
 ```
 
 ### 2.2 配置
@@ -114,7 +162,39 @@ pip install akshare
 ### 2.3 验证
 
 ```bash
-python scripts/test_akshare_connection.py
+# 测试 Python Bridge
+cd bridge
+python akshare_fetcher.py '{"code":"600519","start":"2024-01-01","end":"2024-12-31"}'
+```
+
+**Node.js 调用示例**:
+
+```typescript
+// backend/src/services/datasource/akshare.service.ts
+import { Injectable, Logger } from '@nestjs/common';
+import { PythonBridgeService } from '../python-bridge/python-bridge.service';
+
+@Injectable()
+export class AkShareService {
+  private readonly logger = new Logger(AkShareService.name);
+
+  constructor(private readonly bridge: PythonBridgeService) {}
+
+  async getDailyKLine(stockCode: string, startDate: string, endDate: string) {
+    try {
+      const result = await this.bridge.execute('akshare_fetcher.py', {
+        code: stockCode,
+        start: startDate,
+        end: endDate
+      });
+      
+      return result;
+    } catch (error) {
+      this.logger.error(`AkShare fetch failed: ${error.message}`);
+      throw error;
+    }
+  }
+}
 ```
 
 ---
@@ -132,30 +212,47 @@ python scripts/test_akshare_connection.py
 
 ### 3.2 降级流程
 
-```python
-# 伪代码示例
-async def fetch_stock_data(stock_code):
-    # 1. 尝试 Tushare Pro (主数据源)
-    try:
-        data = await tushare_client.fetch(stock_code)
-        log_success(source='tushare', stock_code=stock_code)
-        return normalize(data, source='tushare')
-    
-    except QuotaExceeded:
-        log_warning("Tushare quota exceeded, switching to AkShare")
-    
-    except APIError as e:
-        log_error(f"Tushare API error: {e}, switching to AkShare")
-    
-    # 2. 降级到 AkShare (备用数据源)
-    try:
-        data = await akshare_client.fetch(stock_code)
-        log_success(source='akshare', stock_code=stock_code)
-        return normalize(data, source='akshare')
-    
-    except Exception as e:
-        log_error(f"All data sources failed: {e}")
-        raise DataSourceUnavailable()
+**Node.js + TypeScript 实现示例**:
+
+```typescript
+// backend/src/services/datasource/datasource-manager.service.ts
+async fetchStockData(stockCode: string, startDate: string, endDate: string) {
+  // 1. 尝试 Tushare Pro (主数据源 - HTTP 直接调用)
+  try {
+    const data = await this.tushare.getDailyKLine(stockCode, startDate, endDate);
+    this.logger.log(`Success: Tushare Pro | ${stockCode}`);
+    return this.normalizeData(data, 'tushare');
+  } catch (error) {
+    if (error.message.includes('quota')) {
+      this.logger.warn('Tushare quota exceeded, switching to AkShare');
+    } else {
+      this.logger.error(`Tushare API error: ${error.message}, switching to AkShare`);
+    }
+  }
+  
+  // 2. 降级到 AkShare (备用数据源 - Python Bridge)
+  try {
+    const data = await this.akshare.getDailyKLine(stockCode, startDate, endDate);
+    this.logger.log(`Success: AkShare | ${stockCode}`);
+    return this.normalizeData(data, 'akshare');
+  } catch (error) {
+    this.logger.error(`All data sources failed: ${error.message}`);
+    throw new DataSourceUnavailableException(stockCode);
+  }
+}
+
+private normalizeData(data: any[], source: 'tushare' | 'akshare') {
+  return data.map(item => ({
+    date: item.trade_date || item.date,
+    open: parseFloat(item.open),
+    high: parseFloat(item.high),
+    low: parseFloat(item.low),
+    close: parseFloat(item.close),
+    volume: parseFloat(item.vol || item.volume),
+    amount: parseFloat(item.amount),
+    source
+  }));
+}
 ```
 
 ### 3.3 恢复机制

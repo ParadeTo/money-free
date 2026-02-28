@@ -1,0 +1,33 @@
+{
+  "name": "stock-analysis-tool",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Stock Analysis Tool - Investment Platform with Technical Indicators",
+  "keywords": [
+    "stock",
+    "analysis",
+    "technical-indicators",
+    "k-line",
+    "investment"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter backend dev & pnpm --filter frontend dev",
+    "dev:backend": "pnpm --filter backend dev",
+    "dev:frontend": "pnpm --filter frontend dev",
+    "build": "pnpm -r build",
+    "build:backend": "pnpm --filter backend build",
+    "build:frontend": "pnpm --filter frontend build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "format": "pnpm -r format",
+    "clean": "pnpm -r clean && rm -rf node_modules"
+  },
+  "engines": {
+    "node": ">=20.19.5 <21.0.0",
+    "pnpm": ">=9.6.0"
+  },
+  "packageManager": "pnpm@9.6.0",
+  "volta": {
+    "node": "20.19.5"
+  }
+}

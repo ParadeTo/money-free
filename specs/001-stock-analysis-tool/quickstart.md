@@ -1,501 +1,722 @@
-# 快速开始指南
+# 快速开始指南：股票分析工具
 
-**项目**: 股票分析工具  
-**日期**: 2026-02-28  
-**目标**: 帮助开发者在本地快速搭建开发环境并运行项目
+**Branch**: `001-stock-analysis-tool` | **Date**: 2026-02-28 | **Phase**: 1 (Design)
+
+## 概述
+
+本指南帮助开发者快速搭建股票分析工具的开发环境。项目采用 Node.js (Nest.js) 后端 + Python Bridge + React 前端的混合架构。
+
+**技术栈**:
+- **后端**: Node.js 18+, Nest.js 10+, TypeScript, Prisma, SQLite
+- **Python Bridge**: Python 3.11+, pandas-ta, akshare
+- **前端**: React 18+, TypeScript, Vite, TradingView Lightweight Charts
+- **任务队列**: Bull (Redis) 或 node-cron
 
 ---
 
 ## 前置要求
 
-### 必需软件
+### 必需
 
-- **Python**: 3.11 或更高版本
-  ```bash
-  python --version  # 应输出 Python 3.11.x 或更高
-  ```
+- **Node.js**: >= 18.0.0 LTS
+- **npm** 或 **pnpm**: >= 9.0.0
+- **Python**: >= 3.11
+- **pip**: >= 23.0
+- **Git**: 最新版本
 
-- **Node.js**: 18.x 或更高版本
-  ```bash
-  node --version  # 应输出 v18.x.x 或更高
-  ```
+### 可选（生产环境推荐）
 
-- **npm**: 9.x 或更高版本（或使用 pnpm/yarn）
-  ```bash
-  npm --version  # 应输出 9.x.x 或更高
-  ```
-
-- **Git**: 用于版本控制
-
-### 推荐工具
-
-- **VS Code**: 推荐的代码编辑器
-  - 推荐插件：
-    - Python (ms-python.python)
-    - Pylance (ms-python.vscode-pylance)
-    - ESLint (dbaeumer.vscode-eslint)
-    - Prettier (esbenp.prettier-vscode)
-- **Postman** 或 **Insomnia**: 用于 API 测试
+- **Redis**: >= 7.0（用于 Bull 任务队列）
+- **Docker**: >= 20.10（用于容器化部署）
 
 ---
 
-## 项目克隆
+## 环境搭建
+
+### 1. 克隆仓库
 
 ```bash
-# 克隆仓库
-git clone <仓库地址>
+git clone <repository-url>
 cd money-free
-
-# 切换到特性分支
 git checkout 001-stock-analysis-tool
 ```
 
 ---
 
-## 后端设置
+### 2. 后端设置 (Node.js + Nest.js)
 
-### 1. 创建虚拟环境
+#### 2.1 安装依赖
 
 ```bash
 cd backend
-
-# 创建虚拟环境
-python -m venv venv
-
-# 激活虚拟环境（macOS/Linux）
-source venv/bin/activate
-
-# 激活虚拟环境（Windows）
-venv\Scripts\activate
+npm install
 ```
 
-### 2. 安装依赖
+#### 2.2 配置环境变量
+
+创建 `.env` 文件（基于 `.env.example`）:
 
 ```bash
-# 安装 Python 依赖
-pip install --upgrade pip
+cp .env.example .env
+```
+
+编辑 `.env`:
+
+```env
+# 数据库
+DATABASE_URL="file:../data/stocks.db"
+
+# JWT 认证
+JWT_SECRET="your-secret-key-change-in-production"
+JWT_EXPIRES_IN="7d"
+
+# Tushare Pro
+TUSHARE_TOKEN="your-tushare-token-here"
+
+# Redis（用于 Bull 任务队列，可选）
+REDIS_URL="redis://localhost:6379"
+
+# 日志级别
+LOG_LEVEL="debug"
+
+# API 端口
+PORT=3000
+
+# CORS 允许的前端域名
+CORS_ORIGIN="http://localhost:5173"
+```
+
+#### 2.3 注册 Tushare Pro
+
+**重要**: 数据获取依赖 Tushare Pro API
+
+1. 访问 [https://tushare.pro/register](https://tushare.pro/register) 注册账户
+2. 实名认证后获取 **token**
+3. 将 token 填入 `.env` 文件的 `TUSHARE_TOKEN`
+4. 免费版额度限制：每分钟200次，每天10000次
+
+**验证 token**:
+```bash
+npm run test:tushare
+```
+
+#### 2.4 数据库初始化
+
+```bash
+# 生成 Prisma Client
+npx prisma generate
+
+# 创建并应用迁移
+npx prisma migrate dev --name init
+
+# 初始化管理员用户
+npm run seed
+```
+
+**验证数据库**:
+```bash
+npx prisma studio
+# 打开浏览器查看 http://localhost:5555
+```
+
+---
+
+### 3. Python Bridge 设置
+
+#### 3.1 创建虚拟环境
+
+```bash
+cd bridge
+python3 -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+```
+
+#### 3.2 安装 Python 依赖
+
+```bash
 pip install -r requirements.txt
 ```
 
-**requirements.txt** 内容（参考）:
+**requirements.txt** 内容:
+
 ```txt
-fastapi==0.109.0
-uvicorn[standard]==0.27.0
-sqlalchemy==2.0.25
-pydantic==2.5.0
-pandas==2.2.0
+pandas==2.1.0
 pandas-ta==0.3.14b
-tushare==1.4.3
-akshare==1.13.0
-pyjwt==2.8.0
-bcrypt==4.1.2
-apscheduler==3.10.4
-python-multipart==0.0.6
-pytest==7.4.4
-pytest-asyncio==0.23.3
-httpx==0.26.0
+akshare==1.12.0
+tushare==1.2.89
 ```
 
-### 3. 配置环境变量
+#### 3.3 验证 Python Bridge
 
 ```bash
-# 创建 .env 文件
-cp .env.example .env
+# 测试 KDJ 计算
+python calculate_kdj.py '{"high":[10,11,12,11,10],"low":[9,10,11,10,9],"close":[9.5,10.5,11.5,10.5,9.5]}'
 
-# 编辑 .env 文件
-nano .env
+# 测试 AkShare 数据获取（需要网络）
+python akshare_fetcher.py '{"code":"600519","start":"2024-01-01","end":"2024-12-31"}'
 ```
 
-**.env** 示例内容:
+---
+
+### 4. 前端设置 (React + Vite)
+
+#### 4.1 安装依赖
+
 ```bash
-# Tushare Pro Token（从 https://tushare.pro 获取）
-TUSHARE_TOKEN=your_tushare_token_here
-
-# SQLite 数据库路径
-DATABASE_PATH=../data/stocks.db
-
-# JWT 密钥（随机生成）
-SECRET_KEY=your-secret-key-here
-
-# 管理员账户密码（默认 admin）
-ADMIN_PASSWORD=admin
-
-# 环境（development/production）
-ENVIRONMENT=development
-
-# 日志级别
-LOG_LEVEL=INFO
+cd frontend
+npm install
 ```
 
-**获取 Tushare Token**:
-1. 访问 [Tushare Pro](https://tushare.pro)
-2. 注册账户并登录
-3. 在"个人主页"中找到"接口Token"
-4. 复制Token并填入 `.env` 文件
+#### 4.2 配置环境变量
 
-### 4. 初始化数据库
+创建 `.env.local`:
 
 ```bash
-# 创建数据目录
-mkdir -p ../data
+cp .env.example .env.local
+```
 
-# 运行数据库初始化脚本
-python -m scripts.init_stocks
+编辑 `.env.local`:
 
-# 可选：获取历史K线数据（耗时较长，约30分钟-1小时）
-python -m scripts.fetch_kline_data
+```env
+VITE_API_BASE_URL=http://localhost:3000/api/v1
+```
 
-# 可选：计算技术指标（耗时约10-20分钟）
-python -m scripts.calculate_indicators
+---
+
+## 数据初始化
+
+### 1. 股票列表初始化
+
+获取符合准入标准的股票（约1000只）:
+
+```bash
+cd backend
+npm run script:init-stocks
+```
+
+**预计时间**: 2-3分钟
+
+**输出示例**:
+```
+✓ Fetched 5000 stocks from Tushare
+✓ Applied admission criteria
+✓ 1023 stocks admitted
+✓ Saved to database
+```
+
+---
+
+### 2. 历史K线数据下载
+
+下载近20年的日K线数据:
+
+```bash
+npm run script:fetch-klines
+```
+
+**预计时间**: 30-60分钟（取决于网络和API限额）
+
+**参数**:
+- `--stocks`: 股票数量限制（默认全部）
+- `--start-date`: 开始日期（默认20年前）
+- `--end-date`: 结束日期（默认今天）
+
+**示例**:
+```bash
+# 只下载前10只股票用于测试
+npm run script:fetch-klines -- --stocks=10
+
+# 指定日期范围
+npm run script:fetch-klines -- --start-date=2020-01-01 --end-date=2024-12-31
 ```
 
 **注意**: 
-- 首次运行 `fetch_kline_data` 会下载约1000只股票近20年的历史数据，需要较长时间
-- 如果不运行数据初始化脚本，可以使用测试数据库（后续提供）
-
-### 5. 启动后端服务
-
-```bash
-# 开发模式（热重载）
-uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
-
-# 或使用简化命令（如果配置了 Makefile）
-make dev
-```
-
-后端服务将在 `http://localhost:8000` 启动。
-
-**验证后端运行**:
-- 访问 API 文档：`http://localhost:8000/docs` (Swagger UI)
-- 访问健康检查：`http://localhost:8000/health`
+- Tushare 免费版有限额限制，建议分批执行
+- 如果遇到限额，脚本会自动降级到 AkShare
 
 ---
 
-## 前端设置
+### 3. 技术指标计算
 
-### 1. 安装依赖
-
-```bash
-cd ../frontend
-
-# 使用 npm
-npm install
-
-# 或使用 pnpm（推荐，更快）
-pnpm install
-
-# 或使用 yarn
-yarn install
-```
-
-**package.json** 依赖（参考）:
-```json
-{
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.21.0",
-    "lightweight-charts": "^4.1.0",
-    "axios": "^1.6.5",
-    "zustand": "^4.4.7"
-  },
-  "devDependencies": {
-    "@types/react": "^18.2.48",
-    "@types/react-dom": "^18.2.18",
-    "@vitejs/plugin-react": "^4.2.1",
-    "vite": "^5.0.11",
-    "typescript": "^5.3.3",
-    "eslint": "^8.56.0",
-    "prettier": "^3.2.4",
-    "vitest": "^1.2.0",
-    "@testing-library/react": "^14.1.2"
-  }
-}
-```
-
-### 2. 配置环境变量
+批量计算所有技术指标:
 
 ```bash
-# 创建 .env 文件
-cp .env.example .env.local
-
-# 编辑 .env.local 文件
-nano .env.local
+npm run script:calculate-indicators
 ```
 
-**.env.local** 示例内容:
+**预计时间**: 20-40分钟
+
+**指标计算顺序**:
+1. MA (移动平均线)
+2. KDJ (随机指标)
+3. RSI (相对强弱指标)
+4. Volume MA (成交量均线)
+5. Amount MA (成交额均线)
+6. Week 52 Markers (52周高低点)
+
+**验证**:
 ```bash
-# 后端 API 地址
-VITE_API_BASE_URL=http://localhost:8000/api/v1
+# 检查数据库
+npx prisma studio
 
-# 环境
-VITE_ENVIRONMENT=development
+# 查看指标数量
+npm run script:check-indicators
 ```
-
-### 3. 启动前端开发服务器
-
-```bash
-# 启动 Vite 开发服务器
-npm run dev
-
-# 或
-pnpm dev
-
-# 或
-yarn dev
-```
-
-前端应用将在 `http://localhost:5173` 启动（Vite 默认端口）。
-
-**验证前端运行**:
-- 访问 `http://localhost:5173`
-- 应该看到登录页面
 
 ---
 
-## 完整开发流程
+## 运行开发环境
 
-### 1. 启动后端和前端
+### 方式 1: 手动启动（推荐用于开发）
 
-**选项 A: 分别启动（推荐用于调试）**
+#### 1. 启动 Redis（如果使用 Bull）
 
 ```bash
-# Terminal 1: 启动后端
+# macOS (Homebrew)
+brew services start redis
+
+# Linux
+sudo systemctl start redis
+
+# Docker
+docker run -d -p 6379:6379 redis:7-alpine
+```
+
+#### 2. 启动后端服务
+
+```bash
 cd backend
-source venv/bin/activate
-uvicorn src.main:app --reload
+npm run start:dev
+```
 
-# Terminal 2: 启动前端
+**访问**: `http://localhost:3000`
+
+**Swagger 文档**: `http://localhost:3000/api-docs`
+
+#### 3. 启动前端服务
+
+```bash
 cd frontend
 npm run dev
 ```
 
-**选项 B: 使用 Makefile（如果配置）**
-
-```bash
-# 根目录
-make dev-all  # 同时启动后端和前端
-```
-
-### 2. 登录系统
-
-1. 打开浏览器访问 `http://localhost:5173`
-2. 使用预设账户登录：
-   - 用户名：`admin`
-   - 密码：`admin`
-3. 登录成功后进入主页面
-
-### 3. 测试核心功能
-
-#### 查看K线图
-1. 在搜索框输入股票代码（如 `600519`）或股票名称（如 `茅台`）
-2. 点击搜索结果中的股票
-3. 查看K线图、添加技术指标（MA、KDJ、RSI等）
-4. 切换日K/周K周期
-
-#### 选股筛选
-1. 进入"选股"页面
-2. 添加筛选条件（如"RSI < 30"）
-3. 点击"筛选"查看结果
-4. 点击"保存为策略"保存筛选方案
-
-#### 收藏股票
-1. 在K线图页面点击"添加收藏"
-2. 进入"收藏列表"查看已收藏股票
-3. 拖动调整收藏顺序
-
-#### 图表绘图
-1. 在K线图页面选择绘图工具（趋势线、水平线等）
-2. 在图表上点击绘制
-3. 刷新页面验证绘图对象是否保存
+**访问**: `http://localhost:5173`
 
 ---
 
-## 运行测试
+### 方式 2: Docker Compose（推荐用于生产）
+
+```bash
+# 构建并启动所有服务
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f
+
+# 停止服务
+docker-compose down
+```
+
+**docker-compose.yml**:
+
+```yaml
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=file:/app/data/stocks.db
+      - TUSHARE_TOKEN=${TUSHARE_TOKEN}
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ./data:/app/data
+      - ./bridge:/app/bridge
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:3000/api/v1
+
+volumes:
+  redis-data:
+```
+
+---
+
+## 测试
 
 ### 后端测试
 
+#### 单元测试
+
 ```bash
 cd backend
-
-# 运行所有测试
-pytest
-
-# 运行单元测试
-pytest tests/unit
-
-# 运行集成测试
-pytest tests/integration
-
-# 查看测试覆盖率
-pytest --cov=src --cov-report=html
+npm run test
 ```
+
+#### 集成测试
+
+```bash
+npm run test:e2e
+```
+
+#### 测试覆盖率
+
+```bash
+npm run test:cov
+```
+
+**目标**: 核心业务逻辑覆盖率 > 80%
+
+---
 
 ### 前端测试
 
+#### 组件测试
+
 ```bash
 cd frontend
-
-# 运行所有测试
 npm run test
+```
 
-# 运行测试（监听模式）
-npm run test:watch
+#### E2E 测试（Playwright）
 
-# 查看测试覆盖率
-npm run test:coverage
+```bash
+npm run test:e2e
 ```
 
 ---
 
 ## 常见问题
 
-### 1. Tushare API 积分不足
+### 1. Tushare API 限额超出
 
-**问题**: 运行 `fetch_kline_data` 时提示"积分不足"
-
-**解决方案**:
-- Tushare Pro 新用户每日有调用次数限制
-- 升级账户等级获得更多积分：https://tushare.pro/document/1?doc_id=13
-- 或使用 AkShare 作为备用数据源（自动降级）
-
-### 2. 数据库文件过大
-
-**问题**: SQLite 文件大小超过预期
+**问题**: `Error: Tushare API limit exceeded`
 
 **解决方案**:
 ```bash
-# 压缩数据库
-sqlite3 ../data/stocks.db "VACUUM;"
-
-# 查看数据库大小
-du -sh ../data/stocks.db
+# 使用 AkShare 备用数据源
+export USE_AKSHARE=true
+npm run script:fetch-klines
 ```
 
-### 3. 前端无法连接后端
-
-**问题**: 前端请求后端 API 失败（CORS 错误）
-
-**解决方案**:
-- 检查后端是否启动：`curl http://localhost:8000/health`
-- 检查 CORS 配置（backend/src/main.py）:
-  ```python
-  from fastapi.middleware.cors import CORSMiddleware
-  
-  app.add_middleware(
-      CORSMiddleware,
-      allow_origins=["http://localhost:5173"],
-      allow_credentials=True,
-      allow_methods=["*"],
-      allow_headers=["*"],
-  )
-  ```
-
-### 4. 图表加载缓慢
-
-**问题**: K线图加载时间超过2秒
-
-**解决方案**:
-- 检查数据库索引是否创建
-- 减少查询的历史数据范围（默认20年可能过多）
-- 使用浏览器开发者工具检查网络请求耗时
-
-### 5. 技术指标计算错误
-
-**问题**: RSI、KDJ 等指标值与第三方工具不一致
-
-**解决方案**:
-- 验证 pandas-ta 版本：`pip show pandas-ta`
-- 检查计算参数是否正确（K=9, D=3, RSI=14）
-- 参考 pandas-ta 文档：https://github.com/twopirllc/pandas-ta
+或者在代码中配置降级策略（已内置）
 
 ---
 
-## 数据备份
+### 2. Python Bridge 找不到
 
-### 备份数据库
+**问题**: `Error: Python script not found`
 
+**解决方案**:
 ```bash
-# 手动备份
-cp ../data/stocks.db ../data/stocks_backup_$(date +%Y%m%d).db
+# 检查 Python 路径
+which python3
 
-# 或使用脚本（如果配置）
-python scripts/backup_database.py
+# 检查 bridge 脚本权限
+cd bridge
+chmod +x *.py
+
+# 测试 bridge
+npm run test:bridge
 ```
 
-### 恢复数据库
+---
+
+### 3. SQLite 数据库锁定
+
+**问题**: `database is locked`
+
+**解决方案**:
+```bash
+# 检查 WAL 模式是否启用
+sqlite3 data/stocks.db "PRAGMA journal_mode;"
+
+# 应该返回 "wal"
+
+# 如果不是，手动启用
+sqlite3 data/stocks.db "PRAGMA journal_mode=WAL;"
+```
+
+---
+
+### 4. 前端无法连接后端
+
+**问题**: `Network Error` 或 `CORS Error`
+
+**解决方案**:
+
+1. 检查后端是否运行:
+   ```bash
+   curl http://localhost:3000/api/v1/health
+   ```
+
+2. 检查 CORS 配置:
+   ```typescript
+   // backend/src/main.ts
+   app.enableCors({
+     origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+     credentials: true
+   });
+   ```
+
+3. 检查前端 API URL:
+   ```typescript
+   // frontend/src/services/api.ts
+   const baseURL = import.meta.env.VITE_API_BASE_URL;
+   console.log('API Base URL:', baseURL);
+   ```
+
+---
+
+### 5. Redis 连接失败
+
+**问题**: `Error connecting to Redis`
+
+**解决方案**:
+
+如果不想使用 Redis，可以切换到 node-cron（简化方案）:
+
+```typescript
+// backend/src/config/queue.config.ts
+export const useRedis = process.env.USE_REDIS === 'true';
+
+if (!useRedis) {
+  // 使用 node-cron
+  import * as cron from 'node-cron';
+  // ...
+}
+```
+
+---
+
+## 开发工作流
+
+### 1. 创建新功能
 
 ```bash
-# 从备份恢复
-cp ../data/stocks_backup_20260228.db ../data/stocks.db
+# 创建功能分支
+git checkout -b feature/your-feature
+
+# 后端：生成模块
+cd backend
+nest g module features/your-feature
+nest g service features/your-feature
+nest g controller features/your-feature
+
+# 前端：创建组件
+cd frontend
+mkdir src/components/YourFeature
+```
+
+### 2. 代码规范
+
+**后端**:
+```bash
+# Lint
+npm run lint
+
+# Format
+npm run format
+
+# Type check
+npm run type-check
+```
+
+**前端**:
+```bash
+# Lint
+npm run lint
+
+# Format
+npm run format
+
+# Type check
+npm run type-check
+```
+
+### 3. 提交代码
+
+```bash
+# 添加更改
+git add .
+
+# 提交
+git commit -m "feat: add your feature"
+
+# 推送
+git push origin feature/your-feature
+```
+
+---
+
+## 性能优化
+
+### 1. 后端优化
+
+#### 启用查询缓存
+
+```typescript
+// backend/src/config/cache.config.ts
+import { CacheModule } from '@nestjs/cache-manager';
+
+@Module({
+  imports: [
+    CacheModule.register({
+      ttl: 300, // 5分钟缓存
+      max: 100
+    })
+  ]
+})
+```
+
+#### 数据库连接池
+
+```typescript
+// backend/src/config/database.config.ts
+export const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL + '?connection_limit=20'
+    }
+  }
+});
+```
+
+---
+
+### 2. 前端优化
+
+#### 代码分割
+
+```typescript
+// frontend/src/router/index.tsx
+const KLineChartPage = lazy(() => import('@/pages/KLineChartPage'));
+const FilterPage = lazy(() => import('@/pages/FilterPage'));
+```
+
+#### Bundle 分析
+
+```bash
+npm run build
+npm run analyze
 ```
 
 ---
 
 ## 部署
 
-### 开发环境 vs 生产环境
+### 开发环境
 
-| 配置项 | 开发环境 | 生产环境 |
-|--------|---------|---------|
-| 后端主机 | 0.0.0.0:8000 | 0.0.0.0:8000 (通过 Nginx 代理) |
-| 前端构建 | `npm run dev` | `npm run build` + Nginx 托管 |
-| 日志级别 | DEBUG | INFO |
-| 错误堆栈 | 显示 | 隐藏 |
-| CORS | 允许 localhost | 限制特定域名 |
+```bash
+# 后端
+cd backend
+npm run start:dev
 
-### 生产环境快速部署（Docker）
+# 前端
+cd frontend
+npm run dev
+```
+
+### 生产环境
+
+```bash
+# 构建后端
+cd backend
+npm run build
+npm run start:prod
+
+# 构建前端
+cd frontend
+npm run build
+# 产物在 dist/ 目录，使用 nginx 或其他静态服务器
+```
+
+### Docker 部署
 
 ```bash
 # 构建镜像
-docker-compose build
+docker build -t stock-analysis-backend ./backend
+docker build -t stock-analysis-frontend ./frontend
 
-# 启动服务
+# 运行
 docker-compose up -d
-
-# 查看日志
-docker-compose logs -f
 ```
 
-**docker-compose.yml** 示例（待实现）:
-```yaml
-version: '3.8'
-services:
-  backend:
-    build: ./backend
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./data:/app/data
-    environment:
-      - TUSHARE_TOKEN=${TUSHARE_TOKEN}
-      - DATABASE_PATH=/app/data/stocks.db
-  
-  frontend:
-    build: ./frontend
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
+---
+
+## 监控和日志
+
+### 后端日志
+
+```bash
+# 查看实时日志
+tail -f backend/logs/app.log
+
+# 查看错误日志
+tail -f backend/logs/error.log
+```
+
+### 健康检查
+
+```bash
+# 后端健康检查
+curl http://localhost:3000/api/v1/health
+
+# 响应示例
+{
+  "status": "ok",
+  "database": "connected",
+  "redis": "connected",
+  "uptime": 3600
+}
 ```
 
 ---
 
 ## 下一步
 
-1. **阅读技术文档**:
-   - [数据模型设计](./data-model.md)
-   - [REST API 契约](./contracts/rest-api.md)
-   - [技术研究报告](./research.md)
+✅ **开发环境搭建完成**
 
-2. **开发任务**:
-   - 查看 [tasks.md](./tasks.md) 了解具体开发任务（Phase 2 生成）
+**建议顺序**:
 
-3. **联系支持**:
-   - 遇到问题时，查看 [常见问题](#常见问题) 章节
-   - 或提交 GitHub Issue
+1. **验证环境**: 运行所有测试，确保通过
+2. **数据初始化**: 至少初始化10只股票的数据用于开发
+3. **功能开发**: 按照 tasks.md 中的 Phase 顺序开发
+4. **测试驱动**: 先写测试，再实现功能（TDD）
+5. **集成测试**: 每个功能完成后进行集成测试
+
+**资源**:
+- [Nest.js 文档](https://docs.nestjs.com/)
+- [Prisma 文档](https://www.prisma.io/docs)
+- [TradingView Lightweight Charts](https://tradingview.github.io/lightweight-charts/)
+- [Tushare Pro API](https://tushare.pro/document/2)
 
 ---
 
-**文档版本**: v1.0  
-**最后更新**: 2026-02-28
+## 联系方式
+
+如有问题，请参考：
+- 项目 README.md
+- API 文档: `http://localhost:3000/api-docs`
+- 数据模型: `specs/001-stock-analysis-tool/data-model.md`
+- 任务清单: `specs/001-stock-analysis-tool/tasks.md`

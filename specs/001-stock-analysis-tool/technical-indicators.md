@@ -411,38 +411,104 @@ for stock in admitted_stocks:
 
 ## 计算性能优化
 
-### 使用TA-Lib库
+### Node.js 原生库实现（推荐）
 
-```python
-import talib
+```typescript
+// backend/src/services/indicators/technical-indicators.service.ts
+import { SMA, RSI, Stochastic } from 'technicalindicators';
 
-# MA计算
-ma50 = talib.MA(close_prices, timeperiod=50)
-ma150 = talib.MA(close_prices, timeperiod=150)
-ma200 = talib.MA(close_prices, timeperiod=200)
+@Injectable()
+export class TechnicalIndicatorsService {
+  // MA 计算
+  calculateMA(closePrices: number[], period: number): number[] {
+    return SMA.calculate({ period, values: closePrices });
+  }
 
-# KDJ计算
-k, d = talib.STOCH(high, low, close, 
-                   fastk_period=9, 
-                   slowk_period=3, 
-                   slowd_period=3)
-j = 3 * k - 2 * d
+  // KDJ 计算
+  calculateKDJ(high: number[], low: number[], close: number[]) {
+    const stochastic = Stochastic.calculate({
+      high,
+      low,
+      close,
+      period: 9,
+      signalPeriod: 3
+    });
+    
+    // 计算 J 值
+    return stochastic.map(item => ({
+      k: item.k,
+      d: item.d,
+      j: 3 * item.k - 2 * item.d
+    }));
+  }
 
-# RSI计算
-rsi = talib.RSI(close_prices, timeperiod=14)
+  // RSI 计算
+  calculateRSI(closePrices: number[], period: number = 14): number[] {
+    return RSI.calculate({ period, values: closePrices });
+  }
+
+  // 52周高低点
+  calculate52WeekMarkers(high: number[], low: number[], dates: string[]) {
+    const window = 260; // 52周 ≈ 260个交易日
+    
+    let highMax = -Infinity;
+    let lowMin = Infinity;
+    let highDate = '';
+    let lowDate = '';
+    
+    for (let i = Math.max(0, high.length - window); i < high.length; i++) {
+      if (high[i] > highMax) {
+        highMax = high[i];
+        highDate = dates[i];
+      }
+      if (low[i] < lowMin) {
+        lowMin = low[i];
+        lowDate = dates[i];
+      }
+    }
+    
+    return { high: highMax, low: lowMin, highDate, lowDate };
+  }
+}
 ```
 
-### 批量计算
+### Python Bridge 实现（可选 - 用于精度验证）
 
 ```python
-# 使用Pandas向量化计算
-df['ma50'] = df['close'].rolling(window=50).mean()
-df['ma150'] = df['close'].rolling(window=150).mean()
-df['ma200'] = df['close'].rolling(window=200).mean()
+# bridge/calculate_indicators.py
+import pandas as pd
+import pandas_ta as ta
 
-# 52周高低点
-df['high_52w'] = df['high'].rolling(window=260).max()
-df['low_52w'] = df['low'].rolling(window=260).min()
+def calculate_ma(close_prices, periods=[50, 150, 200]):
+    df = pd.DataFrame({'close': close_prices})
+    result = {}
+    for period in periods:
+        result[f'ma{period}'] = df['close'].rolling(window=period).mean().tolist()
+    return result
+
+def calculate_kdj(high, low, close):
+    df = pd.DataFrame({'high': high, 'low': low, 'close': close})
+    stoch = ta.stoch(df['high'], df['low'], df['close'], k=9, d=3)
+    k_values = stoch[f'STOCHk_9_3_3'].tolist()
+    d_values = stoch[f'STOCHd_9_3_3'].tolist()
+    j_values = [3 * k - 2 * d for k, d in zip(k_values, d_values)]
+    return {'k': k_values, 'd': d_values, 'j': j_values}
+
+def calculate_rsi(close_prices, period=14):
+    df = pd.DataFrame({'close': close_prices})
+    rsi_values = ta.rsi(df['close'], length=period).tolist()
+    return {'rsi': rsi_values}
+```
+
+**调用 Python Bridge**:
+
+```typescript
+// 仅在需要精度验证时使用
+const result = await this.pythonBridge.execute('calculate_indicators.py', {
+  high: highPrices,
+  low: lowPrices,
+  close: closePrices
+});
 ```
 
 ---

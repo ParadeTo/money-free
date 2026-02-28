@@ -1,590 +1,683 @@
-# 数据模型设计
+# 数据模型：股票分析工具
 
-**项目**: 股票分析工具  
-**日期**: 2026-02-28  
-**来源**: 从 spec.md "关键实体" 章节提取并扩展
+**Branch**: `001-stock-analysis-tool` | **Date**: 2026-02-28 | **Phase**: 1 (Design)
+
+## 概述
+
+本文档定义股票分析工具的数据模型，使用 Prisma ORM 管理 SQLite 数据库。所有模型遵循 TypeScript 类型安全原则，并提供完整的关系映射和索引优化。
 
 ---
 
-## 实体关系图（ERD概述）
+## Prisma Schema
 
-```text
+```prisma
+// backend/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// 1. 股票基础信息
+// ============================================================================
+
+model Stock {
+  stockCode      String         @id @map("stock_code")
+  stockName      String         @map("stock_name")
+  market         String         // 'SH' | 'SZ'
+  industry       String?
+  listDate       DateTime       @map("list_date")
+  marketCap      Float?         @map("market_cap")       // 市值(亿元)
+  avgTurnover    Float?         @map("avg_turnover")     // 日均成交额(万元)
+  admissionStatus String        @default("active") @map("admission_status") // 'active' | 'inactive'
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  // 关系
+  klines         KLineData[]
+  indicators     TechnicalIndicator[]
+  favorites      Favorite[]
+  drawings       Drawing[]
+
+  @@map("stocks")
+  @@index([admissionStatus])
+  @@index([market])
+}
+
+// ============================================================================
+// 2. K线数据
+// ============================================================================
+
+model KLineData {
+  id         Int      @id @default(autoincrement())
+  stockCode  String   @map("stock_code")
+  date       DateTime
+  period     String   // 'daily' | 'weekly'
+  open       Float
+  high       Float
+  low        Float
+  close      Float
+  volume     Float    // 成交量(手)
+  amount     Float    // 成交额(元)
+  source     String   @default("tushare") // 'tushare' | 'akshare'
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // 关系
+  stock      Stock    @relation(fields: [stockCode], references: [stockCode], onDelete: Cascade)
+
+  @@unique([stockCode, date, period])
+  @@index([stockCode, period, date])
+  @@index([date])
+  @@map("kline_data")
+}
+
+// ============================================================================
+// 3. 技术指标
+// ============================================================================
+
+model TechnicalIndicator {
+  id             Int      @id @default(autoincrement())
+  stockCode      String   @map("stock_code")
+  date           DateTime
+  period         String   // 'daily' | 'weekly'
+  indicatorType  String   @map("indicator_type") // 'ma' | 'kdj' | 'rsi' | 'volume' | 'amount' | 'week52_marker'
+  
+  // 指标值(JSON格式存储)
+  // MA: {"ma50": 10.5, "ma150": 12.3, "ma200": 11.8}
+  // KDJ: {"k": 50.2, "d": 48.5, "j": 53.6}
+  // RSI: {"value": 65.4}
+  // Volume: {"volume": 1000000, "ma52w": 800000}
+  // Amount: {"amount": 50000000, "ma52w": 45000000}
+  // Week52Marker: {"high": 15.8, "low": 8.2, "highDate": "2026-01-15", "lowDate": "2025-08-20"}
+  values         String   // JSON string
+  
+  calculatedAt   DateTime @default(now()) @map("calculated_at")
+
+  // 关系
+  stock          Stock    @relation(fields: [stockCode], references: [stockCode], onDelete: Cascade)
+
+  @@unique([stockCode, date, period, indicatorType])
+  @@index([stockCode, period, indicatorType, date])
+  @@map("technical_indicators")
+}
+
+// ============================================================================
+// 4. 用户
+// ============================================================================
+
+model User {
+  userId       String     @id @default(uuid()) @map("user_id")
+  username     String     @unique
+  passwordHash String     @map("password_hash")
+  
+  // 偏好设置(JSON)
+  preferences  String?    // {"defaultPeriod": "daily", "defaultIndicators": ["ma", "volume"]}
+  
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  // 关系
+  favorites    Favorite[]
+  strategies   ScreenerStrategy[]
+  drawings     Drawing[]
+
+  @@map("users")
+}
+
+// ============================================================================
+// 5. 收藏列表
+// ============================================================================
+
+model Favorite {
+  id         Int      @id @default(autoincrement())
+  userId     String   @map("user_id")
+  stockCode  String   @map("stock_code")
+  groupName  String?  @map("group_name")    // 分组名称
+  sortOrder  Int      @default(0) @map("sort_order")  // 排序顺序
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // 关系
+  user       User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  stock      Stock    @relation(fields: [stockCode], references: [stockCode], onDelete: Cascade)
+
+  @@unique([userId, stockCode])
+  @@index([userId, sortOrder])
+  @@map("favorites")
+}
+
+// ============================================================================
+// 6. 选股策略
+// ============================================================================
+
+model ScreenerStrategy {
+  strategyId     String   @id @default(uuid()) @map("strategy_id")
+  userId         String   @map("user_id")
+  strategyName   String   @map("strategy_name")
+  description    String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  user           User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  conditions     FilterCondition[]
+
+  @@index([userId])
+  @@map("screener_strategies")
+}
+
+// ============================================================================
+// 7. 筛选条件
+// ============================================================================
+
+model FilterCondition {
+  id            Int      @id @default(autoincrement())
+  strategyId    String   @map("strategy_id")
+  conditionType String   @map("condition_type") // 'indicator_value' | 'pattern' | 'price_change' | 'volume_change' | 'week_52_high' | 'week_52_low'
+  
+  // 根据 conditionType 使用不同字段
+  indicatorName String?  @map("indicator_name") // 'ma50' | 'kdj_k' | 'rsi' | 'volume' | 'amount'
+  operator      String?  // '>' | '<' | '>=' | '<=' | '='
+  targetValue   Float?   @map("target_value")
+  
+  pattern       String?  // 'kdj_golden_cross' | 'kdj_death_cross' | 'price_above_ma' | 'price_below_ma'
+  
+  sortOrder     Int      @default(0) @map("sort_order")
+
+  // 关系
+  strategy      ScreenerStrategy @relation(fields: [strategyId], references: [strategyId], onDelete: Cascade)
+
+  @@index([strategyId, sortOrder])
+  @@map("filter_conditions")
+}
+
+// ============================================================================
+// 8. 绘图对象
+// ============================================================================
+
+model Drawing {
+  drawingId   String   @id @default(uuid()) @map("drawing_id")
+  userId      String   @map("user_id")
+  stockCode   String   @map("stock_code")
+  period      String   // 'daily' | 'weekly'
+  drawingType String   @map("drawing_type") // 'trend_line' | 'horizontal_line' | 'vertical_line' | 'rectangle'
+  
+  // 坐标数据(JSON)
+  // TrendLine: [{"x": "2026-01-01", "y": 10.5}, {"x": "2026-02-01", "y": 12.3}]
+  // HorizontalLine: [{"y": 10.5}]
+  // VerticalLine: [{"x": "2026-01-15"}]
+  // Rectangle: [{"x1": "2026-01-01", "y1": 10.5, "x2": "2026-02-01", "y2": 12.3}]
+  coordinates String   // JSON string
+  
+  stylePreset String   @default("default") @map("style_preset") // 'default' (blue, 2px)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // 关系
+  user        User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  stock       Stock    @relation(fields: [stockCode], references: [stockCode], onDelete: Cascade)
+
+  @@index([userId, stockCode, period])
+  @@map("drawings")
+}
+
+// ============================================================================
+// 9. 数据更新日志
+// ============================================================================
+
+model UpdateLog {
+  taskId         String   @id @map("task_id")
+  status         String   // 'pending' | 'running' | 'completed' | 'failed'
+  totalStocks    Int      @map("total_stocks")
+  processedStocks Int     @default(0) @map("processed_stocks")
+  successCount   Int      @default(0) @map("success_count")
+  failedCount    Int      @default(0) @map("failed_count")
+  
+  // 错误详情(JSON数组)
+  // [{"stockCode": "600519", "errorReason": "API timeout", "retryResult": "success"}]
+  errorDetails   String?  @map("error_details")
+  
+  startTime      DateTime @default(now()) @map("start_time")
+  endTime        DateTime? @map("end_time")
+
+  @@index([startTime])
+  @@map("update_logs")
+}
+```
+
+---
+
+## 实体关系图(ERD)
+
+```
 ┌─────────────┐
-│   User      │
-│  (预设admin) │
+│    User     │
 └──────┬──────┘
-       │
        │ 1:N
-       ├─────────────────┬─────────────────┬──────────────────┐
-       │                 │                 │                  │
-       ▼                 ▼                 ▼                  ▼
-┌─────────────┐  ┌─────────────┐  ┌──────────────┐  ┌──────────────┐
-│  Favorite   │  │  Strategy   │  │   Drawing    │  │   Session    │
-│  (收藏列表)  │  │ (选股策略)   │  │  (绘图对象)   │  │  (会话令牌)   │
-└──────┬──────┘  └──────┬──────┘  └───────┬──────┘  └──────────────┘
-       │                │                 │
-       │ N:1            │ 1:N             │ N:1
-       │                │                 │
-       ▼                ▼                 ▼
-┌─────────────┐  ┌─────────────┐  ┌─────────────┐
-│   Stock     │  │   Filter    │  │   Stock     │
-│  (股票信息)  │  │ Condition   │  │  (股票信息)  │
-└──────┬──────┘  │  (筛选条件)  │  └─────────────┘
-       │         └─────────────┘
-       │ 1:N
-       │
-       ▼
-┌─────────────┐
-│  KLineData  │
-│  (K线数据)   │
-└──────┬──────┘
-       │ 1:N
-       │
-       ▼
-┌─────────────┐
-│  Indicator  │
-│ (技术指标数据)│
-└─────────────┘
+       ├─────────┬─────────┬─────────┐
+       │         │         │         │
+       ▼ N      ▼ N       ▼ N       ▼ N
+┌──────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐
+│ Favorite │ │Strategy │ │ Drawing │ │UpdateLog│
+└────┬─────┘ └────┬────┘ └────┬────┘ └─────────┘
+     │ N:1        │ 1:N       │ N:1
+     │            ▼            │
+     │      ┌──────────────┐  │
+     │      │FilterCondition│  │
+     │      └──────────────┘  │
+     │                        │
+     └────────┬───────────────┘
+              ▼ N:1
+         ┌────────┐
+         │ Stock  │
+         └───┬────┘
+             │ 1:N
+       ┌─────┴──────┐
+       ▼            ▼
+┌────────────┐ ┌──────────────┐
+│ KLineData  │ │TechnicalIndic│
+└────────────┘ └──────────────┘
 ```
-
----
-
-## 实体定义
-
-### 1. Stock（股票）
-
-**描述**: 代表一只股票的基本信息，仅包含符合准入标准的股票（约1000只）
-
-**字段**:
-
-| 字段名 | 类型 | 约束 | 描述 | 示例值 |
-|--------|------|------|------|--------|
-| `stock_code` | TEXT | PRIMARY KEY | 股票代码（6位数字） | "600519" |
-| `stock_name` | TEXT | NOT NULL | 股票名称 | "贵州茅台" |
-| `market` | TEXT | NOT NULL | 所属市场（SH/SZ） | "SH" |
-| `industry` | TEXT | NULL | 所属行业 | "白酒" |
-| `list_date` | TEXT | NOT NULL | 上市日期（YYYY-MM-DD） | "2001-08-27" |
-| `market_cap` | REAL | NULL | 市值（亿元） | 25000.5 |
-| `avg_turnover` | REAL | NULL | 日均成交额（万元） | 50000.0 |
-| `status` | TEXT | NOT NULL | 准入状态（active/inactive） | "active" |
-| `created_at` | TEXT | NOT NULL | 创建时间 | "2026-02-28T10:00:00Z" |
-| `updated_at` | TEXT | NOT NULL | 更新时间 | "2026-02-28T10:00:00Z" |
-
-**索引**:
-- PRIMARY KEY: `stock_code`
-- INDEX: `idx_stock_status` ON `(status)`
-- INDEX: `idx_stock_market_cap` ON `(market_cap DESC)`
-
-**业务规则**:
-1. 准入标准（`status='active'`时满足）：
-   - `market_cap > 50` 亿元
-   - `avg_turnover > 1000` 万元
-   - `stock_name NOT LIKE '%ST%'` （排除ST股）
-   - 上市时间超过5年（`list_date < CURRENT_DATE - 5年`）
-2. 每月重新评估准入标准，更新 `status` 字段
-3. 不符合标准的股票标记为 `inactive`，但保留历史数据
-
----
-
-### 2. KLineData（K线数据）
-
-**描述**: 代表某个时间点的K线数据，支持日K和周K
-
-**字段**:
-
-| 字段名 | 类型 | 约束 | 描述 | 示例值 |
-|--------|------|------|------|--------|
-| `id` | INTEGER | PRIMARY KEY AUTOINCREMENT | 自增主键 | 1 |
-| `stock_code` | TEXT | NOT NULL, FOREIGN KEY | 股票代码 | "600519" |
-| `date` | TEXT | NOT NULL | 交易日期（YYYY-MM-DD） | "2026-02-28" |
-| `period` | TEXT | NOT NULL | K线周期（daily/weekly） | "daily" |
-| `open` | REAL | NOT NULL | 开盘价 | 1850.00 |
-| `high` | REAL | NOT NULL | 最高价 | 1880.50 |
-| `low` | REAL | NOT NULL | 最低价 | 1845.00 |
-| `close` | REAL | NOT NULL | 收盘价 | 1870.30 |
-| `volume` | INTEGER | NOT NULL | 成交量（手） | 123456 |
-| `turnover` | REAL | NOT NULL | 成交额（元） | 230000000.0 |
-| `created_at` | TEXT | NOT NULL | 创建时间 | "2026-02-28T16:00:00Z" |
-
-**索引**:
-- PRIMARY KEY: `id`
-- UNIQUE: `(stock_code, date, period)`
-- INDEX: `idx_kline_stock_date` ON `(stock_code, date DESC)`
-- INDEX: `idx_kline_date` ON `(date DESC)`
-- INDEX: `idx_kline_period` ON `(period)`
-
-**业务规则**:
-1. 日K数据（`period='daily'`）：存储近20年历史数据（约5000条/股票）
-2. 周K数据（`period='weekly'`）：基于日K数据计算生成，取每周第一个交易日的 `open`、最后一个交易日的 `close`、周内最高 `high`、最低 `low`、累计 `volume` 和 `turnover`
-3. 数据来源：Tushare Pro（主）/ AkShare（备用），经过标准化处理
-4. 每日定时批量更新（T+1日早上6点更新T日数据）
-5. 用户手动触发更新时，重新获取最新交易日数据并覆盖
-
-**关系**:
-- `stock_code` REFERENCES `Stock(stock_code)` ON DELETE CASCADE
-
----
-
-### 3. Indicator（技术指标）
-
-**描述**: 代表计算出的技术指标数据
-
-**字段**:
-
-| 字段名 | 类型 | 约束 | 描述 | 示例值 |
-|--------|------|------|------|--------|
-| `id` | INTEGER | PRIMARY KEY AUTOINCREMENT | 自增主键 | 1 |
-| `stock_code` | TEXT | NOT NULL, FOREIGN KEY | 股票代码 | "600519" |
-| `date` | TEXT | NOT NULL | 日期（YYYY-MM-DD） | "2026-02-28" |
-| `period` | TEXT | NOT NULL | K线周期（daily/weekly） | "daily" |
-| `indicator_type` | TEXT | NOT NULL | 指标类型 | "MA50" |
-| `value` | REAL | NULL | 指标值（NULL表示数据不足无法计算） | 1820.55 |
-| `created_at` | TEXT | NOT NULL | 创建时间 | "2026-02-28T18:00:00Z" |
-
-**索引**:
-- PRIMARY KEY: `id`
-- UNIQUE: `(stock_code, date, period, indicator_type)`
-- INDEX: `idx_indicator_stock_date_type` ON `(stock_code, date DESC, indicator_type)`
-- INDEX: `idx_indicator_latest` ON `(date DESC, indicator_type, value)`（用于选股筛选）
-
-**支持的指标类型**（`indicator_type` 枚举值）:
-
-| indicator_type | 描述 | 计算参数 |
-|----------------|------|----------|
-| `MA50` | 日线50日均线 | period='daily' |
-| `MA150` | 日线150日均线 | period='daily' |
-| `MA200` | 日线200日均线 | period='daily' |
-| `MA10` | 周线10周均线 | period='weekly' |
-| `MA30` | 周线30周均线 | period='weekly' |
-| `MA40` | 周线40周均线 | period='weekly' |
-| `KDJ_K` | KDJ指标K值 | k=9, d=3, smooth_k=3 |
-| `KDJ_D` | KDJ指标D值 | k=9, d=3, smooth_k=3 |
-| `KDJ_J` | KDJ指标J值 | J=3K-2D |
-| `RSI` | 相对强弱指标 | period=14 |
-| `volume_ma52w` | 成交量52周均线 | window=260（日K） |
-| `turnover_ma52w` | 成交额52周均线 | window=260（日K） |
-| `high_52w` | 近52周最高点 | rolling max, window=260 |
-| `low_52w` | 近52周最低点 | rolling min, window=260 |
-
-**业务规则**:
-1. 技术指标每日批量计算（使用 pandas-ta 库）
-2. 计算时依赖足够的历史数据：
-   - MA200: 需要至少200个交易日
-   - 52周指标: 需要至少260个交易日（约1年）
-   - 数据不足时，`value` 字段为 NULL
-3. 用户手动触发更新时，重新计算所有指标并覆盖
-4. 选股筛选时，只查询最新交易日的指标数据（优化查询性能）
-
-**关系**:
-- `stock_code` REFERENCES `Stock(stock_code)` ON DELETE CASCADE
-
----
-
-### 4. User（用户）
-
-**描述**: 代表使用工具的投资者，当前仅支持预设管理员账户
-
-**字段**:
-
-| 字段名 | 类型 | 约束 | 描述 | 示例值 |
-|--------|------|------|------|--------|
-| `user_id` | TEXT | PRIMARY KEY | 用户ID（固定为"admin"） | "admin" |
-| `username` | TEXT | NOT NULL UNIQUE | 用户名 | "admin" |
-| `password_hash` | TEXT | NOT NULL | 密码哈希（bcrypt） | "$2b$12$..." |
-| `created_at` | TEXT | NOT NULL | 创建时间 | "2026-02-28T08:00:00Z" |
-
-**业务规则**:
-1. 系统初始化时创建唯一管理员账户（`username='admin'`, `password='admin'`）
-2. 密码使用 bcrypt 哈希存储，不明文保存
-3. 登录后生成 JWT Token（有效期24小时），存储在 HttpOnly Cookie 中
-4. 未来如需多用户支持，扩展此表即可
-
----
-
-### 5. Favorite（收藏列表）
-
-**描述**: 代表用户收藏的股票集合
-
-**字段**:
-
-| 字段名 | 类型 | 约束 | 描述 | 示例值 |
-|--------|------|------|------|--------|
-| `id` | INTEGER | PRIMARY KEY AUTOINCREMENT | 自增主键 | 1 |
-| `user_id` | TEXT | NOT NULL, FOREIGN KEY | 用户ID | "admin" |
-| `stock_code` | TEXT | NOT NULL, FOREIGN KEY | 股票代码 | "600519" |
-| `group_name` | TEXT | NULL | 自定义分组名称 | "核心持仓" |
-| `sort_order` | INTEGER | NOT NULL DEFAULT 0 | 排序顺序（数字越小越靠前） | 1 |
-| `created_at` | TEXT | NOT NULL | 收藏时间 | "2026-02-28T10:30:00Z" |
-
-**索引**:
-- PRIMARY KEY: `id`
-- UNIQUE: `(user_id, stock_code)`
-- INDEX: `idx_favorite_user_sort` ON `(user_id, sort_order ASC)`
-
-**业务规则**:
-1. 用户可收藏多只股票，每只股票只能收藏一次
-2. 支持自定义分组（`group_name`），同一分组内按 `sort_order` 排序
-3. 用户可拖动调整收藏列表顺序（更新 `sort_order`）
-4. 删除股票时，级联删除收藏记录
-
-**关系**:
-- `user_id` REFERENCES `User(user_id)` ON DELETE CASCADE
-- `stock_code` REFERENCES `Stock(stock_code)` ON DELETE CASCADE
-
----
-
-### 6. Strategy（选股策略）
-
-**描述**: 代表用户保存的选股筛选方案
-
-**字段**:
-
-| 字段名 | 类型 | 约束 | 描述 | 示例值 |
-|--------|------|------|------|--------|
-| `strategy_id` | TEXT | PRIMARY KEY | 策略ID（UUID） | "uuid-1234-..." |
-| `user_id` | TEXT | NOT NULL, FOREIGN KEY | 用户ID | "admin" |
-| `strategy_name` | TEXT | NOT NULL | 策略名称 | "超卖反弹策略" |
-| `description` | TEXT | NULL | 策略描述 | "RSI超卖+KDJ金叉" |
-| `created_at` | TEXT | NOT NULL | 创建时间 | "2026-02-28T11:00:00Z" |
-| `updated_at` | TEXT | NOT NULL | 最后修改时间 | "2026-02-28T11:00:00Z" |
-
-**索引**:
-- PRIMARY KEY: `strategy_id`
-- INDEX: `idx_strategy_user` ON `(user_id, created_at DESC)`
-
-**业务规则**:
-1. 策略名称不能为空，同一用户下策略名称可重复
-2. 策略与筛选条件是 1:N 关系（一个策略包含多个条件）
-3. 所有条件之间使用 AND 逻辑（取交集）
-4. 条件数量不限制，但建议不超过10个（性能考虑）
-5. 支持完整 CRUD 操作：创建、查看、编辑（修改名称和条件）、删除
-
-**关系**:
-- `user_id` REFERENCES `User(user_id)` ON DELETE CASCADE
-- 1:N 关系：一个 Strategy 包含多个 FilterCondition
-
----
-
-### 7. FilterCondition（筛选条件）
-
-**描述**: 代表选股策略中的单个筛选条件
-
-**字段**:
-
-| 字段名 | 类型 | 约束 | 描述 | 示例值 |
-|--------|------|------|------|--------|
-| `condition_id` | TEXT | PRIMARY KEY | 条件ID（UUID） | "uuid-5678-..." |
-| `strategy_id` | TEXT | NOT NULL, FOREIGN KEY | 所属策略ID | "uuid-1234-..." |
-| `condition_type` | TEXT | NOT NULL | 条件类型 | "indicator_value" |
-| `indicator_name` | TEXT | NULL | 指标名称（condition_type=indicator_value时） | "RSI" |
-| `operator` | TEXT | NOT NULL | 比较运算符 | "<" |
-| `target_value` | REAL | NULL | 目标数值 | 30.0 |
-| `pattern` | TEXT | NULL | 形态类型（condition_type=pattern时） | "kdj_golden_cross" |
-| `sort_order` | INTEGER | NOT NULL DEFAULT 0 | 条件顺序 | 1 |
-
-**索引**:
-- PRIMARY KEY: `condition_id`
-- INDEX: `idx_condition_strategy` ON `(strategy_id, sort_order ASC)`
-
-**条件类型**（`condition_type` 枚举值）:
-
-| condition_type | 描述 | 字段组合 | 示例 |
-|----------------|------|----------|------|
-| `indicator_value` | 指标数值比较 | `indicator_name`, `operator`, `target_value` | RSI < 30 |
-| `pattern` | 指标形态 | `pattern` | KDJ金叉（当日） |
-| `price_change` | 涨跌幅 | `operator`, `target_value` | 涨跌幅 > 5% |
-| `volume_change` | 成交量变化 | `operator`, `target_value` | 成交量增长 > 50% |
-| `week_52_high` | 创52周新高 | 无需额外字段 | 当前价格 = high_52w |
-| `week_52_low` | 创52周新低 | 无需额外字段 | 当前价格 = low_52w |
-
-**支持的运算符**（`operator` 枚举值）:
-- `>`, `<`, `>=`, `<=`, `=`, `!=`
-
-**支持的形态**（`pattern` 枚举值）:
-- `kdj_golden_cross`: KDJ金叉（当日K线上穿D线）
-- `kdj_death_cross`: KDJ死叉（当日K线下穿D线）
-- `price_above_ma200`: 价格突破MA200（当日收盘价 > MA200）
-- `price_below_ma200`: 价格跌破MA200（当日收盘价 < MA200）
-
-**业务规则**:
-1. 所有条件基于当日最新K线数据判断
-2. 条件之间使用 AND 逻辑（取交集）
-3. 形态判断逻辑：
-   - KDJ金叉：`KDJ_K[t] > KDJ_D[t] AND KDJ_K[t-1] <= KDJ_D[t-1]`
-   - KDJ死叉：`KDJ_K[t] < KDJ_D[t] AND KDJ_K[t-1] >= KDJ_D[t-1]`
-4. 数据不足（指标值为NULL）的股票自动排除
-
-**关系**:
-- `strategy_id` REFERENCES `Strategy(strategy_id)` ON DELETE CASCADE
-
----
-
-### 8. Drawing（绘图对象）
-
-**描述**: 代表用户在图表上绘制的辅助线和标记
-
-**字段**:
-
-| 字段名 | 类型 | 约束 | 描述 | 示例值 |
-|--------|------|------|------|--------|
-| `drawing_id` | TEXT | PRIMARY KEY | 绘图ID（UUID） | "uuid-9012-..." |
-| `user_id` | TEXT | NOT NULL, FOREIGN KEY | 用户ID | "admin" |
-| `stock_code` | TEXT | NOT NULL, FOREIGN KEY | 股票代码 | "600519" |
-| `drawing_type` | TEXT | NOT NULL | 绘图类型 | "trend_line" |
-| `coordinates` | TEXT | NOT NULL | 坐标点JSON数组 | `[{"x":"2026-01-01","y":1800},{"x":"2026-02-01","y":1900}]` |
-| `style_preset` | TEXT | NOT NULL | 预设样式名称 | "default" |
-| `created_at` | TEXT | NOT NULL | 创建时间 | "2026-02-28T14:00:00Z" |
-
-**索引**:
-- PRIMARY KEY: `drawing_id`
-- INDEX: `idx_drawing_user_stock` ON `(user_id, stock_code)`
-
-**绘图类型**（`drawing_type` 枚举值）:
-
-| drawing_type | 描述 | 坐标格式 | 示例 |
-|--------------|------|----------|------|
-| `trend_line` | 趋势线 | 2个点 `[{x, y}, {x, y}]` | 连接两个日期的价格点 |
-| `horizontal_line` | 水平线 | 1个点 `[{y}]` | 标记支撑位/阻力位 |
-| `vertical_line` | 垂直线 | 1个点 `[{x}]` | 标记重要日期 |
-| `rectangle` | 矩形框 | 2个点 `[{x1, y1}, {x2, y2}]` | 标记盘整区域 |
-
-**预设样式**（`style_preset` 枚举值）:
-- `default`: 蓝色实线，线宽2px
-
-**业务规则**:
-1. 所有绘图对象使用统一预设样式（固定颜色和线宽），用户不能自定义样式
-2. 坐标点存储为 JSON 字符串，`x` 为日期字符串（YYYY-MM-DD），`y` 为价格数值
-3. 绘图对象与用户和股票关联，只在对应股票图表上显示
-4. 用户刷新页面时，自动加载该股票的所有绘图对象
-5. 支持删除绘图对象，不支持编辑（删除后重新绘制）
-
-**关系**:
-- `user_id` REFERENCES `User(user_id)` ON DELETE CASCADE
-- `stock_code` REFERENCES `Stock(stock_code)` ON DELETE CASCADE
-
----
-
-## 数据流
-
-### 1. 数据初始化流程
-
-```text
-1. 运行 scripts/init_stocks.py
-   ├─> 调用 Tushare Pro API 获取全部A股列表
-   ├─> 应用准入标准筛选（市值、成交额、上市时间、ST股）
-   └─> 写入 Stock 表（约1000只股票，status='active'）
-
-2. 运行 scripts/fetch_kline_data.py
-   ├─> 遍历 Stock 表中所有 active 股票
-   ├─> 调用 DataSourceManager 获取近20年日K数据
-   │   ├─> 优先 Tushare Pro
-   │   └─> 失败时降级到 AkShare
-   ├─> 写入 KLineData 表（period='daily'）
-   └─> 基于日K数据计算周K，写入 KLineData 表（period='weekly'）
-
-3. 运行 scripts/calculate_indicators.py
-   ├─> 遍历 KLineData 表（按 stock_code 分组）
-   ├─> 使用 pandas-ta 批量计算所有技术指标
-   │   ├─> MA50, MA150, MA200（日K）
-   │   ├─> MA10, MA30, MA40（周K）
-   │   ├─> KDJ_K, KDJ_D, KDJ_J
-   │   ├─> RSI
-   │   ├─> volume_ma52w, turnover_ma52w
-   │   └─> high_52w, low_52w
-   └─> 写入 Indicator 表
-```
-
-### 2. 每日更新流程
-
-```text
-定时任务（APScheduler，每日早上6点）
-└─> 运行 scripts/update_daily.py
-    ├─> 1. 更新K线数据
-    │   ├─> 调用 DataSourceManager 获取最新交易日数据
-    │   └─> UPSERT 到 KLineData 表（覆盖已存在的记录）
-    ├─> 2. 重新计算技术指标
-    │   ├─> 基于更新后的K线数据
-    │   └─> UPSERT 到 Indicator 表
-    └─> 3. 重新评估准入标准（每月1号）
-        ├─> 查询最新市值和成交额
-        ├─> 更新 Stock 表 status 字段
-        └─> 记录日志（新增/移除的股票）
-```
-
-### 3. 用户筛选流程
-
-```text
-用户设置筛选条件 → 执行筛选
-└─> 1. 获取最新交易日期
-    ├─> SELECT MAX(date) FROM kline_data WHERE period='daily'
-    └─> latest_date = '2026-02-28'
-
-└─> 2. 构建查询（多条件AND组合）
-    ├─> 条件1: RSI < 30
-    │   └─> SELECT stock_code FROM indicators 
-    │       WHERE date='2026-02-28' AND indicator_type='RSI' AND value < 30
-    ├─> 条件2: KDJ金叉
-    │   └─> SELECT stock_code FROM indicators 
-    │       WHERE date='2026-02-28' AND indicator_type='KDJ_K' AND value > (KDJ_D)
-    │       AND date='2026-02-27' AND indicator_type='KDJ_K' AND value <= (KDJ_D)
-    └─> 取交集：stock_codes = 条件1 ∩ 条件2 ∩ ... ∩ 条件N
-
-└─> 3. 限制结果数量
-    └─> LIMIT 100（如果结果 > 100，提示"结果过多，请优化筛选条件"）
-
-└─> 4. 排序（用户可选）
-    ├─> 按涨跌幅降序
-    ├─> 按成交额降序
-    ├─> 按市值降序
-    └─> 按股票代码升序（默认）
-```
-
----
-
-## 状态转换
-
-### Stock.status 状态机
-
-```text
-[初始化] ──应用准入标准──> [active]
-                            │
-                            │ 每月重新评估
-                            │
-              ┌─────────────┴─────────────┐
-              │                           │
-        仍符合标准                    不再符合标准
-              │                           │
-              ▼                           ▼
-          [active]                    [inactive]
-          （继续更新）                （停止更新，保留历史）
-```
-
-**转换规则**:
-- `active → inactive`: 市值 < 50亿 OR 日均成交额 < 1000万 OR 变为ST股
-- `inactive → active`: 重新符合所有准入标准（需连续评估3个月）
-
----
-
-## 数据完整性约束
-
-### 外键约束
-
-```sql
--- KLineData 外键
-ALTER TABLE kline_data 
-ADD FOREIGN KEY (stock_code) REFERENCES stock(stock_code) ON DELETE CASCADE;
-
--- Indicator 外键
-ALTER TABLE indicators 
-ADD FOREIGN KEY (stock_code) REFERENCES stock(stock_code) ON DELETE CASCADE;
-
--- Favorite 外键
-ALTER TABLE favorites 
-ADD FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE;
-ALTER TABLE favorites 
-ADD FOREIGN KEY (stock_code) REFERENCES stock(stock_code) ON DELETE CASCADE;
-
--- Strategy 外键
-ALTER TABLE strategies 
-ADD FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE;
-
--- FilterCondition 外键
-ALTER TABLE filter_conditions 
-ADD FOREIGN KEY (strategy_id) REFERENCES strategies(strategy_id) ON DELETE CASCADE;
-
--- Drawing 外键
-ALTER TABLE drawings 
-ADD FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE;
-ALTER TABLE drawings 
-ADD FOREIGN KEY (stock_code) REFERENCES stock(stock_code) ON DELETE CASCADE;
-```
-
-### 唯一性约束
-
-```sql
--- 防止重复K线数据
-UNIQUE(stock_code, date, period)
-
--- 防止重复指标数据
-UNIQUE(stock_code, date, period, indicator_type)
-
--- 防止重复收藏
-UNIQUE(user_id, stock_code)
-
--- 防止重复用户
-UNIQUE(username)
-```
-
----
-
-## 数据量估算
-
-| 实体 | 记录数量 | 单条记录大小 | 总大小估算 |
-|------|---------|-------------|-----------|
-| Stock | 1,000 | ~500 bytes | 0.5 MB |
-| KLineData (日K) | 1,000 × 5,000 = 5,000,000 | ~150 bytes | 750 MB |
-| KLineData (周K) | 1,000 × 1,000 = 1,000,000 | ~150 bytes | 150 MB |
-| Indicator | 5,000,000 × 14指标 = 70,000,000 | ~100 bytes | 7 GB |
-| User | 1 | ~200 bytes | <1 KB |
-| Favorite | <100 | ~100 bytes | <10 KB |
-| Strategy | <50 | ~300 bytes | <15 KB |
-| FilterCondition | <500 | ~200 bytes | <100 KB |
-| Drawing | <1,000 | ~500 bytes | <500 KB |
-| **总计** | | | **约 8 GB** |
-
-**注**: 
-- 加上 SQLite 索引和元数据，实际存储空间预估 **12-15 GB**
-- 单个 SQLite 文件理论上限 281 TB，8 GB 远未达到限制
-- WAL 模式下，额外需要约 1-2 GB 的临时空间
 
 ---
 
 ## 数据验证规则
 
-### 输入验证
+### Stock (股票)
+```typescript
+// backend/src/entities/stock.dto.ts
+import { IsString, IsEnum, IsNumber, IsOptional, Min } from 'class-validator';
 
-| 字段 | 验证规则 |
-|------|---------|
-| `stock_code` | 正则：`^[0-9]{6}$` |
-| `date` | 格式：`YYYY-MM-DD`，范围：`>= 2005-01-01 AND <= CURRENT_DATE` |
-| `period` | 枚举：`daily`, `weekly` |
-| `indicator_type` | 枚举：见上文支持的指标类型 |
-| `operator` | 枚举：`>`, `<`, `>=`, `<=`, `=`, `!=` |
-| `drawing_type` | 枚举：`trend_line`, `horizontal_line`, `vertical_line`, `rectangle` |
-| `coordinates` | JSON 格式，包含 `x`（日期）和 `y`（数值） |
+export class CreateStockDto {
+  @IsString()
+  stockCode: string;
 
-### 业务验证
+  @IsString()
+  stockName: string;
 
-- K线数据：`open`, `high`, `low`, `close` 必须 > 0，`high >= max(open, close, low)`，`low <= min(open, close, high)`
-- 技术指标：RSI 范围 [0, 100]，KDJ 范围理论上 [0, 100] 但可能超出
-- 筛选条件：`target_value` 必须为有效数值（不能为 NaN 或 Infinity）
-- 绘图对象：坐标点中的日期必须在股票上市日期之后
+  @IsEnum(['SH', 'SZ'])
+  market: 'SH' | 'SZ';
+
+  @IsOptional()
+  @IsString()
+  industry?: string;
+
+  @IsNumber()
+  marketCap: number;
+
+  @IsNumber()
+  @Min(0)
+  avgTurnover: number;
+}
+
+// 准入标准验证
+export function checkAdmission(stock: Stock): boolean {
+  return (
+    stock.marketCap > 50 &&           // 市值 > 50亿
+    stock.avgTurnover > 1000 &&       // 日均成交额 > 1000万
+    !stock.stockCode.includes('ST') && // 排除ST股
+    new Date().getFullYear() - stock.listDate.getFullYear() >= 5 // 上市 > 5年
+  );
+}
+```
+
+### KLineData (K线数据)
+```typescript
+export class CreateKLineDto {
+  @IsString()
+  stockCode: string;
+
+  @IsDateString()
+  date: string;
+
+  @IsEnum(['daily', 'weekly'])
+  period: 'daily' | 'weekly';
+
+  @IsNumber()
+  @Min(0)
+  open: number;
+
+  @IsNumber()
+  @Min(0)
+  high: number;
+
+  @IsNumber()
+  @Min(0)
+  low: number;
+
+  @IsNumber()
+  @Min(0)
+  close: number;
+
+  @IsNumber()
+  @Min(0)
+  volume: number;
+
+  @IsNumber()
+  @Min(0)
+  amount: number;
+
+  // 验证：high >= max(open, close), low <= min(open, close)
+}
+```
+
+---
+
+## 索引优化
+
+### 高频查询索引
+
+```prisma
+// KLineData 查询优化
+@@index([stockCode, period, date])  // 查询特定股票的K线数据
+@@index([date])                     // 查询特定日期的所有股票数据
+
+// TechnicalIndicator 查询优化
+@@index([stockCode, period, indicatorType, date])  // 查询特定指标
+
+// Favorite 查询优化
+@@index([userId, sortOrder])  // 按排序查询用户收藏
+
+// FilterCondition 查询优化
+@@index([strategyId, sortOrder])  // 按顺序加载筛选条件
+```
+
+### 查询性能估算
+
+| 查询场景 | 数据量 | 索引 | 预估时间 |
+|---------|--------|------|---------|
+| 单只股票20年日K | 5,000条 | ✅ | <50ms |
+| 1000只股票最新价格 | 1,000条 | ✅ | <100ms |
+| 技术指标筛选 | 1,000条 | ✅ | <500ms |
+| 用户收藏列表 | <100条 | ✅ | <20ms |
+
+---
+
+## 存储空间估算
+
+### 详细计算
+
+```
+1000只股票 × 20年数据:
+
+日K线数据:
+- 记录数: 1000 × 20 × 250 = 5,000,000 条
+- 每条大小: 8 + 8 + 4 + 8*6 = 68 字节
+- 总大小: 5,000,000 × 68 ≈ 340 MB
+
+周K线数据:
+- 记录数: 1000 × 20 × 52 = 1,040,000 条
+- 总大小: 1,040,000 × 68 ≈ 71 MB
+
+技术指标数据:
+- 6种指标 × (5,000,000日 + 1,040,000周) = 36,240,000 条
+- 每条大小: 8 + 8 + 4 + 200(JSON) = 220 字节
+- 总大小: 36,240,000 × 220 ≈ 7.97 GB
+
+索引开销: ~1.5 GB
+其他表(User, Favorite, Strategy等): ~50 MB
+---------
+总计: 340MB + 71MB + 7.97GB + 1.5GB + 50MB ≈ 9.93 GB
+实际(含SQLite开销): ~12-15 GB
+```
+
+**推荐预留空间**: 20 GB
+
+---
+
+## Prisma 迁移
+
+### 初始化数据库
+
+```bash
+# 生成 Prisma Client
+npx prisma generate
+
+# 创建迁移
+npx prisma migrate dev --name init
+
+# 应用迁移
+npx prisma migrate deploy
+```
+
+### 数据初始化脚本
+
+```typescript
+// backend/src/scripts/seed.ts
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+async function main() {
+  // 创建管理员用户
+  const admin = await prisma.user.create({
+    data: {
+      username: 'admin',
+      passwordHash: await bcrypt.hash('admin', 10),
+      preferences: JSON.stringify({
+        defaultPeriod: 'daily',
+        defaultIndicators: ['ma', 'volume']
+      })
+    }
+  });
+
+  console.log('Admin user created:', admin);
+}
+
+main()
+  .catch(e => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
+```
+
+---
+
+## TypeScript 类型定义
+
+### 自动生成的 Prisma 类型
+
+```typescript
+// node_modules/.prisma/client/index.d.ts (自动生成)
+export type Stock = {
+  stockCode: string;
+  stockName: string;
+  market: string;
+  industry: string | null;
+  listDate: Date;
+  marketCap: number | null;
+  avgTurnover: number | null;
+  admissionStatus: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type KLineData = {
+  id: number;
+  stockCode: string;
+  date: Date;
+  period: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  amount: number;
+  source: string;
+  createdAt: Date;
+};
+
+// ... 其他类型自动生成
+```
+
+### 前端 TypeScript 接口
+
+```typescript
+// frontend/src/types/stock.ts
+export interface Stock {
+  stockCode: string;
+  stockName: string;
+  market: 'SH' | 'SZ';
+  industry?: string;
+  listDate: string;
+  marketCap?: number;
+  avgTurnover?: number;
+  admissionStatus: 'active' | 'inactive';
+  
+  // 可选的实时数据
+  latestPrice?: number;
+  priceChange?: number;
+  priceChangePercent?: number;
+}
+
+export interface KLineData {
+  date: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  amount: number;
+}
+
+export interface IndicatorValues {
+  ma?: { ma50: number; ma150: number; ma200: number };
+  kdj?: { k: number; d: number; j: number };
+  rsi?: { value: number };
+  volume?: { volume: number; ma52w: number };
+  amount?: { amount: number; ma52w: number };
+  week52Marker?: {
+    high: number;
+    low: number;
+    highDate: string;
+    lowDate: string;
+  };
+}
+```
 
 ---
 
 ## 数据迁移策略
 
-### 版本控制
+### 从现有 Python 数据迁移
 
-使用 Alembic 管理数据库迁移（如需要）：
+如果已经有 Python + SQLAlchemy 的数据：
 
-```bash
-# 创建迁移脚本
-alembic revision -m "add_new_indicator_type"
+```typescript
+// backend/src/scripts/migrate-from-python.ts
+import { PrismaClient } from '@prisma/client';
+import Database from 'better-sqlite3';
 
-# 应用迁移
-alembic upgrade head
+const prisma = new PrismaClient();
+const oldDb = new Database('old-python.db');
 
-# 回滚迁移
-alembic downgrade -1
+async function migrate() {
+  // 1. 迁移股票数据
+  const stocks = oldDb.prepare('SELECT * FROM stocks').all();
+  for (const stock of stocks) {
+    await prisma.stock.create({
+      data: {
+        stockCode: stock.stock_code,
+        stockName: stock.stock_name,
+        market: stock.market,
+        // ... 字段映射
+      }
+    });
+  }
+
+  // 2. 迁移K线数据（批量插入）
+  const klines = oldDb.prepare('SELECT * FROM kline_data').all();
+  await prisma.kLineData.createMany({
+    data: klines.map(k => ({
+      stockCode: k.stock_code,
+      date: new Date(k.date),
+      period: k.period,
+      // ... 字段映射
+    }))
+  });
+
+  console.log('Migration completed');
+}
+
+migrate();
 ```
-
-### 备份策略
-
-1. **每日备份**：定时任务（凌晨2点）备份 SQLite 文件到本地目录
-2. **增量备份**：使用 SQLite WAL 模式，定期 checkpoint 刷新到主文件
-3. **云备份**：每周上传备份文件到云存储（可选）
 
 ---
 
-**Phase 1 数据模型设计完成**，下一步：创建 API 契约（contracts/）
+## 性能优化建议
+
+### 1. WAL 模式
+
+```typescript
+// backend/src/config/database.config.ts
+import { PrismaClient } from '@prisma/client';
+
+export const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL + '?connection_limit=10&socket_timeout=10'
+    }
+  }
+});
+
+// 启用 WAL 模式
+await prisma.$executeRaw`PRAGMA journal_mode = WAL`;
+await prisma.$executeRaw`PRAGMA synchronous = NORMAL`;
+await prisma.$executeRaw`PRAGMA cache_size = -64000`; // 64MB
+```
+
+### 2. 批量插入
+
+```typescript
+// 不推荐：逐条插入
+for (const kline of klines) {
+  await prisma.kLineData.create({ data: kline });
+}
+
+// 推荐：批量插入
+await prisma.kLineData.createMany({
+  data: klines,
+  skipDuplicates: true
+});
+```
+
+### 3. 查询优化
+
+```typescript
+// 使用 select 减少返回字段
+const stocks = await prisma.stock.findMany({
+  select: {
+    stockCode: true,
+    stockName: true,
+    // 不加载关联数据
+  }
+});
+
+// 使用 where 过滤
+const activeStocks = await prisma.stock.findMany({
+  where: {
+    admissionStatus: 'active',
+    marketCap: { gt: 50 }
+  }
+});
+```
+
+---
+
+## 总结
+
+✅ **数据模型设计完成**
+
+- 9个核心实体，完整的关系映射
+- 使用 Prisma ORM，类型安全
+- 优化的索引策略
+- 详细的验证规则
+- 存储空间估算：12-15GB（推荐预留20GB）
+
+**下一步**: 生成 API 契约文档（contracts/api-spec.md）
