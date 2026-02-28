@@ -1,0 +1,235 @@
+// backend/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// 1. 股票基础信息
+// ============================================================================
+
+model Stock {
+  stockCode      String         @id @map("stock_code")
+  stockName      String         @map("stock_name")
+  market         String         // 'SH' | 'SZ'
+  industry       String?
+  listDate       DateTime       @map("list_date")
+  marketCap      Float?         @map("market_cap")       // 市值(亿元)
+  avgTurnover    Float?         @map("avg_turnover")     // 日均成交额(万元)
+  admissionStatus String        @default("active") @map("admission_status") // 'active' | 'inactive'
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  // 关系
+  klines         KLineData[]
+  indicators     TechnicalIndicator[]
+  favorites      Favorite[]
+  drawings       Drawing[]
+
+  @@map("stocks")
+  @@index([admissionStatus])
+  @@index([market])
+}
+
+// ============================================================================
+// 2. K线数据
+// ============================================================================
+
+model KLineData {
+  id         Int      @id @default(autoincrement())
+  stockCode  String   @map("stock_code")
+  date       DateTime
+  period     String   // 'daily' | 'weekly'
+  open       Float
+  high       Float
+  low        Float
+  close      Float
+  volume     Float    // 成交量(手)
+  amount     Float    // 成交额(元)
+  source     String   @default("tushare") // 'tushare' | 'akshare'
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // 关系
+  stock      Stock    @relation(fields: [stockCode], references: [stockCode], onDelete: Cascade)
+
+  @@unique([stockCode, date, period])
+  @@index([stockCode, period, date])
+  @@index([date])
+  @@map("kline_data")
+}
+
+// ============================================================================
+// 3. 技术指标
+// ============================================================================
+
+model TechnicalIndicator {
+  id             Int      @id @default(autoincrement())
+  stockCode      String   @map("stock_code")
+  date           DateTime
+  period         String   // 'daily' | 'weekly'
+  indicatorType  String   @map("indicator_type") // 'ma' | 'kdj' | 'rsi' | 'volume' | 'amount' | 'week52_marker'
+  
+  // 指标值(JSON格式存储)
+  // MA: {"ma50": 10.5, "ma150": 12.3, "ma200": 11.8}
+  // KDJ: {"k": 50.2, "d": 48.5, "j": 53.6}
+  // RSI: {"value": 65.4}
+  // Volume: {"volume": 1000000, "ma52w": 800000}
+  // Amount: {"amount": 50000000, "ma52w": 45000000}
+  // Week52Marker: {"high": 15.8, "low": 8.2, "highDate": "2026-01-15", "lowDate": "2025-08-20"}
+  values         String   // JSON string
+  
+  calculatedAt   DateTime @default(now()) @map("calculated_at")
+
+  // 关系
+  stock          Stock    @relation(fields: [stockCode], references: [stockCode], onDelete: Cascade)
+
+  @@unique([stockCode, date, period, indicatorType])
+  @@index([stockCode, period, indicatorType, date])
+  @@map("technical_indicators")
+}
+
+// ============================================================================
+// 4. 用户
+// ============================================================================
+
+model User {
+  userId       String     @id @default(uuid()) @map("user_id")
+  username     String     @unique
+  passwordHash String     @map("password_hash")
+  
+  // 偏好设置(JSON)
+  preferences  String?    // {"defaultPeriod": "daily", "defaultIndicators": ["ma", "volume"]}
+  
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  // 关系
+  favorites    Favorite[]
+  strategies   ScreenerStrategy[]
+  drawings     Drawing[]
+
+  @@map("users")
+}
+
+// ============================================================================
+// 5. 收藏列表
+// ============================================================================
+
+model Favorite {
+  id         Int      @id @default(autoincrement())
+  userId     String   @map("user_id")
+  stockCode  String   @map("stock_code")
+  groupName  String?  @map("group_name")    // 分组名称
+  sortOrder  Int      @default(0) @map("sort_order")  // 排序顺序
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // 关系
+  user       User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  stock      Stock    @relation(fields: [stockCode], references: [stockCode], onDelete: Cascade)
+
+  @@unique([userId, stockCode])
+  @@index([userId, sortOrder])
+  @@map("favorites")
+}
+
+// ============================================================================
+// 6. 选股策略
+// ============================================================================
+
+model ScreenerStrategy {
+  strategyId     String   @id @default(uuid()) @map("strategy_id")
+  userId         String   @map("user_id")
+  strategyName   String   @map("strategy_name")
+  description    String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // 关系
+  user           User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  conditions     FilterCondition[]
+
+  @@index([userId])
+  @@map("screener_strategies")
+}
+
+// ============================================================================
+// 7. 筛选条件
+// ============================================================================
+
+model FilterCondition {
+  id            Int      @id @default(autoincrement())
+  strategyId    String   @map("strategy_id")
+  conditionType String   @map("condition_type") // 'indicator_value' | 'pattern' | 'price_change' | 'volume_change' | 'week_52_high' | 'week_52_low'
+  
+  // 根据 conditionType 使用不同字段
+  indicatorName String?  @map("indicator_name") // 'ma50' | 'kdj_k' | 'rsi' | 'volume' | 'amount'
+  operator      String?  // '>' | '<' | '>=' | '<=' | '='
+  targetValue   Float?   @map("target_value")
+  
+  pattern       String?  // 'kdj_golden_cross' | 'kdj_death_cross' | 'price_above_ma' | 'price_below_ma'
+  
+  sortOrder     Int      @default(0) @map("sort_order")
+
+  // 关系
+  strategy      ScreenerStrategy @relation(fields: [strategyId], references: [strategyId], onDelete: Cascade)
+
+  @@index([strategyId, sortOrder])
+  @@map("filter_conditions")
+}
+
+// ============================================================================
+// 8. 绘图对象
+// ============================================================================
+
+model Drawing {
+  drawingId   String   @id @default(uuid()) @map("drawing_id")
+  userId      String   @map("user_id")
+  stockCode   String   @map("stock_code")
+  period      String   // 'daily' | 'weekly'
+  drawingType String   @map("drawing_type") // 'trend_line' | 'horizontal_line' | 'vertical_line' | 'rectangle'
+  
+  // 坐标数据(JSON)
+  // TrendLine: [{"x": "2026-01-01", "y": 10.5}, {"x": "2026-02-01", "y": 12.3}]
+  // HorizontalLine: [{"y": 10.5}]
+  // VerticalLine: [{"x": "2026-01-15"}]
+  // Rectangle: [{"x1": "2026-01-01", "y1": 10.5, "x2": "2026-02-01", "y2": 12.3}]
+  coordinates String   // JSON string
+  
+  stylePreset String   @default("default") @map("style_preset") // 'default' (blue, 2px)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // 关系
+  user        User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  stock       Stock    @relation(fields: [stockCode], references: [stockCode], onDelete: Cascade)
+
+  @@index([userId, stockCode, period])
+  @@map("drawings")
+}
+
+// ============================================================================
+// 9. 数据更新日志
+// ============================================================================
+
+model UpdateLog {
+  taskId         String   @id @map("task_id")
+  status         String   // 'pending' | 'running' | 'completed' | 'failed'
+  totalStocks    Int      @map("total_stocks")
+  processedStocks Int     @default(0) @map("processed_stocks")
+  successCount   Int      @default(0) @map("success_count")
+  failedCount    Int      @default(0) @map("failed_count")
+  
+  // 错误详情(JSON数组)
+  // [{"stockCode": "600519", "errorReason": "API timeout", "retryResult": "success"}]
+  errorDetails   String?  @map("error_details")
+  
+  startTime      DateTime @default(now()) @map("start_time")
+  endTime        DateTime? @map("end_time")
+
+  @@index([startTime])
+  @@map("update_logs")
+}
