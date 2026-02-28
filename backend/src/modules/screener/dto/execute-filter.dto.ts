@@ -24,6 +24,8 @@ export class FilterConditionDto {
       'week_52_low',
       'near_52_high',
       'near_52_low',
+      'price_vs_ma',
+      'ma_vs_ma',
     ],
     example: 'indicator_value',
   })
@@ -37,11 +39,13 @@ export class FilterConditionDto {
     'week_52_low',
     'near_52_high',
     'near_52_low',
+    'price_vs_ma',
+    'ma_vs_ma',
   ])
   conditionType!: string;
 
   @ApiPropertyOptional({
-    description: 'Indicator name (required for indicator_value type)',
+    description: 'Indicator name (required for indicator_value and price_vs_ma type)',
     enum: ['ma50', 'ma150', 'ma200', 'kdj_k', 'kdj_d', 'kdj_j', 'rsi', 'volume', 'amount'],
     example: 'rsi',
   })
@@ -75,6 +79,24 @@ export class FilterConditionDto {
   @IsOptional()
   @IsString()
   pattern?: string;
+
+  @ApiPropertyOptional({
+    description: 'First MA period (for ma_vs_ma type)',
+    enum: ['ma_50', 'ma_150', 'ma_200', 'ma_10', 'ma_30', 'ma_40'],
+    example: 'ma_50',
+  })
+  @IsOptional()
+  @IsString()
+  ma1Period?: string;
+
+  @ApiPropertyOptional({
+    description: 'Second MA period (for ma_vs_ma type)',
+    enum: ['ma_50', 'ma_150', 'ma_200', 'ma_10', 'ma_30', 'ma_40'],
+    example: 'ma_150',
+  })
+  @IsOptional()
+  @IsString()
+  ma2Period?: string;
 }
 
 export class ExecuteFilterDto {

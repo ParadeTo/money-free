@@ -68,6 +68,10 @@ data/*.db-wal
 *.sqlite3
 *.db
 
+# Backend data directory (all files except .gitkeep)
+backend/data/*
+!backend/data/.gitkeep
+
 # === IDE and Editors ===
 .DS_Store
 .vscode/

@@ -10,6 +10,8 @@ export interface FilterCondition {
   operator?: string;
   targetValue?: number;
   pattern?: string;
+  ma1Period?: string;
+  ma2Period?: string;
 }
 
 export interface StockResult {

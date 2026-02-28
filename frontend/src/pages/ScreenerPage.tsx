@@ -2,7 +2,7 @@
  * 选股页面
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Card, 
   Button, 
@@ -15,26 +15,40 @@ import {
   Tag,
   Spin,
   Alert,
+  Modal,
+  Input,
+  Dropdown,
+  Popconfirm,
 } from 'antd';
 import { 
   PlusOutlined, 
   DeleteOutlined, 
   SearchOutlined,
-  LineChartOutlined 
+  LineChartOutlined,
+  SaveOutlined,
+  FolderOpenOutlined,
+  MoreOutlined,
+  EditOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import type { ColumnsType } from 'antd/es/table';
+import type { MenuProps } from 'antd';
 import { screenerService, type StockResult, type FilterCondition as ApiFilterCondition } from '../services/screener.service';
+import { strategyService, type Strategy } from '../services/strategy.service';
 import styles from './ScreenerPage.module.css';
 
 const { Option } = Select;
 
 interface FilterCondition extends ApiFilterCondition {
   id: string;
+  ma1Period?: string;
+  ma2Period?: string;
 }
 
 const CONDITION_TYPES = [
   { value: 'indicator_value', label: '指标数值' },
+  { value: 'price_vs_ma', label: '股价与均线' },
+  { value: 'ma_vs_ma', label: '均线与均线' },
   { value: 'pattern', label: '指标形态' },
   { value: 'price_change', label: '涨跌幅' },
   { value: 'volume_change', label: '成交量变化' },
@@ -50,6 +64,24 @@ const INDICATORS = [
   { value: 'ma50', label: 'MA50' },
   { value: 'ma150', label: 'MA150' },
   { value: 'ma200', label: 'MA200' },
+];
+
+const MA_TYPES = [
+  { value: 'ma50', label: 'MA50' },
+  { value: 'ma150', label: 'MA150' },
+  { value: 'ma200', label: 'MA200' },
+];
+
+const MA_PERIODS_DAILY = [
+  { value: 'ma_50', label: 'MA50' },
+  { value: 'ma_150', label: 'MA150' },
+  { value: 'ma_200', label: 'MA200' },
+];
+
+const MA_PERIODS_WEEKLY = [
+  { value: 'ma_10', label: 'MA10' },
+  { value: 'ma_30', label: 'MA30' },
+  { value: 'ma_40', label: 'MA40' },
 ];
 
 const OPERATORS = [
@@ -74,6 +106,27 @@ export function ScreenerPage() {
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [isTruncated, setIsTruncated] = useState(false);
+  
+  // 策略相关状态
+  const [strategies, setStrategies] = useState<Strategy[]>([]);
+  const [saveModalVisible, setSaveModalVisible] = useState(false);
+  const [strategyName, setStrategyName] = useState('');
+  const [strategyDescription, setStrategyDescription] = useState('');
+  const [currentStrategyId, setCurrentStrategyId] = useState<string>();
+
+  // 加载策略列表
+  useEffect(() => {
+    loadStrategies();
+  }, []);
+
+  const loadStrategies = async () => {
+    try {
+      const data = await strategyService.getAll();
+      setStrategies(data);
+    } catch (error: any) {
+      console.error('加载策略失败:', error);
+    }
+  };
 
   const addCondition = () => {
     const newCondition: FilterCondition = {
@@ -96,6 +149,112 @@ export function ScreenerPage() {
     ));
   };
 
+  // 保存策略
+  const handleSaveStrategy = async () => {
+    if (!strategyName.trim()) {
+      message.error('请输入策略名称');
+      return;
+    }
+
+    if (conditions.length === 0) {
+      message.error('请至少添加一个筛选条件');
+      return;
+    }
+
+    try {
+      const strategyConditions = conditions.map((c, index) => ({
+        conditionType: c.conditionType,
+        indicatorName: c.indicatorName,
+        operator: c.operator,
+        targetValue: c.targetValue,
+        pattern: c.pattern,
+        ma1Period: c.ma1Period,
+        ma2Period: c.ma2Period,
+        sortOrder: index,
+      }));
+
+      if (currentStrategyId) {
+        // 更新现有策略
+        await strategyService.update(currentStrategyId, {
+          strategyName,
+          description: strategyDescription,
+          conditions: strategyConditions,
+        });
+        message.success('策略更新成功');
+      } else {
+        // 创建新策略
+        await strategyService.create({
+          strategyName,
+          description: strategyDescription,
+          conditions: strategyConditions,
+        });
+        message.success('策略保存成功');
+      }
+
+      setSaveModalVisible(false);
+      setStrategyName('');
+      setStrategyDescription('');
+      setCurrentStrategyId(undefined);
+      loadStrategies();
+    } catch (error: any) {
+      message.error(error.message || '保存策略失败');
+    }
+  };
+
+  // 加载策略
+  const handleLoadStrategy = async (strategyId: string) => {
+    try {
+      const strategy = await strategyService.getOne(strategyId);
+      
+      // 将策略条件转换为本地格式
+      const loadedConditions: FilterCondition[] = strategy.conditions.map((c) => ({
+        id: Date.now().toString() + Math.random(),
+        conditionType: c.conditionType,
+        indicatorName: c.indicatorName,
+        operator: c.operator,
+        targetValue: c.targetValue,
+        pattern: c.pattern,
+        ma1Period: c.ma1Period,
+        ma2Period: c.ma2Period,
+      }));
+
+      setConditions(loadedConditions);
+      setCurrentStrategyId(strategy.strategyId);
+      setStrategyName(strategy.strategyName);
+      setStrategyDescription(strategy.description || '');
+      message.success(`已加载策略: ${strategy.strategyName}`);
+    } catch (error: any) {
+      message.error(error.message || '加载策略失败');
+    }
+  };
+
+  // 删除策略
+  const handleDeleteStrategy = async (strategyId: string) => {
+    try {
+      await strategyService.delete(strategyId);
+      message.success('策略删除成功');
+      loadStrategies();
+      
+      // 如果删除的是当前加载的策略，清空相关状态
+      if (currentStrategyId === strategyId) {
+        setCurrentStrategyId(undefined);
+        setStrategyName('');
+        setStrategyDescription('');
+      }
+    } catch (error: any) {
+      message.error(error.message || '删除策略失败');
+    }
+  };
+
+  // 打开保存策略弹窗
+  const openSaveModal = () => {
+    if (conditions.length === 0) {
+      message.warning('请至少添加一个筛选条件');
+      return;
+    }
+    setSaveModalVisible(true);
+  };
+
   const executeFilter = async () => {
     if (conditions.length === 0) {
       message.warning('请至少添加一个筛选条件');
@@ -111,6 +270,8 @@ export function ScreenerPage() {
           operator: c.operator,
           targetValue: c.targetValue,
           pattern: c.pattern,
+          ma1Period: c.ma1Period,
+          ma2Period: c.ma2Period,
         })),
         'stockCode',
         'asc',
@@ -141,7 +302,7 @@ export function ScreenerPage() {
       key: 'stockCode',
       width: 120,
       render: (code: string) => (
-        <Button type="link" onClick={() => navigate(`/chart/${code}`)}>
+        <Button type="link" onClick={() => window.open(`/chart/${code}`, '_blank')}>
           {code}
         </Button>
       ),
@@ -197,7 +358,7 @@ export function ScreenerPage() {
         <Button 
           type="link" 
           icon={<LineChartOutlined />}
-          onClick={() => navigate(`/chart/${record.stockCode}`)}
+          onClick={() => window.open(`/chart/${record.stockCode}`, '_blank')}
         >
           查看图表
         </Button>
@@ -209,7 +370,49 @@ export function ScreenerPage() {
     <div className={styles.container}>
       <div className={styles.pageHeader}>
         <h1 className={styles.title}>选股筛选</h1>
-        <Space>
+        <Space size="middle">
+          {strategies.length > 0 && (
+            <Dropdown
+              menu={{
+                items: strategies.map((strategy) => ({
+                  key: strategy.strategyId,
+                  label: (
+                    <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                      <span>{strategy.strategyName}</span>
+                      <Space size="small" onClick={(e) => e.stopPropagation()}>
+                        <Popconfirm
+                          title="确定删除此策略？"
+                          onConfirm={() => handleDeleteStrategy(strategy.strategyId)}
+                          okText="确定"
+                          cancelText="取消"
+                        >
+                          <Button
+                            type="text"
+                            size="small"
+                            danger
+                            icon={<DeleteOutlined />}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </Popconfirm>
+                      </Space>
+                    </Space>
+                  ),
+                  onClick: () => handleLoadStrategy(strategy.strategyId),
+                })),
+              }}
+            >
+              <Button icon={<FolderOpenOutlined />}>
+                加载策略
+              </Button>
+            </Dropdown>
+          )}
+          <Button 
+            icon={<SaveOutlined />}
+            onClick={openSaveModal}
+            disabled={conditions.length === 0}
+          >
+            {currentStrategyId ? '更新策略' : '保存策略'}
+          </Button>
           <Button 
             type="primary" 
             icon={<PlusOutlined />}
@@ -272,6 +475,64 @@ export function ScreenerPage() {
                       onChange={(value) => updateCondition(condition.id, { targetValue: value || 0 })}
                       placeholder="目标值"
                     />
+                  </>
+                )}
+
+                {condition.conditionType === 'price_vs_ma' && (
+                  <>
+                    <span style={{ margin: '0 8px' }}>股价</span>
+                    <Select
+                      style={{ width: 100 }}
+                      value={condition.operator}
+                      onChange={(value) => updateCondition(condition.id, { operator: value })}
+                    >
+                      {OPERATORS.filter(op => op.value !== '=').map(op => (
+                        <Option key={op.value} value={op.value}>{op.label}</Option>
+                      ))}
+                    </Select>
+                    <Select
+                      style={{ width: 120 }}
+                      value={condition.indicatorName || 'ma50'}
+                      onChange={(value) => updateCondition(condition.id, { indicatorName: value })}
+                    >
+                      {MA_TYPES.map(ma => (
+                        <Option key={ma.value} value={ma.value}>{ma.label}</Option>
+                      ))}
+                    </Select>
+                  </>
+                )}
+
+                {condition.conditionType === 'ma_vs_ma' && (
+                  <>
+                    <Select
+                      style={{ width: 120 }}
+                      value={condition.ma1Period || 'ma_50'}
+                      onChange={(value) => updateCondition(condition.id, { ma1Period: value })}
+                      placeholder="第一条均线"
+                    >
+                      {MA_PERIODS_DAILY.map(ma => (
+                        <Option key={ma.value} value={ma.value}>{ma.label}</Option>
+                      ))}
+                    </Select>
+                    <Select
+                      style={{ width: 100 }}
+                      value={condition.operator || '>'}
+                      onChange={(value) => updateCondition(condition.id, { operator: value })}
+                    >
+                      {OPERATORS.filter(op => op.value !== '=').map(op => (
+                        <Option key={op.value} value={op.value}>{op.label}</Option>
+                      ))}
+                    </Select>
+                    <Select
+                      style={{ width: 120 }}
+                      value={condition.ma2Period || 'ma_150'}
+                      onChange={(value) => updateCondition(condition.id, { ma2Period: value })}
+                      placeholder="第二条均线"
+                    >
+                      {MA_PERIODS_DAILY.map(ma => (
+                        <Option key={ma.value} value={ma.value}>{ma.label}</Option>
+                      ))}
+                    </Select>
                   </>
                 )}
 
@@ -369,6 +630,53 @@ export function ScreenerPage() {
           </Card>
         </>
       )}
+
+      {/* 保存策略弹窗 */}
+      <Modal
+        title={currentStrategyId ? '更新策略' : '保存选股策略'}
+        open={saveModalVisible}
+        onOk={handleSaveStrategy}
+        onCancel={() => {
+          setSaveModalVisible(false);
+          if (!currentStrategyId) {
+            setStrategyName('');
+            setStrategyDescription('');
+          }
+        }}
+        okText="保存"
+        cancelText="取消"
+        width={500}
+      >
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <div>
+            <label style={{ marginBottom: 8, display: 'block' }}>
+              策略名称 <span style={{ color: 'red' }}>*</span>
+            </label>
+            <Input
+              placeholder="请输入策略名称，例如：超跌反弹策略"
+              value={strategyName}
+              onChange={(e) => setStrategyName(e.target.value)}
+              maxLength={50}
+            />
+          </div>
+          <div>
+            <label style={{ marginBottom: 8, display: 'block' }}>策略描述</label>
+            <Input.TextArea
+              placeholder="可选：描述策略的用途和逻辑"
+              value={strategyDescription}
+              onChange={(e) => setStrategyDescription(e.target.value)}
+              rows={3}
+              maxLength={200}
+            />
+          </div>
+          <Alert
+            message="提示"
+            description={`当前共有 ${conditions.length} 个筛选条件将被保存`}
+            type="info"
+            showIcon
+          />
+        </Space>
+      </Modal>
     </div>
   );
 }

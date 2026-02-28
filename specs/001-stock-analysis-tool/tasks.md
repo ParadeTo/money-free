@@ -139,11 +139,14 @@
 - [ ] T055 [P] [US1] Verify KLineData entity exists in backend/prisma/schema.prisma
 - [ ] T056 [P] [US1] Verify TechnicalIndicator entity exists in backend/prisma/schema.prisma
 
-### US1 Backend Implementation - Data Scripts
+### US1 Backend Implementation - Data Scripts ✅
 
-- [ ] T057 [US1] Create backend/src/scripts/init-stocks.ts to fetch ~1000 admitted stocks from Tushare and insert into database
-- [ ] T058 [US1] Create backend/src/scripts/fetch-klines.ts to download 20 years of daily/weekly K-line data (supports --stocks, --start-date, --end-date params)
-- [ ] T059 [US1] Create backend/src/scripts/calculate-indicators.ts to compute all 5 indicator types for all stocks
+- [x] T057 [US1] Create backend/src/scripts/init-stocks.ts to fetch ~1000 admitted stocks from Tushare and insert into database (实际完成: fetch-all-stocks.ts，获取3665只股票)
+- [x] T058 [US1] Create backend/src/scripts/fetch-klines.ts to download 20 years of daily/weekly K-line data (实际完成: fetch-batch-klines.ts，支持批量处理和断点续传)
+- [x] T059 [US1] Create backend/src/scripts/calculate-indicators.ts to compute all 5 indicator types for all stocks (已集成到 fetch-batch-klines.ts 中)
+- [x] T059a [US1] Create backend/src/scripts/batch-init-all-klines-simple.ts for automated batch processing with progress tracking and API rate limiting
+- [x] T059b [US1] Create backend/src/scripts/check-progress.ts for real-time monitoring of data initialization progress
+- [x] T059c [US1] Create backend/src/scripts/batch-init-all-klines.sh wrapper script for continuous batch processing
 
 ### US1 Backend Implementation - Services
 
@@ -199,10 +202,14 @@
 **Checkpoint**: ✅ MVP is functional - users can search stocks and view charts with indicators
 
 **实际完成情况**:
-- ✅ 5只股票，1210条K线数据（2023-03-01 至 2024-02-28）
-- ✅ 3320条技术指标数据（MA + RSI + Volume + 52周标注）
+- ✅ 3665只A股股票信息已导入
+- ✅ 660只股票完成数据初始化（18%进度）
+- ✅ 413,066条K线数据（日线342,532条 + 周线70,534条）
+- ✅ 1,745,571条技术指标数据（MA + KDJ + RSI + Volume + Amount + 52周标注）
+- ✅ 数据时间范围：2022-01-01 至 2024-02-28（前复权数据）
 - ✅ 完整的前端界面和后端 API
 - ✅ 数据来源：Tushare Pro
+- ✅ 批量初始化工具支持断点续传和进度监控
 - 🌐 访问：http://localhost:5174/chart/600519
 
 ---
@@ -292,6 +299,8 @@
 - [x] T136 [P] [US2] Component test for FilterBuilder in frontend/tests/components/FilterBuilder.test.tsx
 - [x] T137 [P] [US2] Component test for StrategyManager in frontend/tests/components/StrategyManager.test.tsx
 - [x] T138 [P] [US2] Page test for FilterPage in frontend/tests/pages/FilterPage.test.tsx
+- [x] T138a [P] [US2] Manual testing for price_vs_ma filtering - ✅ 已验证
+- [x] T138b [P] [US2] Manual testing for ma_vs_ma filtering - ✅ 已验证（测试结果见 docs/ma_vs_ma_test_results.md）
 
 ### US2 Backend Implementation - Data Models ✅
 
@@ -308,11 +317,18 @@
 - [x] T146 [US2] Add result limiting: cap at 100 stocks, set isTruncated flag if more results exist
 - [x] T147 [US2] Add sorting: support sortBy (stockCode, priceChangePercent, amount, marketCap) and sortOrder (asc, desc)
 - [x] T148 [US2] Create backend/src/modules/strategies/strategies.service.ts with create(), findAll(), findOne(), update(), delete() methods
+- [x] T148a [US2] Implement price vs MA filtering in screener.service.ts: filterByPriceVsMA() method to compare stock price with specified MA
+- [x] T148b [US2] Implement MA vs MA filtering in screener.service.ts: filterByMAvsMA() method to compare two moving averages - ✅ 已完成并通过测试（77只金叉股票，56只多头排列）
 
 ### US2 Backend Implementation - Controllers ✅
 
 - [x] T149 [P] [US2] Create backend/src/modules/screener/dto/execute-filter.dto.ts with FilterCondition[] validation
+- [x] T149a [US2] Add price_vs_ma condition type to execute-filter.dto.ts for stock price vs MA comparison
+- [x] T149b [US2] Create migration to add ma1_period and ma2_period fields to filter_conditions table (backend/prisma/migrations/20260228153025_add_ma_vs_ma_strategy/)
+- [x] T149c [US2] Update Prisma schema to add ma1Period and ma2Period optional fields to FilterCondition model
 - [x] T150 [P] [US2] Create backend/src/modules/strategies/dto/create-strategy.dto.ts with strategyName, description, conditions validation
+- [x] T150a [US2] Add ma_vs_ma condition type to ConditionDto enum for MA vs MA comparison
+- [x] T150b [US2] Add ma1Period and ma2Period optional fields to ConditionDto for MA selection
 - [x] T151 [US2] Implement backend/src/modules/screener/screener.controller.ts with POST /screener/execute endpoint
 - [x] T152 [US2] Implement backend/src/modules/strategies/strategies.controller.ts with POST, GET, PUT, DELETE endpoints for CRUD operations
 - [x] T153 [US2] Add POST /strategies/:strategyId/execute endpoint to run saved strategy
@@ -324,6 +340,7 @@
 - [x] T156 [P] [US2] Create frontend/src/types/strategy.ts with Strategy interface
 - [x] T157 [P] [US2] Create frontend/src/services/screener.service.ts with executeFilter() method
 - [x] T158 [P] [US2] Create frontend/src/services/strategy.service.ts with createStrategy(), getStrategies(), updateStrategy(), deleteStrategy(), executeStrategy() methods
+- [x] T158a [US2] Add ma1Period and ma2Period fields to StrategyCondition interface in strategy.service.ts
 
 ### US2 Frontend Implementation - Components ✅
 
@@ -333,6 +350,8 @@
 - [x] T162 [US2] Add pattern conditions in FilterBuilder: kdj_golden_cross, kdj_death_cross, price_above_ma, price_below_ma dropdown
 - [x] T163 [US2] Add change conditions in FilterBuilder: price_change, volume_change with percentage input
 - [x] T164 [US2] Add 52-week conditions in FilterBuilder: week_52_high, week_52_low, near_52_high (<5%), near_52_low (<5%)
+- [x] T164a [US2] Add price_vs_ma condition in ScreenerPage: select MA type and operator to compare stock price with MA
+- [x] T164b [US2] Add ma_vs_ma condition in ScreenerPage: select two MA periods and operator to compare moving averages
 - [x] T165 [US2] Create frontend/src/components/FilterResultsTable/index.tsx with Ant Design Table showing stockCode, stockName, latestPrice, priceChange, amount
 - [x] T166 [US2] Add sorting controls in FilterResultsTable (sortable columns with onClick handlers)
 - [x] T167 [US2] Add row click handler to navigate to /chart/:stockCode
@@ -350,6 +369,15 @@
 - [x] T176 [US2] Add loading states and error handling for filter execution
 
 **Checkpoint**: ✅ Stock filtering and strategy management fully functional
+
+**新增功能** (2026-02-28):
+- ✅ 股价与均线比较 (price_vs_ma): 筛选股价高于或低于指定均线的股票
+- ✅ 均线与均线比较 (ma_vs_ma): 完整实现包括策略保存、前端UI、筛选执行
+- ✅ 前端支持 ma_vs_ma 条件的创建、编辑和执行
+- ✅ 后端 filterByMAvsMA() 方法已实现并通过测试
+- ✅ 测试验证：金叉筛选出77只股票，多头排列筛选出56只股票
+
+**测试结果**: 参见 docs/ma_vs_ma_test_results.md
 
 ---
 
@@ -474,6 +502,38 @@
 
 ---
 
+## Phase 10: Data Initialization & DevOps Tools ✅
+
+**Purpose**: Tools and scripts for data management and system operations
+
+### Data Initialization Scripts ✅
+
+- [x] T265 [P] Create backend/src/scripts/fetch-all-stocks.ts to fetch A-share stock list from Tushare (fetches 3665 stocks)
+- [x] T266 [P] Create backend/src/scripts/fetch-batch-klines.ts to batch process historical K-line data with parameters (limit, offset)
+- [x] T267 Create backend/src/scripts/batch-init-all-klines-simple.ts for automated batch processing with auto-resume from last processed stock
+- [x] T268 Create backend/src/scripts/check-progress.ts to monitor real-time progress with statistics and ETA calculation
+- [x] T269 [P] Create backend/src/scripts/batch-init-all-klines.sh wrapper script for continuous batch execution
+- [x] T270 [P] Create backend/src/scripts/check-progress.sh wrapper script for quick progress checks
+
+### Documentation ✅
+
+- [x] T271 [P] Create docs/CHANGELOG_ma_vs_ma.md documenting MA vs MA strategy feature addition
+- [x] T272 [P] Create docs/ma_vs_ma_strategy_example.md with API usage examples and common patterns
+- [x] T273 [P] Create docs/ma_vs_ma_frontend_guide.md with user guide for frontend MA comparison feature
+- [x] T274 [P] Create RESUME_INIT.md with quick recovery instructions for data initialization
+- [x] T275 [P] Create backend/PROGRESS_SNAPSHOT.md with detailed progress snapshot and recovery methods
+
+**Checkpoint**: ✅ Data management tools complete with comprehensive documentation
+
+**数据初始化现状**:
+- ✅ 3665只股票信息已导入
+- ⏳ 660只股票已完成K线和指标初始化（18%）
+- ⏳ 3005只股票待处理（预计耗时1.6小时）
+- ✅ 支持断点续传和自动恢复
+- ✅ 实时进度监控工具就绪
+
+---
+
 ## Phase 9: Polish & Cross-Cutting Concerns
 
 **Purpose**: Improvements that affect multiple user stories
@@ -502,12 +562,12 @@
 - [ ] T257 Run all backend unit and integration tests: npm run test && npm run test:e2e in backend/
 - [ ] T258 Run all frontend component and page tests: npm run test in frontend/
 - [ ] T259 [P] Create Playwright E2E test suite in e2e/ directory covering all 6 user stories
-- [ ] T260 Run quickstart.md validation: verify data initialization scripts work (init-stocks, fetch-klines, calculate-indicators)
+- [x] T260 Run quickstart.md validation: verify data initialization scripts work (init-stocks, fetch-klines, calculate-indicators) - ✅ Scripts validated with 660 stocks processed
 - [ ] T261 Performance validation: Measure K-line chart loading time (must be <2秒), chart interaction response time (must be <300ms)
 - [ ] T262 Performance validation: Measure screener execution time (must be <3秒 for ~1000 stocks)
 - [ ] T263 Performance validation: Measure data update task completion time (must be <10分钟 for 1-3 trading days)
 - [ ] T264 [P] Database optimization: Run ANALYZE and verify all indexes are used in query plans
-- [ ] T265 [P] Database optimization: Enable SQLite auto-vacuum and set cache_size to 64MB in database.config.ts
+- [ ] T276 [P] Database optimization: Enable SQLite auto-vacuum and set cache_size to 64MB in database.config.ts
 
 ---
 
@@ -621,20 +681,34 @@ Stories integrate independently when complete.
 
 ## Task Summary
 
-- **Total Tasks**: 265
+- **Total Tasks**: 280 (+15 new tasks)
 - **Setup Phase**: 10 tasks
 - **Foundational Phase**: 18 tasks
 - **US0 (Login)**: 18 tasks
-- **US1 (Charts)**: 49 tasks 🎯 MVP
+- **US1 (Charts)**: 55 tasks 🎯 MVP (+6 data script tasks)
 - **US5 (Data Update)**: 36 tasks
-- **US2 (Filtering)**: 45 tasks
+- **US2 (Filtering)**: 51 tasks (+6 for price_vs_ma and ma_vs_ma features)
 - **US3 (Favorites)**: 28 tasks
 - **US4 (Drawing)**: 31 tasks
+- **Data Tools (Phase 10)**: 11 tasks (NEW)
 - **Polish Phase**: 30 tasks
 
-**Parallel Tasks**: 157 tasks marked [P] can be parallelized
+**Parallel Tasks**: 165 tasks marked [P] can be parallelized
 
-**Estimated MVP Effort**: Phase 1 (Setup) + Phase 2 (Foundational) + Phase 3 (US0) + Phase 4 (US1) = 95 tasks
+**Estimated MVP Effort**: Phase 1 (Setup) + Phase 2 (Foundational) + Phase 3 (US0) + Phase 4 (US1) = 101 tasks
+
+**新增功能总结** (2026-02-28):
+- ✅ 股价与均线比较筛选 (price_vs_ma) - 完全实现
+- ✅ 均线与均线比较策略 (ma_vs_ma) - 完全实现并验证
+  - 数据库迁移 ✅
+  - 后端完整实现 ✅
+  - 前端UI ✅
+  - 功能测试 ✅（77只金叉，56只多头排列）
+- ✅ 批量数据初始化自动化工具
+  - 断点续传 ✅
+  - 进度监控 ✅
+  - API限流 ✅
+- ✅ 完整的功能文档和用户指南（5个新文档）
 
 ---
 
@@ -649,3 +723,50 @@ Stories integrate independently when complete.
 - Technology stack: Node.js + Nest.js + Prisma + React + TypeScript + Python Bridge
 - Database: SQLite (single file at data/stocks.db, excluded from git)
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
+
+## Recent Additions (2026-02-28)
+
+### Feature: 股价与均线比较 (price_vs_ma)
+- **Status**: ✅ 完全实现
+- **Files**: 
+  - `backend/src/modules/screener/screener.service.ts` (filterByPriceVsMA method)
+  - `backend/src/modules/screener/dto/execute-filter.dto.ts` (added price_vs_ma type)
+  - `frontend/src/pages/ScreenerPage.tsx` (UI support)
+- **Usage**: 筛选股价高于或低于指定均线的股票（如：股价 > MA200）
+
+### Feature: 均线与均线比较 (ma_vs_ma)
+- **Status**: ⚠️ 部分实现（数据模型和前端UI已完成，后端筛选逻辑待实现）
+- **Files**: 
+  - `backend/prisma/migrations/20260228153025_add_ma_vs_ma_strategy/` (database migration)
+  - `backend/prisma/schema.prisma` (added ma1Period, ma2Period fields)
+  - `backend/src/modules/strategies/dto/create-strategy.dto.ts` (DTO support)
+  - `backend/src/modules/strategies/strategies.service.ts` (CRUD support)
+  - `frontend/src/pages/ScreenerPage.tsx` (UI support)
+  - `frontend/src/services/strategy.service.ts` (API client)
+- **Pending**: `backend/src/modules/screener/screener.service.ts` needs filterByMAvsMA() method (T148b)
+- **Usage**: 创建金叉、死叉、多头排列等均线策略（如：MA50 > MA150）
+
+### Feature: 批量数据初始化工具
+- **Status**: ✅ 完全实现
+- **Files**:
+  - `backend/src/scripts/fetch-all-stocks.ts` (获取股票列表)
+  - `backend/src/scripts/fetch-batch-klines.ts` (批量获取K线和计算指标)
+  - `backend/src/scripts/batch-init-all-klines-simple.ts` (自动化批处理)
+  - `backend/src/scripts/check-progress.ts` (进度监控)
+  - `backend/src/scripts/batch-init-all-klines.sh` (Shell wrapper)
+  - `backend/src/scripts/check-progress.sh` (Shell wrapper)
+- **Features**:
+  - 自动断点续传
+  - 实时进度显示（进度条、数据统计、预估时间）
+  - API限流控制（批次间暂停30秒）
+  - 支持指定范围处理或全自动处理
+- **Current Progress**: 660/3665 stocks processed (18%)
+
+### Documentation
+- **Status**: ✅ 完全完成
+- **Files**:
+  - `docs/CHANGELOG_ma_vs_ma.md` (均线比较功能更新日志)
+  - `docs/ma_vs_ma_strategy_example.md` (API使用示例)
+  - `docs/ma_vs_ma_frontend_guide.md` (前端用户指南)
+  - `RESUME_INIT.md` (快速恢复数据初始化指南)
+  - `backend/PROGRESS_SNAPSHOT.md` (详细进度快照)

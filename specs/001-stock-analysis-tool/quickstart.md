@@ -206,62 +206,132 @@ npm run script:init-stocks
 
 ---
 
-### 2. 历史K线数据下载
+### 2. 历史K线数据下载（推荐使用自动化工具）
 
-下载近20年的日K线数据:
+#### 方式 1: 自动化批量初始化（推荐）⭐
 
+**功能特点**:
+- ✅ 自动断点续传（中断后可继续）
+- ✅ 实时进度监控
+- ✅ API限流控制
+- ✅ 一键完成K线下载和指标计算
+
+**步骤**:
+
+1. **获取股票列表**:
 ```bash
-npm run script:fetch-klines
+npx ts-node src/scripts/fetch-all-stocks.ts
+```
+预期结果：约3665只A股股票导入数据库
+
+2. **批量初始化（自动化）**:
+```bash
+npx ts-node src/scripts/batch-init-all-klines-simple.ts
 ```
 
-**预计时间**: 30-60分钟（取决于网络和API限额）
+**预计时间**: 约2小时（3665只股票）  
+**处理速度**: 约32只/分钟  
+**批次配置**: 500只/批，批次间暂停30秒
 
-**参数**:
-- `--stocks`: 股票数量限制（默认全部）
-- `--start-date`: 开始日期（默认20年前）
-- `--end-date`: 结束日期（默认今天）
-
-**示例**:
+3. **监控进度**（另开终端）:
 ```bash
-# 只下载前10只股票用于测试
-npm run script:fetch-klines -- --stocks=10
+# 查看一次进度
+npx ts-node src/scripts/check-progress.ts
 
-# 指定日期范围
-npm run script:fetch-klines -- --start-date=2020-01-01 --end-date=2024-12-31
+# 持续监控（每30秒刷新）
+npx ts-node src/scripts/check-progress.ts --watch
 ```
 
-**注意**: 
-- Tushare 免费版有限额限制，建议分批执行
-- 如果遇到限额，脚本会自动降级到 AkShare
+**进度示例**:
+```
+股票进度:
+  总数: 3665 只
+  已处理: 660 只
+  待处理: 3005 只
+  完成度: 18.0%
+
+  [█████████░░░░░░░...] 18.0%
+
+数据统计:
+  K线数据: 413,066 条
+    - 日线: 342,532 条
+    - 周线: 70,534 条
+  技术指标: 1,745,571 条
+```
+
+**中断恢复**:
+如果脚本中断，直接重新运行相同命令即可自动从断点继续：
+```bash
+npx ts-node src/scripts/batch-init-all-klines-simple.ts
+```
 
 ---
 
-### 3. 技术指标计算
+#### 方式 2: 手动分批处理
 
-批量计算所有技术指标:
+如果需要更精细的控制，可以手动指定范围：
 
 ```bash
-npm run script:calculate-indicators
+# 处理第1-500只股票
+npx ts-node src/scripts/fetch-batch-klines.ts 500 0
+
+# 处理第501-1000只股票
+npx ts-node src/scripts/fetch-batch-klines.ts 500 500
+
+# 以此类推...
 ```
 
-**预计时间**: 20-40分钟
+**参数说明**:
+- 第一个参数：批次大小（limit）
+- 第二个参数：起始偏移量（offset）
 
-**指标计算顺序**:
-1. MA (移动平均线)
-2. KDJ (随机指标)
-3. RSI (相对强弱指标)
-4. Volume MA (成交量均线)
-5. Amount MA (成交额均线)
+---
+
+#### 方式 3: Shell脚本自动化
+
+```bash
+# 使用Shell脚本循环执行
+./src/scripts/batch-init-all-klines.sh
+```
+
+---
+
+### 3. 技术指标说明
+
+**注意**: 使用方式1（自动化工具）时，技术指标会自动计算，无需单独运行。
+
+**已集成的指标**:
+1. MA (移动平均线): ma50, ma150, ma200
+2. KDJ (随机指标): k, d, j
+3. RSI (相对强弱指标): 14周期
+4. Volume MA (成交量52周均线)
+5. Amount MA (成交额52周均线)
 6. Week 52 Markers (52周高低点)
 
-**验证**:
+**验证数据**:
 ```bash
-# 检查数据库
+# 打开数据库浏览器
 npx prisma studio
 
-# 查看指标数量
-npm run script:check-indicators
+# 或查看进度
+npx ts-node src/scripts/check-progress.ts
 ```
+
+---
+
+### 4. 快速测试（仅初始化少量数据）
+
+如果只是测试功能，可以只初始化少量股票：
+
+```bash
+# 方式1: 使用现有的测试数据脚本
+npx ts-node src/scripts/fetch-sample-klines.ts
+
+# 方式2: 手动指定少量股票
+npx ts-node src/scripts/fetch-batch-klines.ts 10 0
+```
+
+这将只处理前10只股票，足够测试所有功能。
 
 ---
 

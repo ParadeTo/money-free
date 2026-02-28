@@ -52,7 +52,8 @@ export function KLineChartPage() {
   } = useIndicators(stockCode || '', period, subChart1Indicator, subChart2Indicator, showMA, timeRange);
 
   const handleStockSelect = (stock: Stock) => {
-    navigate(`/chart/${stock.stockCode}`);
+    // 在新标签页打开股票图表
+    window.open(`/chart/${stock.stockCode}`, '_blank');
   };
 
   const handleDataHover = (data: KLineData | undefined) => {

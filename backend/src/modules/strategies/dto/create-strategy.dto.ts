@@ -26,6 +26,8 @@ export class ConditionDto {
       'week_52_low',
       'near_52_high',
       'near_52_low',
+      'price_vs_ma',
+      'ma_vs_ma',
     ],
     example: 'indicator_value',
   })
@@ -39,6 +41,8 @@ export class ConditionDto {
     'week_52_low',
     'near_52_high',
     'near_52_low',
+    'price_vs_ma',
+    'ma_vs_ma',
   ])
   conditionType!: string;
 
@@ -75,6 +79,22 @@ export class ConditionDto {
   @IsOptional()
   @IsString()
   pattern?: string;
+
+  @ApiPropertyOptional({
+    description: 'First MA period (for ma_vs_ma type, e.g., "ma_50" for MA50)',
+    example: 'ma_50',
+  })
+  @IsOptional()
+  @IsString()
+  ma1Period?: string;
+
+  @ApiPropertyOptional({
+    description: 'Second MA period (for ma_vs_ma type, e.g., "ma_150" for MA150)',
+    example: 'ma_150',
+  })
+  @IsOptional()
+  @IsString()
+  ma2Period?: string;
 
   @ApiProperty({
     description: 'Sort order of this condition',

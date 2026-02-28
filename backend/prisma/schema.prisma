@@ -164,7 +164,7 @@ model ScreenerStrategy {
 model FilterCondition {
   id            Int      @id @default(autoincrement())
   strategyId    String   @map("strategy_id")
-  conditionType String   @map("condition_type") // 'indicator_value' | 'pattern' | 'price_change' | 'volume_change' | 'week_52_high' | 'week_52_low'
+  conditionType String   @map("condition_type") // 'indicator_value' | 'pattern' | 'price_change' | 'volume_change' | 'week_52_high' | 'week_52_low' | 'ma_vs_ma'
   
   // 根据 conditionType 使用不同字段
   indicatorName String?  @map("indicator_name") // 'ma50' | 'kdj_k' | 'rsi' | 'volume' | 'amount'
@@ -172,6 +172,10 @@ model FilterCondition {
   targetValue   Float?   @map("target_value")
   
   pattern       String?  // 'kdj_golden_cross' | 'kdj_death_cross' | 'price_above_ma' | 'price_below_ma'
+  
+  // 均线比较策略字段 (for ma_vs_ma type)
+  ma1Period     String?  @map("ma1_period") // 'ma_50' | 'ma_150' | 'ma_200' | 'ma_10' | 'ma_30' | 'ma_40'
+  ma2Period     String?  @map("ma2_period") // 'ma_50' | 'ma_150' | 'ma_200' | 'ma_10' | 'ma_30' | 'ma_40'
   
   sortOrder     Int      @default(0) @map("sort_order")
 

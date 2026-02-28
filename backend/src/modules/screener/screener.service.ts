@@ -111,6 +111,21 @@ export class ScreenerService {
       case 'near_52_low':
         return this.filterNear52Low(stockCodes, condition.targetValue || 5);
 
+      case 'price_vs_ma':
+        return this.filterByPriceVsMA(
+          stockCodes,
+          condition.indicatorName!,
+          condition.operator!,
+        );
+
+      case 'ma_vs_ma':
+        return this.filterByMAvsMA(
+          stockCodes,
+          condition.ma1Period!,
+          condition.ma2Period!,
+          condition.operator!,
+        );
+
       default:
         return stocks;
     }
@@ -175,6 +190,146 @@ export class ScreenerService {
           });
           if (stock) result.push(stock);
         }
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Filter by price vs MA comparison
+   * 比较最新股价与指定均线的关系
+   */
+  private async filterByPriceVsMA(
+    stockCodes: string[],
+    maType: string, // ma50, ma150, ma200
+    operator: string, // >, <, >=, <=
+  ): Promise<any[]> {
+    const result: any[] = [];
+
+    for (const stockCode of stockCodes) {
+      // 获取最新K线数据
+      const kline = await this.prisma.kLineData.findFirst({
+        where: {
+          stockCode,
+          period: 'daily',
+        },
+        orderBy: { date: 'desc' },
+      });
+
+      // 获取最新MA数据
+      const maIndicator = await this.prisma.technicalIndicator.findFirst({
+        where: {
+          stockCode,
+          period: 'daily',
+          indicatorType: 'ma',
+        },
+        orderBy: { date: 'desc' },
+      });
+
+      if (!kline || !maIndicator) continue;
+
+      const maValues = JSON.parse(maIndicator.values);
+      const maValue = maValues[maType]; // ma50, ma150, ma200
+
+      if (maValue === undefined || maValue === null) continue;
+
+      const price = kline.close;
+      let matches = false;
+
+      switch (operator) {
+        case '>':
+          matches = price > maValue;
+          break;
+        case '<':
+          matches = price < maValue;
+          break;
+        case '>=':
+          matches = price >= maValue;
+          break;
+        case '<=':
+          matches = price <= maValue;
+          break;
+      }
+
+      if (matches) {
+        const stock = await this.prisma.stock.findUnique({
+          where: { stockCode },
+        });
+        if (stock) result.push(stock);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Filter by MA vs MA comparison (e.g., MA50 > MA150)
+   */
+  private async filterByMAvsMA(
+    stockCodes: string[],
+    ma1Period: string, // ma_50, ma_150, ma_200
+    ma2Period: string, // ma_50, ma_150, ma_200
+    operator: string, // >, <, >=, <=
+  ): Promise<any[]> {
+    const result: any[] = [];
+
+    // 验证参数
+    if (!ma1Period || !ma2Period || !operator) {
+      this.logger.warn('MA vs MA filter missing required parameters');
+      return result;
+    }
+
+    // 将 ma_50 转换为 ma50 格式（去掉下划线）
+    const ma1Key = ma1Period.replace('_', '');
+    const ma2Key = ma2Period.replace('_', '');
+
+    for (const stockCode of stockCodes) {
+      // 获取最新MA数据
+      const maIndicator = await this.prisma.technicalIndicator.findFirst({
+        where: {
+          stockCode,
+          period: 'daily',
+          indicatorType: 'ma',
+        },
+        orderBy: { date: 'desc' },
+      });
+
+      if (!maIndicator) continue;
+
+      const maValues = JSON.parse(maIndicator.values);
+      const ma1Value = maValues[ma1Key]; // ma50, ma150, ma200
+      const ma2Value = maValues[ma2Key]; // ma50, ma150, ma200
+
+      if (ma1Value === undefined || ma1Value === null || ma2Value === undefined || ma2Value === null) {
+        continue;
+      }
+
+      let matches = false;
+
+      switch (operator) {
+        case '>':
+          matches = ma1Value > ma2Value;
+          break;
+        case '<':
+          matches = ma1Value < ma2Value;
+          break;
+        case '>=':
+          matches = ma1Value >= ma2Value;
+          break;
+        case '<=':
+          matches = ma1Value <= ma2Value;
+          break;
+        case '=':
+          matches = Math.abs(ma1Value - ma2Value) < 0.01;
+          break;
+      }
+
+      if (matches) {
+        const stock = await this.prisma.stock.findUnique({
+          where: { stockCode },
+        });
+        if (stock) result.push(stock);
       }
     }
 
