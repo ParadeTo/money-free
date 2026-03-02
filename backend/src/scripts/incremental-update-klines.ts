@@ -1,17 +1,19 @@
 /**
- * 批量获取股票 K线数据
+ * 智能增量更新K线数据（20年历史）
  * 
  * 功能:
- * 1. 从数据库获取股票列表
- * 2. 批量获取日线和周线数据
- * 3. 计算技术指标并保存
+ * 1. 检测每只股票现有数据的日期范围
+ * 2. 只补充缺失的时间段（2006-2026）
+ * 3. 保留已有数据，使用 upsert 避免重复
+ * 4. 重新计算技术指标确保准确性
  * 
  * 使用:
- * npx ts-node src/scripts/fetch-batch-klines.ts [limit] [offset]
+ * npx ts-node src/scripts/incremental-update-klines.ts [limit] [offset]
  * 
  * 例子:
- * npx ts-node src/scripts/fetch-batch-klines.ts 100 0    # 获取前100只股票
- * npx ts-node src/scripts/fetch-batch-klines.ts 100 100  # 获取101-200只股票
+ * npx ts-node src/scripts/incremental-update-klines.ts 10 0    # 测试前10只
+ * npx ts-node src/scripts/incremental-update-klines.ts 100 0   # 更新前100只
+ * npx ts-node src/scripts/incremental-update-klines.ts         # 更新所有股票
  */
 
 import { PrismaClient } from '@prisma/client';
@@ -25,17 +27,63 @@ import { PythonBridgeService } from '../services/python-bridge/python-bridge.ser
 const prisma = new PrismaClient();
 
 // 从命令行参数获取 limit 和 offset
-const limit = parseInt(process.argv[2]) || 50; // 默认50只
-const offset = parseInt(process.argv[3]) || 0;  // 默认从0开始
+const limit = parseInt(process.argv[2]) || 0; // 0表示全部
+const offset = parseInt(process.argv[3]) || 0;
+
+// 目标日期范围：20年历史数据
+const TARGET_START = new Date('2006-03-01');
+const TARGET_END = new Date('2026-03-01');
 
 async function processStock(
   stock: any,
   dataSourceManager: DataSourceManagerService,
   indicatorsService: TechnicalIndicatorsService,
-  startDateStr: string,
-  endDateStr: string,
 ) {
-  console.log(`\n--- Processing ${stock.stockCode} ${stock.stockName} ---`);
+  console.log(`\n--- Checking ${stock.stockCode} ${stock.stockName} ---`);
+
+  // 检测数据缺口
+  const existing = await prisma.kLineData.findMany({
+    where: { stockCode: stock.stockCode, period: 'daily' },
+    orderBy: { date: 'asc' },
+    select: { date: true },
+  });
+
+  let startDateStr: string;
+  let endDateStr: string;
+  let updateType: string;
+
+  if (existing.length === 0) {
+    // 无数据，全量获取
+    startDateStr = TARGET_START.toISOString().split('T')[0];
+    endDateStr = TARGET_END.toISOString().split('T')[0];
+    updateType = 'FULL';
+    console.log(`📊 No existing data, fetching full 20 years`);
+  } else {
+    const currentStart = existing[0].date;
+    const currentEnd = existing[existing.length - 1].date;
+
+    console.log(`📊 Existing data: ${currentStart.toISOString().split('T')[0]} to ${currentEnd.toISOString().split('T')[0]}`);
+
+    // 优先补充早期数据
+    if (currentStart > TARGET_START) {
+      const gapEnd = new Date(currentStart);
+      gapEnd.setDate(gapEnd.getDate() - 1);
+      startDateStr = TARGET_START.toISOString().split('T')[0];
+      endDateStr = gapEnd.toISOString().split('T')[0];
+      updateType = 'BEFORE';
+      console.log(`📊 Gap detected BEFORE: need ${startDateStr} to ${endDateStr}`);
+    } else if (currentEnd < TARGET_END) {
+      const gapStart = new Date(currentEnd);
+      gapStart.setDate(gapStart.getDate() + 1);
+      startDateStr = gapStart.toISOString().split('T')[0];
+      endDateStr = TARGET_END.toISOString().split('T')[0];
+      updateType = 'AFTER';
+      console.log(`📊 Gap detected AFTER: need ${startDateStr} to ${endDateStr}`);
+    } else {
+      console.log('✅ Data is complete, skipping...');
+      return { success: true, action: 'skipped' };
+    }
+  }
 
   try {
     // ===== 1. 获取和保存日线数据 =====
@@ -49,33 +97,57 @@ async function processStock(
     console.log(`✅ Fetched ${dailyData.length} daily records from ${dailySource}`);
 
     if (dailyData.length === 0) {
-      console.log('⚠️ No data available, skipping...');
-      return { success: false, reason: 'no_data' };
+      console.log('⚠️ No new data available, skipping...');
+      return { success: true, action: 'no_data' };
     }
 
-    // 保存日线数据（增量模式：只插入新数据，不删除已有数据）
-    // 使用 upsert 或 createMany with skipDuplicates
-    await prisma.kLineData.createMany({
-      data: dailyData.map((item) => ({
+    // 保存日线数据（增量模式：upsert逐条插入，避免重复）
+    console.log(`💾 Saving ${dailyData.length} daily records (incremental)...`);
+    let insertedCount = 0;
+    for (const item of dailyData) {
+      try {
+        await prisma.kLineData.upsert({
+          where: {
+            stockCode_date_period: {
+              stockCode: stock.stockCode,
+              date: item.date,
+              period: 'daily',
+            },
+          },
+          update: {},
+          create: {
+            stockCode: stock.stockCode,
+            date: item.date,
+            period: 'daily',
+            open: item.open,
+            high: item.high,
+            low: item.low,
+            close: item.close,
+            volume: item.volume,
+            amount: item.amount,
+            source: dailySource,
+          },
+        });
+        insertedCount++;
+      } catch (error) {
+        // 跳过插入失败的记录
+      }
+    }
+    console.log(`✅ Inserted ${insertedCount} new daily records`);
+
+    // ===== 2. 重新计算日线技术指标（基于完整数据）=====
+    console.log(`🔢 Recalculating daily indicators based on full dataset...`);
+    
+    // 获取该股票的所有日线数据用于计算
+    const allDailyRecords = await prisma.kLineData.findMany({
+      where: {
         stockCode: stock.stockCode,
-        date: item.date,
         period: 'daily',
-        open: item.open,
-        high: item.high,
-        low: item.low,
-        close: item.close,
-        volume: item.volume,
-        amount: item.amount,
-        source: dailySource,
-      })),
+      },
+      orderBy: { date: 'asc' },
     });
 
-    // ===== 2. 计算日线技术指标 =====
-    const sortedDailyData = [...dailyData].sort((a, b) =>
-      new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
-
-    const priceData: PriceData[] = sortedDailyData.map((item) => ({
+    const priceData: PriceData[] = allDailyRecords.map((item) => ({
       date: item.date,
       open: item.open,
       high: item.high,
@@ -92,7 +164,7 @@ async function processStock(
     const amountResults = indicatorsService.calculateAmount(priceData, 52);
     const markers = indicatorsService.calculate52WeekMarkers(priceData);
 
-    // 删除日线指标（因为新旧数据会影响MA等计算，需要重新计算）
+    // 删除旧指标（因为新数据会影响MA等计算）
     await prisma.technicalIndicator.deleteMany({
       where: {
         stockCode: stock.stockCode,
@@ -189,27 +261,51 @@ async function processStock(
 
     if (weeklyData.length > 0) {
       // 保存周线数据（增量模式）
-      await prisma.kLineData.createMany({
-        data: weeklyData.map((item) => ({
+      console.log(`💾 Saving ${weeklyData.length} weekly records (incremental)...`);
+      let weeklyInserted = 0;
+      for (const item of weeklyData) {
+        try {
+          await prisma.kLineData.upsert({
+            where: {
+              stockCode_date_period: {
+                stockCode: stock.stockCode,
+                date: item.date,
+                period: 'weekly',
+              },
+            },
+            update: {},
+            create: {
+              stockCode: stock.stockCode,
+              date: item.date,
+              period: 'weekly',
+              open: item.open,
+              high: item.high,
+              low: item.low,
+              close: item.close,
+              volume: item.volume,
+              amount: item.amount,
+              source: weeklySource,
+            },
+          });
+          weeklyInserted++;
+        } catch (error) {
+          // 跳过失败的记录
+        }
+      }
+      console.log(`✅ Inserted ${weeklyInserted} new weekly records`);
+
+      // 重新计算周线指标（基于完整数据）
+      console.log(`🔢 Recalculating weekly indicators...`);
+      
+      const allWeeklyRecords = await prisma.kLineData.findMany({
+        where: {
           stockCode: stock.stockCode,
-          date: item.date,
           period: 'weekly',
-          open: item.open,
-          high: item.high,
-          low: item.low,
-          close: item.close,
-          volume: item.volume,
-          amount: item.amount,
-          source: weeklySource,
-        })),
+        },
+        orderBy: { date: 'asc' },
       });
 
-      // 计算周线指标（简化版，只保存必要指标）
-      const sortedWeeklyData = [...weeklyData].sort((a, b) =>
-        new Date(a.date).getTime() - new Date(b.date).getTime()
-      );
-
-      const weeklyPriceData: PriceData[] = sortedWeeklyData.map((item) => ({
+      const weeklyPriceData: PriceData[] = allWeeklyRecords.map((item) => ({
         date: item.date,
         open: item.open,
         high: item.high,
@@ -221,7 +317,7 @@ async function processStock(
 
       const weeklyMaResults = indicatorsService.calculateMA(weeklyPriceData, { weekly: [10, 30, 40] }, 'weekly');
 
-      // 删除周线指标（需要重新计算）
+      // 删除旧周线指标
       await prisma.technicalIndicator.deleteMany({
         where: {
           stockCode: stock.stockCode,
@@ -294,14 +390,38 @@ async function main() {
     return;
   }
 
-  // 数据日期范围 (20年历史数据)
-  const endDate = new Date('2026-03-01'); // 更新到最新
-  const startDate = new Date();
-  startDate.setFullYear(endDate.getFullYear() - 20); // 往前推20年
-  const startDateStr = startDate.toISOString().split('T')[0];
-  const endDateStr = endDate.toISOString().split('T')[0];
-
-  console.log(`Date range: ${startDateStr} to ${endDateStr}\n`);
+  // 检测数据缺口并确定需要获取的日期范围
+  console.log(`Target range: 2006-03-01 to 2026-03-01 (20 years)\n`);
+  
+  let totalGaps = { before: 0, after: 0, complete: 0, full: 0 };
+  
+  // 先扫描所有股票，统计缺口类型
+  console.log('Scanning data gaps...\n');
+  for (const stock of stocks) {
+    const existing = await prisma.kLineData.findMany({
+      where: { stockCode: stock.stockCode, period: 'daily' },
+      orderBy: { date: 'asc' },
+      select: { date: true },
+      take: 2,
+    });
+    
+    if (existing.length === 0) {
+      totalGaps.full++;
+    } else {
+      const currentStart = existing[0].date;
+      const currentEnd = existing[existing.length - 1]?.date || currentStart;
+      
+      if (currentStart > TARGET_START) totalGaps.before++;
+      if (currentEnd < TARGET_END) totalGaps.after++;
+      if (currentStart <= TARGET_START && currentEnd >= TARGET_END) totalGaps.complete++;
+    }
+  }
+  
+  console.log(`Gap analysis:`);
+  console.log(`  Need full data: ${totalGaps.full} stocks`);
+  console.log(`  Need earlier data: ${totalGaps.before} stocks`);
+  console.log(`  Need latest data: ${totalGaps.after} stocks`);
+  console.log(`  Already complete: ${totalGaps.complete} stocks\n`);
 
   // 统计
   let successCount = 0;
@@ -317,8 +437,6 @@ async function main() {
       stock,
       dataSourceManager,
       indicatorsService,
-      startDateStr,
-      endDateStr,
     );
 
     if (result.success) {

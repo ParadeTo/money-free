@@ -119,11 +119,15 @@ export class ScreenerService {
         );
 
       case 'ma_vs_ma':
+        if (!condition.ma1Period || !condition.ma2Period || !condition.operator) {
+          this.logger.warn('MA vs MA condition missing required fields');
+          return stocks;
+        }
         return this.filterByMAvsMA(
           stockCodes,
-          condition.ma1Period!,
-          condition.ma2Period!,
-          condition.operator!,
+          condition.ma1Period,
+          condition.ma2Period,
+          condition.operator,
         );
 
       default:

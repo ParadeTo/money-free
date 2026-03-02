@@ -144,9 +144,20 @@ export function ScreenerPage() {
   };
 
   const updateCondition = (id: string, updates: Partial<FilterCondition>) => {
-    setConditions(conditions.map(c => 
-      c.id === id ? { ...c, ...updates } : c
-    ));
+    setConditions(conditions.map(c => {
+      if (c.id !== id) return c;
+      
+      const updated = { ...c, ...updates };
+      
+      // 当切换到 ma_vs_ma 类型时，设置默认值
+      if (updates.conditionType === 'ma_vs_ma') {
+        if (!updated.ma1Period) updated.ma1Period = 'ma_50';
+        if (!updated.ma2Period) updated.ma2Period = 'ma_150';
+        if (!updated.operator) updated.operator = '>';
+      }
+      
+      return updated;
+    }));
   };
 
   // 保存策略
