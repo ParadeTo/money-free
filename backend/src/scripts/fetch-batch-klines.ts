@@ -53,8 +53,14 @@ async function processStock(
       return { success: false, reason: 'no_data' };
     }
 
-    // 保存日线数据（增量模式：只插入新数据，不删除已有数据）
-    // 使用 upsert 或 createMany with skipDuplicates
+    // 删除旧数据后重新插入（确保数据完整性）
+    await prisma.kLineData.deleteMany({
+      where: {
+        stockCode: stock.stockCode,
+        period: 'daily',
+      },
+    });
+
     await prisma.kLineData.createMany({
       data: dailyData.map((item) => ({
         stockCode: stock.stockCode,
@@ -188,7 +194,14 @@ async function processStock(
     });
 
     if (weeklyData.length > 0) {
-      // 保存周线数据（增量模式）
+      // 删除旧周线数据后重新插入
+      await prisma.kLineData.deleteMany({
+        where: {
+          stockCode: stock.stockCode,
+          period: 'weekly',
+        },
+      });
+
       await prisma.kLineData.createMany({
         data: weeklyData.map((item) => ({
           stockCode: stock.stockCode,
@@ -330,9 +343,9 @@ async function main() {
     }
 
     // 避免 API 限流：每处理一只股票后等待
-    // Tushare 免费版有每分钟调用次数限制
+    // Tushare 免费版有每分钟调用次数限制（50次/分钟）
     if (i < stocks.length - 1) {
-      await new Promise(resolve => setTimeout(resolve, 1000)); // 等待1秒
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 等待2秒，避免超限
     }
   }
 

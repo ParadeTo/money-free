@@ -22,6 +22,7 @@ model Stock {
   marketCap      Float?         @map("market_cap")       // 市值(亿元)
   avgTurnover    Float?         @map("avg_turnover")     // 日均成交额(万元)
   admissionStatus String        @default("active") @map("admission_status") // 'active' | 'inactive'
+  indexCode      String?        @map("index_code")       // 'HS300' | 'ZZ1000' | null
   createdAt      DateTime       @default(now()) @map("created_at")
   updatedAt      DateTime       @updatedAt @map("updated_at")
 
@@ -34,6 +35,7 @@ model Stock {
   @@map("stocks")
   @@index([admissionStatus])
   @@index([market])
+  @@index([indexCode])
 }
 
 // ============================================================================

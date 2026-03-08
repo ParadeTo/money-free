@@ -323,6 +323,82 @@ export class TushareService {
   }
 
   /**
+   * 获取指数成分股
+   * index_code: '000300.SH' (沪深300), '000852.SH' (中证1000)
+   */
+  async getIndexWeight(params: {
+    index_code: string;
+    trade_date?: string; // YYYYMMDD，不传则获取最新
+  }): Promise<Array<{ con_code: string; trade_date: string; weight: number }>> {
+    try {
+      const requestParams: any = { index_code: params.index_code };
+      
+      if (params.trade_date) {
+        requestParams.trade_date = params.trade_date;
+      } else {
+        const today = new Date();
+        let tryDate = new Date(today);
+        
+        for (let i = 0; i < 10; i++) {
+          const dateStr = tryDate.toISOString().split('T')[0].replace(/-/g, '');
+          const response = await this.client.post('', {
+            api_name: 'index_weight',
+            token: this.token,
+            params: { index_code: params.index_code, trade_date: dateStr },
+            fields: 'con_code,trade_date,weight',
+          });
+
+          if (response.data.code !== 0) {
+            throw new Error(`Tushare API error: ${response.data.msg}`);
+          }
+
+          const items = response.data.data.items || [];
+          if (items.length > 0) {
+            const fields = response.data.data.fields || [];
+            return items.map((item: any[]) => {
+              const obj: any = {};
+              fields.forEach((field: string, index: number) => {
+                obj[field] = item[index];
+              });
+              return obj;
+            });
+          }
+          
+          tryDate.setDate(tryDate.getDate() - 1);
+        }
+        
+        return [];
+      }
+
+      const response = await this.client.post('', {
+        api_name: 'index_weight',
+        token: this.token,
+        params: requestParams,
+        fields: 'con_code,trade_date,weight',
+      });
+
+      if (response.data.code !== 0) {
+        throw new Error(`Tushare API error: ${response.data.msg}`);
+      }
+
+      const items = response.data.data.items || [];
+      const fields = response.data.data.fields || [];
+
+      return items.map((item: any[]) => {
+        const obj: any = {};
+        fields.forEach((field: string, index: number) => {
+          obj[field] = item[index];
+        });
+        return obj;
+      });
+    } catch (error) {
+      const err = error as Error;
+      this.logger.error(`Failed to fetch index weight for ${params.index_code}: ${err.message}`);
+      throw error;
+    }
+  }
+
+  /**
    * 检查服务是否可用
    */
   isAvailable(): boolean {
