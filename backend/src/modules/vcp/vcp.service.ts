@@ -15,7 +15,16 @@ export class VcpService {
   async getLatestScanResults(dto: GetVcpScanDto) {
     const sortBy = dto.sortBy || 'lastContractionPct';
     const sortOrder = dto.sortOrder || 'asc';
-    const inPullbackOnly = dto.inPullbackOnly || false;
+    
+    // 手动处理 inPullbackOnly 参数
+    let inPullbackOnly = false;
+    if (dto.inPullbackOnly !== undefined && dto.inPullbackOnly !== null) {
+      if (typeof dto.inPullbackOnly === 'string') {
+        inPullbackOnly = dto.inPullbackOnly.toLowerCase() === 'true';
+      } else {
+        inPullbackOnly = Boolean(dto.inPullbackOnly);
+      }
+    }
 
     const latestResult = await this.prisma.vcpScanResult.findFirst({
       orderBy: { scanDate: 'desc' },
@@ -43,7 +52,7 @@ export class VcpService {
     };
 
     // 如果只要处于回调中的股票
-    if (inPullbackOnly) {
+    if (inPullbackOnly === true) {
       whereClause.inPullback = true;
     }
 

@@ -91,6 +91,21 @@ export function VcpResultTable({
       render: (v: number) => <Tag color="blue">{v}</Tag>,
     },
     {
+      title: '回调状态',
+      key: 'pullbackStatus',
+      width: 100,
+      align: 'center',
+      render: (_: unknown, record: VcpScanItem) => {
+        if (record.inPullback) {
+          return <Tag color="orange">🎯 回调中</Tag>;
+        }
+        if (record.pullbackCount > 0) {
+          return <Tag color="default">已恢复</Tag>;
+        }
+        return <Tag color="default">-</Tag>;
+      },
+    },
+    {
       title: 'Last Contraction %',
       dataIndex: 'lastContractionPct',
       key: 'lastContractionPct',

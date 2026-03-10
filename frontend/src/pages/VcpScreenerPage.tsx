@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Typography, Alert, Space } from 'antd';
+import { Typography, Alert, Space, Checkbox } from 'antd';
 import { ThunderboltOutlined } from '@ant-design/icons';
 import { vcpService } from '../services/vcp.service';
 import { favoriteService } from '../services/favorite.service';
@@ -18,6 +18,7 @@ export function VcpScreenerPage() {
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<VcpScanQuery['sortBy']>('lastContractionPct');
   const [sortOrder, setSortOrder] = useState<VcpScanQuery['sortOrder']>('asc');
+  const [inPullbackOnly, setInPullbackOnly] = useState(false);
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const setFavorites = useFavoritesStore(s => s.setFavorites);
 
@@ -26,7 +27,7 @@ export function VcpScreenerPage() {
     setError(null);
     try {
       const [result, favResult] = await Promise.all([
-        vcpService.getVcpScanResults({ sortBy, sortOrder }),
+        vcpService.getVcpScanResults({ sortBy, sortOrder, inPullbackOnly }),
         favoriteService.getFavorites(),
       ]);
       setData(result);
@@ -36,7 +37,7 @@ export function VcpScreenerPage() {
     } finally {
       setLoading(false);
     }
-  }, [sortBy, sortOrder, setFavorites]);
+  }, [sortBy, sortOrder, inPullbackOnly, setFavorites]);
 
   useEffect(() => {
     fetchData();
@@ -68,9 +69,19 @@ export function VcpScreenerPage() {
           <ThunderboltOutlined className={styles.headerIcon} />
           <Title level={4} style={{ margin: 0 }}>VCP Breakout Screener</Title>
         </Space>
-        {data?.scanDate && (
-          <Text type="secondary">Date: {data.scanDate} | Total: {data.totalCount} stocks</Text>
-        )}
+        <Space align="center">
+          <Checkbox 
+            checked={inPullbackOnly}
+            onChange={(e) => setInPullbackOnly(e.target.checked)}
+          >
+            <span className={styles.checkboxLabel}>
+              🎯 只看回调中的股票
+            </span>
+          </Checkbox>
+          {data?.scanDate && (
+            <Text type="secondary">Date: {data.scanDate} | Total: {data.totalCount} stocks</Text>
+          )}
+        </Space>
       </div>
 
       {error && <Alert type="error" message={error} style={{ marginBottom: 16 }} closable />}

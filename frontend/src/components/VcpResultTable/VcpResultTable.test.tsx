@@ -14,6 +14,8 @@ const mockData: VcpScanItem[] = [
     lastContractionPct: 8.5,
     volumeDryingUp: true,
     rsRating: 92,
+    inPullback: true,
+    pullbackCount: 3,
   },
   {
     stockCode: '000858.SZ',
@@ -26,6 +28,8 @@ const mockData: VcpScanItem[] = [
     lastContractionPct: 12.3,
     volumeDryingUp: false,
     rsRating: 78,
+    inPullback: false,
+    pullbackCount: 2,
   },
 ];
 

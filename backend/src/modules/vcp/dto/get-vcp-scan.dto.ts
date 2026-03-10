@@ -1,6 +1,6 @@
-import { IsOptional, IsIn, IsBoolean } from 'class-validator';
+import { IsOptional, IsIn } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 export class GetVcpScanDto {
   @ApiPropertyOptional({
@@ -18,11 +18,11 @@ export class GetVcpScanDto {
 
   @ApiPropertyOptional({
     description: '只返回处于回调中的股票',
-    type: Boolean,
-    default: false,
+    type: String,
   })
   @IsOptional()
-  @Transform(({ value }) => value === 'true' || value === true)
-  @IsBoolean()
-  inPullbackOnly?: boolean;
+  @IsIn(['true', 'false', true, false], {
+    message: 'inPullbackOnly must be "true" or "false"',
+  })
+  inPullbackOnly?: string | boolean;
 }
