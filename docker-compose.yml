@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # Redis - 任务队列 (Bull)
+  redis:
+    image: redis:7-alpine
+    container_name: money-free-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Backend - Nest.js API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: money-free-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=file:../data/stocks.db
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET:-default-secret-change-me}
+      - TUSHARE_TOKEN=${TUSHARE_TOKEN}
+      - NODE_ENV=production
+      - PORT=3000
+      - CORS_ORIGIN=http://localhost:5173
+    volumes:
+      - ./data:/app/data
+      - ./backend/.env:/app/.env
+    depends_on:
+      redis:
+        condition: service_healthy
+    command: npm run start:prod
+
+  # Frontend - React + Vite
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: money-free-frontend
+    ports:
+      - "5173:80"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:3000/api/v1
+    depends_on:
+      - backend
+
+  # Python Bridge (Optional - for AkShare fallback)
+  # Uncomment if you need to run Python bridge as a microservice
+  # python-bridge:
+  #   build:
+  #     context: ./bridge
+  #     dockerfile: Dockerfile
+  #   container_name: money-free-python-bridge
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #   command: python main.py
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  default:
+    name: money-free-network
