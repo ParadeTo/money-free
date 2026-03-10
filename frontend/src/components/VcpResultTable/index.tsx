@@ -30,20 +30,20 @@ export function VcpResultTable({
 }: VcpResultTableProps) {
   const columns: ColumnsType<VcpScanItem> = [
     {
-      title: '股票代码',
+      title: 'Stock Code',
       dataIndex: 'stockCode',
       key: 'stockCode',
       width: 110,
       render: (code: string) => <Text strong>{code}</Text>,
     },
     {
-      title: '名称',
+      title: 'Name',
       dataIndex: 'stockName',
       key: 'stockName',
       width: 100,
     },
     {
-      title: '当前价格',
+      title: 'Current Price',
       dataIndex: 'latestPrice',
       key: 'latestPrice',
       width: 100,
@@ -51,7 +51,7 @@ export function VcpResultTable({
       render: (v: number) => v?.toFixed(2),
     },
     {
-      title: '涨跌幅',
+      title: 'Change %',
       dataIndex: 'priceChangePct',
       key: 'priceChangePct',
       width: 90,
@@ -65,7 +65,7 @@ export function VcpResultTable({
       ),
     },
     {
-      title: '距52周高点',
+      title: 'From 52W High',
       dataIndex: 'distFrom52WeekHigh',
       key: 'distFrom52WeekHigh',
       width: 110,
@@ -73,7 +73,7 @@ export function VcpResultTable({
       render: (v: number) => <Text>{-Math.abs(v)?.toFixed(1)}%</Text>,
     },
     {
-      title: '距52周低点',
+      title: 'From 52W Low',
       dataIndex: 'distFrom52WeekLow',
       key: 'distFrom52WeekLow',
       width: 110,
@@ -81,7 +81,7 @@ export function VcpResultTable({
       render: (v: number) => <Text style={{ color: '#52c41a' }}>+{v?.toFixed(1)}%</Text>,
     },
     {
-      title: '收缩次数',
+      title: 'Contractions',
       dataIndex: 'contractionCount',
       key: 'contractionCount',
       width: 90,
@@ -91,7 +91,7 @@ export function VcpResultTable({
       render: (v: number) => <Tag color="blue">{v}</Tag>,
     },
     {
-      title: '最近收缩幅度',
+      title: 'Last Contraction %',
       dataIndex: 'lastContractionPct',
       key: 'lastContractionPct',
       width: 120,
@@ -101,7 +101,7 @@ export function VcpResultTable({
       render: (v: number) => `${v?.toFixed(1)}%`,
     },
     {
-      title: '成交量配合',
+      title: 'Volume Dry Up',
       dataIndex: 'volumeDryingUp',
       key: 'volumeDryingUp',
       width: 100,
@@ -109,7 +109,7 @@ export function VcpResultTable({
       sorter: true,
       sortOrder: sortBy === 'volumeDryingUp' ? (sortOrder === 'asc' ? 'ascend' : 'descend') : undefined,
       render: (v: boolean) => (
-        <Tag color={v ? 'green' : 'default'}>{v ? '是' : '否'}</Tag>
+        <Tag color={v ? 'green' : 'default'}>{v ? 'Yes' : 'No'}</Tag>
       ),
     },
     {
@@ -154,7 +154,7 @@ export function VcpResultTable({
           expandRowByClick: true,
         } : undefined}
         locale={{
-          emptyText: <Empty description="当前无符合 VCP 条件的股票" />,
+          emptyText: <Empty description="No stocks meeting VCP criteria" />,
         }}
       />
     </div>

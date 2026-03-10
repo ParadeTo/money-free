@@ -1,35 +1,34 @@
 import type { TimeRange } from '../store/chart.store';
 
 /**
- * 根据时间范围类型计算日期区间
- * 注意：endDate 设置为数据的最新日期（2024-02-28），而不是当前系统日期
+ * 根据时间范围类型计算起始日期
+ * 不返回 endDate，让后端自动返回到最新日期的数据
  */
 export function getDateRangeFromTimeRange(timeRange: TimeRange): {
   startDate: string;
-  endDate: string;
 } {
-  // 使用数据的最新日期作为结束日期
-  const endDate = new Date('2024-02-28');
-  const startDate = new Date('2024-02-28');
+  // 使用当前日期作为参考点计算起始日期
+  const today = new Date();
+  const startDate = new Date(today);
 
   switch (timeRange) {
     case '1M':
-      startDate.setMonth(endDate.getMonth() - 1);
+      startDate.setMonth(today.getMonth() - 1);
       break;
     case '3M':
-      startDate.setMonth(endDate.getMonth() - 3);
+      startDate.setMonth(today.getMonth() - 3);
       break;
     case '6M':
-      startDate.setMonth(endDate.getMonth() - 6);
+      startDate.setMonth(today.getMonth() - 6);
       break;
     case '1Y':
-      startDate.setFullYear(endDate.getFullYear() - 1);
+      startDate.setFullYear(today.getFullYear() - 1);
       break;
     case '2Y':
-      startDate.setFullYear(endDate.getFullYear() - 2);
+      startDate.setFullYear(today.getFullYear() - 2);
       break;
     case '5Y':
-      startDate.setFullYear(endDate.getFullYear() - 5);
+      startDate.setFullYear(today.getFullYear() - 5);
       break;
     case 'ALL':
       // 获取所有数据，设置一个很早的日期
@@ -39,7 +38,6 @@ export function getDateRangeFromTimeRange(timeRange: TimeRange): {
 
   return {
     startDate: startDate.toISOString().split('T')[0],
-    endDate: endDate.toISOString().split('T')[0],
   };
 }
 

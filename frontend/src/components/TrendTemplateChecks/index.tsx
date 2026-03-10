@@ -16,7 +16,7 @@ export function TrendTemplateChecks({ checks, allPass }: TrendTemplateChecksProp
       <div className={styles.header}>
         <Text strong>Trend Template</Text>
         <Tag color={allPass ? 'green' : 'orange'}>
-          {allPass ? '全部通过' : '部分未通过'}
+          {allPass ? 'All Pass' : 'Partial Pass'}
         </Tag>
       </div>
       <div className={styles.checkList}>

@@ -37,14 +37,14 @@ export function VcpDetailPanel({ stockCode }: VcpDetailPanelProps) {
   if (!data) return null;
 
   const contractionColumns = [
-    { title: '序号', dataIndex: 'index', key: 'index', width: 60 },
-    { title: '高点日期', dataIndex: 'swingHighDate', key: 'swingHighDate', width: 110 },
-    { title: '高点价格', dataIndex: 'swingHighPrice', key: 'swingHighPrice', width: 90, render: (v: number) => v?.toFixed(2) },
-    { title: '低点日期', dataIndex: 'swingLowDate', key: 'swingLowDate', width: 110 },
-    { title: '低点价格', dataIndex: 'swingLowPrice', key: 'swingLowPrice', width: 90, render: (v: number) => v?.toFixed(2) },
-    { title: '幅度%', dataIndex: 'depthPct', key: 'depthPct', width: 80, render: (v: number) => `${v?.toFixed(1)}%` },
-    { title: '天数', dataIndex: 'durationDays', key: 'durationDays', width: 60 },
-    { title: '平均成交量', dataIndex: 'avgVolume', key: 'avgVolume', width: 110, render: (v: number) => v?.toLocaleString() },
+    { title: 'Index', dataIndex: 'index', key: 'index', width: 60 },
+    { title: 'Swing High Date', dataIndex: 'swingHighDate', key: 'swingHighDate', width: 110 },
+    { title: 'Swing High Price', dataIndex: 'swingHighPrice', key: 'swingHighPrice', width: 90, render: (v: number) => v?.toFixed(2) },
+    { title: 'Swing Low Date', dataIndex: 'swingLowDate', key: 'swingLowDate', width: 110 },
+    { title: 'Swing Low Price', dataIndex: 'swingLowPrice', key: 'swingLowPrice', width: 90, render: (v: number) => v?.toFixed(2) },
+    { title: 'Depth %', dataIndex: 'depthPct', key: 'depthPct', width: 80, render: (v: number) => `${v?.toFixed(1)}%` },
+    { title: 'Days', dataIndex: 'durationDays', key: 'durationDays', width: 60 },
+    { title: 'Avg Volume', dataIndex: 'avgVolume', key: 'avgVolume', width: 110, render: (v: number) => v?.toLocaleString() },
   ];
 
   return (
@@ -57,9 +57,9 @@ export function VcpDetailPanel({ stockCode }: VcpDetailPanelProps) {
       <Divider style={{ margin: '12px 0' }} />
 
       <div className={styles.sectionHeader}>
-        <Text strong>收缩记录</Text>
+        <Text strong>Contraction Records</Text>
         <Tag color={data.volumeDryingUp ? 'green' : 'default'}>
-          成交量配合: {data.volumeDryingUp ? '是' : '否'}
+          Volume Dry Up: {data.volumeDryingUp ? 'Yes' : 'No'}
         </Tag>
       </div>
 
@@ -77,7 +77,7 @@ export function VcpDetailPanel({ stockCode }: VcpDetailPanelProps) {
           icon={<LineChartOutlined />}
           onClick={() => navigate(`/chart/${stockCode}`)}
         >
-          查看K线
+          View Chart
         </Button>
       </div>
     </div>

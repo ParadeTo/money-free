@@ -123,7 +123,7 @@ function SortableItem({ favorite, onRemove, onItemClick }: SortableItemProps) {
           </Space>
 
           <Space size="small">
-            <Tooltip title="查看图表">
+            <Tooltip title="View Chart">
               <Button
                 type="text"
                 icon={<LineChartOutlined />}
@@ -135,12 +135,12 @@ function SortableItem({ favorite, onRemove, onItemClick }: SortableItemProps) {
               />
             </Tooltip>
 
-            <Tooltip title="删除收藏">
+            <Tooltip title="Remove Favorite">
               <Button
                 type="text"
                 danger
                 icon={<DeleteOutlined />}
-                aria-label={`删除收藏 ${favorite.stockCode}`}
+                aria-label={`Remove favorite ${favorite.stockCode}`}
                 data-testid={`delete-favorite-${favorite.id}`}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -207,10 +207,10 @@ export function FavoriteList({
           description={
             <Space direction="vertical" size="small">
               <Text style={{ fontSize: '16px', color: 'rgba(44, 62, 80, 0.65)' }}>
-                暂无收藏股票
+                No favorites yet
               </Text>
               <Text style={{ fontSize: '14px', color: 'rgba(44, 62, 80, 0.45)' }}>
-                去图表页添加收藏吧
+                Go to chart page to add favorites
               </Text>
             </Space>
           }
@@ -224,16 +224,16 @@ export function FavoriteList({
       <div style={{ marginBottom: '24px' }}>
         <Space style={{ width: '100%', justifyContent: 'space-between', paddingLeft: '60px', paddingRight: '100px' }}>
           <Text style={{ fontSize: '12px', color: 'rgba(44, 62, 80, 0.55)', fontWeight: 500 }}>
-            股票代码
+            Stock Code
           </Text>
           <Text style={{ fontSize: '12px', color: 'rgba(44, 62, 80, 0.55)', fontWeight: 500 }}>
-            股票名称
+            Stock Name
           </Text>
           <Text style={{ fontSize: '12px', color: 'rgba(44, 62, 80, 0.55)', fontWeight: 500 }}>
-            最新价
+            Latest Price
           </Text>
           <Text style={{ fontSize: '12px', color: 'rgba(44, 62, 80, 0.55)', fontWeight: 500 }}>
-            涨跌幅
+            Change %
           </Text>
         </Space>
       </div>

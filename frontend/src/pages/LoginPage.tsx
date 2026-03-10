@@ -22,7 +22,7 @@ export const LoginPage: React.FC = () => {
       <Card className={styles.loginCard} bordered={false}>
         <div className={styles.header}>
           <h1 className={styles.title}>StockHub</h1>
-          <p className={styles.subtitle}>请登录您的账户</p>
+          <p className={styles.subtitle}>Please log in to your account</p>
         </div>
 
         <div className={styles.formContainer}>
@@ -47,27 +47,27 @@ export const LoginPage: React.FC = () => {
           >
             <Form.Item
               name="username"
-              label="用户名"
-              rules={[{ required: true, message: '请输入用户名' }]}
+              label="Username"
+              rules={[{ required: true, message: 'Please enter username' }]}
             >
               <Input
                 prefix={<UserOutlined style={{ color: 'rgba(0,0,0,0.25)' }} />}
-                placeholder="请输入用户名"
+                placeholder="Please enter username"
                 autoComplete="username"
               />
             </Form.Item>
 
             <Form.Item
               name="password"
-              label="密码"
+              label="Password"
               rules={[
-                { required: true, message: '请输入密码' },
-                { min: 6, message: '密码至少6位' },
+                { required: true, message: 'Please enter password' },
+                { min: 6, message: 'Password must be at least 6 characters' },
               ]}
             >
               <Input.Password
                 prefix={<LockOutlined style={{ color: 'rgba(0,0,0,0.25)' }} />}
-                placeholder="请输入密码"
+                placeholder="Please enter password"
                 autoComplete="current-password"
               />
             </Form.Item>
@@ -80,7 +80,7 @@ export const LoginPage: React.FC = () => {
                 loading={isLoading}
                 size="large"
               >
-                {isLoading ? '登录中...' : '登录'}
+                {isLoading ? 'Logging in...' : 'Login'}
               </Button>
             </Form.Item>
           </Form>
@@ -88,7 +88,7 @@ export const LoginPage: React.FC = () => {
 
         <div className={styles.footer}>
           <p className={styles.footerText}>
-            默认账号: admin / admin123
+            Default account: admin / admin123
           </p>
         </div>
       </Card>

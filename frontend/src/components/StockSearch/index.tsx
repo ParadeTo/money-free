@@ -13,7 +13,7 @@ interface StockSearchProps {
 
 export function StockSearch({ 
   onSelect, 
-  placeholder = '搜索股票代码或名称',
+  placeholder = 'Search stock code or name',
   style 
 }: StockSearchProps) {
   const [options, setOptions] = useState<{ value: string; label: string; stock: Stock }[]>([]);
@@ -62,7 +62,7 @@ export function StockSearch({
       options={options}
       onSearch={searchStocks}
       onSelect={handleSelect}
-      notFoundContent={loading ? '搜索中...' : '暂无结果'}
+      notFoundContent={loading ? 'Searching...' : 'No results'}
     >
       <Input
         size="large"

@@ -38,13 +38,13 @@ export function FavoriteButton({ stockCode, isFavorited, onToggle, loading = fal
   };
 
   return (
-    <Tooltip title={isFavorited ? '取消收藏' : '添加到收藏'}>
+    <Tooltip title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}>
       <Button
         onClick={handleClick}
         disabled={loading}
         style={buttonStyle}
         className="favorite-button"
-        aria-label={isFavorited ? '取消收藏' : '添加到收藏'}
+        aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
         icon={
           loading ? (
             <LoadingOutlined />
@@ -55,7 +55,7 @@ export function FavoriteButton({ stockCode, isFavorited, onToggle, loading = fal
           )
         }
       >
-        {isFavorited ? '已收藏' : '收藏'}
+        {isFavorited ? 'Favorited' : 'Favorite'}
       </Button>
     </Tooltip>
   );

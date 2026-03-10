@@ -32,7 +32,7 @@ export function VcpScreenerPage() {
       setData(result);
       setFavorites(favResult.favorites);
     } catch (err: any) {
-      setError(err.message || '加载 VCP 筛选结果失败');
+      setError(err.message || 'Failed to load VCP screening results');
     } finally {
       setLoading(false);
     }
@@ -52,7 +52,7 @@ export function VcpScreenerPage() {
   };
 
   const favoriteColumn = {
-    title: '收藏',
+    title: 'Favorite',
     key: 'favorite',
     width: 60,
     align: 'center' as const,
@@ -66,10 +66,10 @@ export function VcpScreenerPage() {
       <div className={styles.header}>
         <Space align="center">
           <ThunderboltOutlined className={styles.headerIcon} />
-          <Title level={4} style={{ margin: 0 }}>VCP 待突破筛选</Title>
+          <Title level={4} style={{ margin: 0 }}>VCP Breakout Screener</Title>
         </Space>
         {data?.scanDate && (
-          <Text type="secondary">数据日期: {data.scanDate} | 共 {data.totalCount} 只</Text>
+          <Text type="secondary">Date: {data.scanDate} | Total: {data.totalCount} stocks</Text>
         )}
       </div>
 

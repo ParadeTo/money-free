@@ -34,22 +34,22 @@ export function MainLayout({ children }: MainLayoutProps) {
     {
       key: '/chart',
       icon: <AreaChartOutlined />,
-      label: 'K线图',
+      label: 'Chart',
     },
     {
       key: '/screener',
       icon: <FilterOutlined />,
-      label: '选股',
+      label: 'Screener',
     },
     {
       key: '/vcp',
       icon: <ThunderboltOutlined />,
-      label: 'VCP 筛选',
+      label: 'VCP Scanner',
     },
     {
       key: '/favorites',
       icon: <StarOutlined />,
-      label: '收藏',
+      label: 'Favorites',
     },
   ];
 
@@ -57,7 +57,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: '退出登录',
+      label: 'Logout',
       onClick: handleLogout,
     },
   ];

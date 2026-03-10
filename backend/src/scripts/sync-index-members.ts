@@ -16,7 +16,7 @@ const prisma = new PrismaClient();
 
 const INDEX_CONFIG = [
   { code: '000300', label: 'HS300', name: '沪深300' },
-  { code: '000852', label: 'ZZ1000', name: '中证1000' },
+  // { code: '000905', label: 'ZZ500', name: '中证500' },  // 未来扩展
 ];
 
 function fetchIndexMembers(indexCode: string): Promise<string[]> {

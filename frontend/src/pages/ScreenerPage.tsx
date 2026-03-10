@@ -1,5 +1,5 @@
 /**
- * 选股页面
+ * Stock Screener Page
  */
 
 import { useState, useEffect } from 'react';
@@ -46,14 +46,14 @@ interface FilterCondition extends ApiFilterCondition {
 }
 
 const CONDITION_TYPES = [
-  { value: 'indicator_value', label: '指标数值' },
-  { value: 'price_vs_ma', label: '股价与均线' },
-  { value: 'ma_vs_ma', label: '均线与均线' },
-  { value: 'pattern', label: '指标形态' },
-  { value: 'price_change', label: '涨跌幅' },
-  { value: 'volume_change', label: '成交量变化' },
-  { value: 'week_52_high', label: '创52周新高' },
-  { value: 'week_52_low', label: '创52周新低' },
+  { value: 'indicator_value', label: 'Indicator Value' },
+  { value: 'price_vs_ma', label: 'Price vs MA' },
+  { value: 'ma_vs_ma', label: 'MA vs MA' },
+  { value: 'pattern', label: 'Pattern' },
+  { value: 'price_change', label: 'Price Change' },
+  { value: 'volume_change', label: 'Volume Change' },
+  { value: 'week_52_high', label: '52-Week High' },
+  { value: 'week_52_low', label: '52-Week Low' },
 ];
 
 const INDICATORS = [
@@ -85,18 +85,18 @@ const MA_PERIODS_WEEKLY = [
 ];
 
 const OPERATORS = [
-  { value: '>', label: '大于' },
-  { value: '<', label: '小于' },
-  { value: '>=', label: '大于等于' },
-  { value: '<=', label: '小于等于' },
-  { value: '=', label: '等于' },
+  { value: '>', label: 'Greater than' },
+  { value: '<', label: 'Less than' },
+  { value: '>=', label: 'Greater than or equal' },
+  { value: '<=', label: 'Less than or equal' },
+  { value: '=', label: 'Equal' },
 ];
 
 const PATTERNS = [
-  { value: 'kdj_golden_cross', label: 'KDJ金叉' },
-  { value: 'kdj_death_cross', label: 'KDJ死叉' },
-  { value: 'price_above_ma', label: '价格突破均线' },
-  { value: 'price_below_ma', label: '价格跌破均线' },
+  { value: 'kdj_golden_cross', label: 'KDJ Golden Cross' },
+  { value: 'kdj_death_cross', label: 'KDJ Death Cross' },
+  { value: 'price_above_ma', label: 'Price Breaks Above MA' },
+  { value: 'price_below_ma', label: 'Price Breaks Below MA' },
 ];
 
 export function ScreenerPage() {
@@ -124,7 +124,7 @@ export function ScreenerPage() {
       const data = await strategyService.getAll();
       setStrategies(data);
     } catch (error: any) {
-      console.error('加载策略失败:', error);
+      console.error('Failed to load strategies:', error);
     }
   };
 
@@ -149,7 +149,7 @@ export function ScreenerPage() {
       
       const updated = { ...c, ...updates };
       
-      // 当切换到 ma_vs_ma 类型时，设置默认值
+      // Set default values when switching to ma_vs_ma type
       if (updates.conditionType === 'ma_vs_ma') {
         if (!updated.ma1Period) updated.ma1Period = 'ma_50';
         if (!updated.ma2Period) updated.ma2Period = 'ma_150';
@@ -160,15 +160,15 @@ export function ScreenerPage() {
     }));
   };
 
-  // 保存策略
+  // Save strategy
   const handleSaveStrategy = async () => {
     if (!strategyName.trim()) {
-      message.error('请输入策略名称');
+      message.error('Please enter strategy name');
       return;
     }
 
     if (conditions.length === 0) {
-      message.error('请至少添加一个筛选条件');
+      message.error('Please add at least one filter condition');
       return;
     }
 
@@ -185,21 +185,21 @@ export function ScreenerPage() {
       }));
 
       if (currentStrategyId) {
-        // 更新现有策略
+        // Update existing strategy
         await strategyService.update(currentStrategyId, {
           strategyName,
           description: strategyDescription,
           conditions: strategyConditions,
         });
-        message.success('策略更新成功');
+        message.success('Strategy updated successfully');
       } else {
-        // 创建新策略
+        // Create new strategy
         await strategyService.create({
           strategyName,
           description: strategyDescription,
           conditions: strategyConditions,
         });
-        message.success('策略保存成功');
+        message.success('Strategy saved successfully');
       }
 
       setSaveModalVisible(false);
@@ -208,16 +208,16 @@ export function ScreenerPage() {
       setCurrentStrategyId(undefined);
       loadStrategies();
     } catch (error: any) {
-      message.error(error.message || '保存策略失败');
+      message.error(error.message || 'Failed to save strategy');
     }
   };
 
-  // 加载策略
+  // Load strategy
   const handleLoadStrategy = async (strategyId: string) => {
     try {
       const strategy = await strategyService.getOne(strategyId);
       
-      // 将策略条件转换为本地格式
+      // Convert strategy conditions to local format
       const loadedConditions: FilterCondition[] = strategy.conditions.map((c) => ({
         id: Date.now().toString() + Math.random(),
         conditionType: c.conditionType,
@@ -233,34 +233,34 @@ export function ScreenerPage() {
       setCurrentStrategyId(strategy.strategyId);
       setStrategyName(strategy.strategyName);
       setStrategyDescription(strategy.description || '');
-      message.success(`已加载策略: ${strategy.strategyName}`);
+      message.success(`Loaded strategy: ${strategy.strategyName}`);
     } catch (error: any) {
-      message.error(error.message || '加载策略失败');
+      message.error(error.message || 'Failed to load strategy');
     }
   };
 
-  // 删除策略
+  // Delete strategy
   const handleDeleteStrategy = async (strategyId: string) => {
     try {
       await strategyService.delete(strategyId);
-      message.success('策略删除成功');
+      message.success('Strategy deleted successfully');
       loadStrategies();
       
-      // 如果删除的是当前加载的策略，清空相关状态
+      // If the current strategy is deleted, clear related state
       if (currentStrategyId === strategyId) {
         setCurrentStrategyId(undefined);
         setStrategyName('');
         setStrategyDescription('');
       }
     } catch (error: any) {
-      message.error(error.message || '删除策略失败');
+      message.error(error.message || 'Failed to delete strategy');
     }
   };
 
-  // 打开保存策略弹窗
+  // Open save strategy modal
   const openSaveModal = () => {
     if (conditions.length === 0) {
-      message.warning('请至少添加一个筛选条件');
+      message.warning('Please add at least one filter condition');
       return;
     }
     setSaveModalVisible(true);
@@ -268,7 +268,7 @@ export function ScreenerPage() {
 
   const executeFilter = async () => {
     if (conditions.length === 0) {
-      message.warning('请至少添加一个筛选条件');
+      message.warning('Please add at least one filter condition');
       return;
     }
 
@@ -293,12 +293,12 @@ export function ScreenerPage() {
       setIsTruncated(result.isTruncated);
       
       if (result.stocks.length === 0) {
-        message.info('未找到符合条件的股票');
+        message.info('No stocks found matching criteria');
       } else {
-        message.success(`找到 ${result.totalCount} 只股票${result.isTruncated ? '（显示前100只）' : ''}`);
+        message.success(`Found ${result.totalCount} stocks${result.isTruncated ? ' (showing first 100)' : ''}`);
       }
     } catch (error: any) {
-      const errorMsg = error?.response?.data?.message || error?.message || '筛选失败';
+      const errorMsg = error?.response?.data?.message || error?.message || 'Filter failed';
       message.error(errorMsg);
       console.error(error);
     } finally {
@@ -308,7 +308,7 @@ export function ScreenerPage() {
 
   const columns: ColumnsType<StockResult> = [
     {
-      title: '股票代码',
+      title: 'Stock Code',
       dataIndex: 'stockCode',
       key: 'stockCode',
       width: 120,
@@ -319,13 +319,13 @@ export function ScreenerPage() {
       ),
     },
     {
-      title: '股票名称',
+      title: 'Stock Name',
       dataIndex: 'stockName',
       key: 'stockName',
       width: 150,
     },
     {
-      title: '市场',
+      title: 'Market',
       dataIndex: 'market',
       key: 'market',
       width: 80,
@@ -334,7 +334,7 @@ export function ScreenerPage() {
       ),
     },
     {
-      title: '最新价',
+      title: 'Latest Price',
       dataIndex: 'latestPrice',
       key: 'latestPrice',
       width: 100,
@@ -342,7 +342,7 @@ export function ScreenerPage() {
       render: (price?: number) => price?.toFixed(2) || '-',
     },
     {
-      title: '涨跌幅',
+      title: 'Change %',
       dataIndex: 'priceChangePercent',
       key: 'priceChangePercent',
       width: 100,
@@ -354,15 +354,15 @@ export function ScreenerPage() {
       },
     },
     {
-      title: '成交量',
+      title: 'Volume',
       dataIndex: 'volume',
       key: 'volume',
       width: 120,
       align: 'right',
-      render: (vol?: number) => vol ? `${(vol / 10000).toFixed(0)}万` : '-',
+      render: (vol?: number) => vol ? `${(vol / 10000).toFixed(0)}k` : '-',
     },
     {
-      title: '操作',
+      title: 'Action',
       key: 'action',
       width: 100,
       render: (_, record) => (
@@ -371,7 +371,7 @@ export function ScreenerPage() {
           icon={<LineChartOutlined />}
           onClick={() => window.open(`/chart/${record.stockCode}`, '_blank')}
         >
-          查看图表
+          View Chart
         </Button>
       ),
     },
@@ -380,7 +380,7 @@ export function ScreenerPage() {
   return (
     <div className={styles.container}>
       <div className={styles.pageHeader}>
-        <h1 className={styles.title}>选股筛选</h1>
+        <h1 className={styles.title}>Stock Screener</h1>
         <Space size="middle">
           {strategies.length > 0 && (
             <Dropdown
@@ -392,10 +392,10 @@ export function ScreenerPage() {
                       <span>{strategy.strategyName}</span>
                       <Space size="small" onClick={(e) => e.stopPropagation()}>
                         <Popconfirm
-                          title="确定删除此策略？"
+                          title="Are you sure to delete this strategy?"
                           onConfirm={() => handleDeleteStrategy(strategy.strategyId)}
-                          okText="确定"
-                          cancelText="取消"
+                          okText="OK"
+                          cancelText="Cancel"
                         >
                           <Button
                             type="text"
@@ -413,7 +413,7 @@ export function ScreenerPage() {
               }}
             >
               <Button icon={<FolderOpenOutlined />}>
-                加载策略
+                Load Strategy
               </Button>
             </Dropdown>
           )}
@@ -422,14 +422,14 @@ export function ScreenerPage() {
             onClick={openSaveModal}
             disabled={conditions.length === 0}
           >
-            {currentStrategyId ? '更新策略' : '保存策略'}
+            {currentStrategyId ? 'Update Strategy' : 'Save Strategy'}
           </Button>
           <Button 
             type="primary" 
             icon={<PlusOutlined />}
             onClick={addCondition}
           >
-            添加条件
+            Add Condition
           </Button>
           <Button 
             type="primary"
@@ -438,13 +438,13 @@ export function ScreenerPage() {
             loading={loading}
             disabled={conditions.length === 0}
           >
-            开始筛选
+            Start Screening
           </Button>
         </Space>
       </div>
 
       {conditions.length > 0 && (
-        <Card className={styles.conditionsCard} title="筛选条件（所有条件必须同时满足）">
+        <Card className={styles.conditionsCard} title="Filter Conditions (All conditions must be met)">
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
             {conditions.map((condition, index) => (
               <div key={condition.id} className={styles.conditionRow}>
@@ -484,14 +484,14 @@ export function ScreenerPage() {
                       style={{ width: 120 }}
                       value={condition.targetValue}
                       onChange={(value) => updateCondition(condition.id, { targetValue: value || 0 })}
-                      placeholder="目标值"
+                      placeholder="Target value"
                     />
                   </>
                 )}
 
                 {condition.conditionType === 'price_vs_ma' && (
                   <>
-                    <span style={{ margin: '0 8px' }}>股价</span>
+                    <span style={{ margin: '0 8px' }}>Price</span>
                     <Select
                       style={{ width: 100 }}
                       value={condition.operator}
@@ -519,7 +519,7 @@ export function ScreenerPage() {
                       style={{ width: 120 }}
                       value={condition.ma1Period || 'ma_50'}
                       onChange={(value) => updateCondition(condition.id, { ma1Period: value })}
-                      placeholder="第一条均线"
+                      placeholder="First MA"
                     >
                       {MA_PERIODS_DAILY.map(ma => (
                         <Option key={ma.value} value={ma.value}>{ma.label}</Option>
@@ -538,7 +538,7 @@ export function ScreenerPage() {
                       style={{ width: 120 }}
                       value={condition.ma2Period || 'ma_150'}
                       onChange={(value) => updateCondition(condition.id, { ma2Period: value })}
-                      placeholder="第二条均线"
+                      placeholder="Second MA"
                     >
                       {MA_PERIODS_DAILY.map(ma => (
                         <Option key={ma.value} value={ma.value}>{ma.label}</Option>
@@ -574,7 +574,7 @@ export function ScreenerPage() {
                       style={{ width: 120 }}
                       value={condition.targetValue}
                       onChange={(value) => updateCondition(condition.id, { targetValue: value || 0 })}
-                      placeholder="百分比(%)"
+                      placeholder="Percentage (%)"
                       suffix="%"
                     />
                   </>
@@ -586,7 +586,7 @@ export function ScreenerPage() {
                   icon={<DeleteOutlined />}
                   onClick={() => removeCondition(condition.id)}
                 >
-                  删除
+                  Delete
                 </Button>
               </div>
             ))}
@@ -600,8 +600,8 @@ export function ScreenerPage() {
             image={Empty.PRESENTED_IMAGE_SIMPLE}
             description={
               <span>
-                点击"添加条件"按钮开始创建筛选条件<br/>
-                通过设置技术指标条件，快速筛选符合您投资策略的股票
+                Click "Add Condition" button to start creating filter conditions<br/>
+                Set technical indicator conditions to quickly screen stocks that fit your investment strategy
               </span>
             }
           />
@@ -610,7 +610,7 @@ export function ScreenerPage() {
 
       {loading && (
         <div className={styles.loadingContainer}>
-          <Spin size="large" tip="正在筛选股票..." />
+          <Spin size="large" tip="Screening stocks..." />
         </div>
       )}
 
@@ -618,8 +618,8 @@ export function ScreenerPage() {
         <>
           {isTruncated && (
             <Alert
-              message="结果过多"
-              description={`共找到 ${totalCount} 只股票，仅显示前100只结果。建议添加更多筛选条件以获得更精准的结果。`}
+              message="Too Many Results"
+              description={`Found ${totalCount} stocks in total, showing first 100 results. Consider adding more filter conditions for more precise results.`}
               type="warning"
               showIcon
               style={{ marginBottom: 16 }}
@@ -632,7 +632,7 @@ export function ScreenerPage() {
               rowKey="stockCode"
               pagination={{
                 pageSize: 20,
-                showTotal: (total) => `共 ${total} 只股票`,
+                showTotal: (total) => `Total ${total} stocks`,
                 showSizeChanger: true,
                 pageSizeOptions: ['10', '20', '50', '100'],
               }}
@@ -642,9 +642,9 @@ export function ScreenerPage() {
         </>
       )}
 
-      {/* 保存策略弹窗 */}
+      {/* Save strategy modal */}
       <Modal
-        title={currentStrategyId ? '更新策略' : '保存选股策略'}
+        title={currentStrategyId ? 'Update Strategy' : 'Save Stock Screening Strategy'}
         open={saveModalVisible}
         onOk={handleSaveStrategy}
         onCancel={() => {
@@ -654,26 +654,26 @@ export function ScreenerPage() {
             setStrategyDescription('');
           }
         }}
-        okText="保存"
-        cancelText="取消"
+        okText="Save"
+        cancelText="Cancel"
         width={500}
       >
         <Space direction="vertical" size="middle" style={{ width: '100%' }}>
           <div>
             <label style={{ marginBottom: 8, display: 'block' }}>
-              策略名称 <span style={{ color: 'red' }}>*</span>
+              Strategy Name <span style={{ color: 'red' }}>*</span>
             </label>
             <Input
-              placeholder="请输入策略名称，例如：超跌反弹策略"
+              placeholder="e.g., Oversold Rebound Strategy"
               value={strategyName}
               onChange={(e) => setStrategyName(e.target.value)}
               maxLength={50}
             />
           </div>
           <div>
-            <label style={{ marginBottom: 8, display: 'block' }}>策略描述</label>
+            <label style={{ marginBottom: 8, display: 'block' }}>Strategy Description</label>
             <Input.TextArea
-              placeholder="可选：描述策略的用途和逻辑"
+              placeholder="Optional: Describe the purpose and logic of the strategy"
               value={strategyDescription}
               onChange={(e) => setStrategyDescription(e.target.value)}
               rows={3}
@@ -681,8 +681,8 @@ export function ScreenerPage() {
             />
           </div>
           <Alert
-            message="提示"
-            description={`当前共有 ${conditions.length} 个筛选条件将被保存`}
+            message="Notice"
+            description={`${conditions.length} filter condition(s) will be saved`}
             type="info"
             showIcon
           />

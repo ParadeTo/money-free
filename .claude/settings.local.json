@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls /Users/youxingzhi/ayou/money-free/backend/src 2>/dev/null || find /Users/youxingzhi/ayou/money-free/backend -name \"*.ts\" | head -20)",
+      "Bash(cd /Users/youxingzhi/ayou/money-free/backend && timeout 5 node -e \"const { execSync } = require\\('child_process'\\); try { execSync\\('npx prisma db push --skip-generate 2>&1', {stdio:'pipe'}\\); } catch\\(e\\) { console.log\\(e.stderr?.toString\\(\\)\\); }\" 2>&1 | head -20)",
+      "Bash(timeout 30 node --enable-source-maps dist/main 2>&1)",
+      "Bash(redis-cli ping:*)",
+      "Bash(echo \"NODE_OPTIONS=$NODE_OPTIONS\" && echo \"NODE_DEBUG=$NODE_DEBUG\")",
+      "Bash(NODE_OPTIONS=\"\" npm run dev 2>&1)",
+      "Bash(cd /Users/youxingzhi/ayou/money-free/backend && npm run dev 2>&1)",
+      "Bash(brew services:*)",
+      "Bash(pkill -f \"nest start\" 2>/dev/null; pkill -f \"node.*dist/main\" 2>/dev/null; echo \"killed\")",
+      "Bash(npx ts-node:*)",
+      "Bash(npm run:*)",
+      "Bash(node dist/main.js 2>&1)",
+      "Bash(echo \"NODE_OPTIONS: $NODE_OPTIONS\")",
+      "Bash(unset NODE_OPTIONS && node dist/main.js 2>&1)"
+    ]
+  }
+}

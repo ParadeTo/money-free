@@ -23,7 +23,7 @@ export function FavoritePage() {
       const response = await favoriteService.getFavorites();
       setFavorites(response.favorites);
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.message || err?.message || '加载收藏列表失败';
+      const errorMsg = err?.response?.data?.message || err?.message || 'Failed to load favorites';
       setError(errorMsg);
       message.error(errorMsg);
     } finally {
@@ -39,9 +39,9 @@ export function FavoritePage() {
     try {
       await favoriteService.removeFavorite(id);
       removeFromStore(id);
-      message.success('已删除收藏');
+      message.success('Favorite removed');
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.message || err?.message || '删除失败';
+      const errorMsg = err?.response?.data?.message || err?.message || 'Failed to remove';
       message.error(errorMsg);
     }
   };
@@ -58,7 +58,7 @@ export function FavoritePage() {
       await favoriteService.batchUpdateSortOrder(updates);
     } catch (err: any) {
       updateFavoriteOrder(oldFavorites);
-      const errorMsg = err?.response?.data?.message || err?.message || '更新排序失败';
+      const errorMsg = err?.response?.data?.message || err?.message || 'Failed to update order';
       message.error(errorMsg);
     }
   };
@@ -102,17 +102,17 @@ export function FavoritePage() {
           <Space size="middle" align="center">
             <StarOutlined style={{ fontSize: '24px', color: '#faad14' }} />
             <Title level={1} style={titleStyle}>
-              我的收藏
+              My Favorites
             </Title>
           </Space>
           
           <Text style={{ fontSize: '14px', color: 'rgba(44, 62, 80, 0.65)' }}>
-            管理您关注的股票，快速访问和对比分析
+            Manage your watched stocks, quick access and comparison analysis
           </Text>
 
           {favorites && favorites.length > 0 && (
             <Text style={{ fontSize: '13px', color: 'rgba(44, 62, 80, 0.55)', marginTop: '12px' }}>
-              共 {favorites.length} 只股票 · 拖动调整顺序
+              Total {favorites.length} stocks · Drag to reorder
             </Text>
           )}
         </Space>
@@ -122,7 +122,7 @@ export function FavoritePage() {
         {error && (
           <div style={{ marginBottom: '24px' }}>
             <Alert
-              message="加载失败"
+              message="Load Failed"
               description={error}
               type="error"
               showIcon
@@ -134,7 +134,7 @@ export function FavoritePage() {
                   onClick={handleRetry}
                   loading={retrying}
                 >
-                  重试
+                  Retry
                 </Button>
               }
               style={{

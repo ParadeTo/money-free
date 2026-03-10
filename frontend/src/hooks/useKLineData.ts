@@ -22,13 +22,13 @@ export function useKLineData(
     setError(null);
 
     try {
-      // 根据时间范围计算日期区间
-      const { startDate, endDate } = getDateRangeFromTimeRange(timeRange);
+      // 根据时间范围计算起始日期，不传递 endDate 以获取最新数据
+      const { startDate } = getDateRangeFromTimeRange(timeRange);
       
       const response = await klineService.getKLineData(stockCode, {
         period,
         startDate,
-        endDate,
+        // 不传递 endDate，让后端返回到最新日期的数据
         limit: 2000, // 设置足够大的 limit
         ...params,
       });

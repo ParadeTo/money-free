@@ -18,13 +18,13 @@ export function ChartToolbar() {
   } = useChartStore();
 
   const timeRangeOptions = [
-    { label: '1月', value: '1M' },
-    { label: '3月', value: '3M' },
-    { label: '6月', value: '6M' },
-    { label: '1年', value: '1Y' },
-    { label: '2年', value: '2Y' },
-    { label: '5年', value: '5Y' },
-    { label: '全部', value: 'ALL' },
+    { label: '1M', value: '1M' },
+    { label: '3M', value: '3M' },
+    { label: '6M', value: '6M' },
+    { label: '1Y', value: '1Y' },
+    { label: '2Y', value: '2Y' },
+    { label: '5Y', value: '5Y' },
+    { label: 'All', value: 'ALL' },
   ];
 
   const subChart1Options = [
@@ -35,21 +35,21 @@ export function ChartToolbar() {
 
   const subChart2Options = [
     { label: 'VOL', value: 'volume' },
-    { label: '成交额', value: 'amount' },
-    { label: '隐藏', value: 'none' },
+    { label: 'Amount', value: 'amount' },
+    { label: 'Hide', value: 'none' },
   ];
 
   return (
     <div className={styles.toolbar}>
       <div className={styles.section}>
         <Space size="small">
-          <span className={styles.label}>周期:</span>
+          <span className={styles.label}>Period:</span>
           <Segmented
             value={period}
             onChange={(value) => setPeriod(value as Period)}
             options={[
-              { label: '日K', value: 'daily' },
-              { label: '周K', value: 'weekly' },
+              { label: 'Daily', value: 'daily' },
+              { label: 'Weekly', value: 'weekly' },
             ]}
             size="small"
           />
@@ -58,7 +58,7 @@ export function ChartToolbar() {
 
       <div className={styles.section}>
         <Space size="small">
-          <span className={styles.label}>时间:</span>
+          <span className={styles.label}>Time:</span>
           <Radio.Group
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value as TimeRange)}
@@ -79,13 +79,13 @@ export function ChartToolbar() {
 
       <div className={styles.section}>
         <Space size="small">
-          <span className={styles.label}>主图:</span>
+          <span className={styles.label}>Main:</span>
           <Button
             type={showMA ? 'primary' : 'default'}
             size="small"
             onClick={() => setShowMA(!showMA)}
           >
-            MA均线
+            MA
           </Button>
         </Space>
       </div>
@@ -93,7 +93,7 @@ export function ChartToolbar() {
       <div className={styles.section}>
         <Space size="middle">
           <Space size="small">
-            <span className={styles.label}>指标:</span>
+            <span className={styles.label}>Indicators:</span>
             <Radio.Group
               value={subChart1Indicator}
               onChange={(e) => setSubChart1Indicator(e.target.value as SubChartIndicator)}
