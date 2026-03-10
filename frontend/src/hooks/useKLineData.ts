@@ -1,0 +1,55 @@
+import { useState, useEffect, useCallback } from 'react';
+import { klineService, type GetKLineParams, type KLineResponse } from '../services/kline.service';
+import type { TimeRange } from '../store/chart.store';
+import { getDateRangeFromTimeRange } from '../utils/dateRange';
+
+export function useKLineData(
+  stockCode: string, 
+  period: 'daily' | 'weekly' = 'daily',
+  timeRange: TimeRange = '1Y'
+) {
+  const [data, setData] = useState<KLineResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchData = useCallback(async (params?: GetKLineParams) => {
+    if (!stockCode) {
+      setData(null);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // 根据时间范围计算日期区间
+      const { startDate, endDate } = getDateRangeFromTimeRange(timeRange);
+      
+      const response = await klineService.getKLineData(stockCode, {
+        period,
+        startDate,
+        endDate,
+        limit: 2000, // 设置足够大的 limit
+        ...params,
+      });
+      setData(response);
+    } catch (err) {
+      setError(err as Error);
+      setData(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [stockCode, period, timeRange]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return {
+    data: data?.data || [],
+    response: data,
+    loading,
+    error,
+    refresh: fetchData,
+  };
+}

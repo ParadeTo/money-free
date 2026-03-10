@@ -1,0 +1,113 @@
+.layout {
+  min-height: 100vh;
+  background: #f5f7fa;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: #ffffff;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #e1e8ed;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-right: 48px;
+}
+
+.logoIcon {
+  font-size: 24px;
+  color: #4fc3f7;
+}
+
+.logoText {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+  white-space: nowrap;
+}
+
+.menu {
+  flex: 1;
+  background: transparent;
+  border-bottom: none;
+  line-height: 64px;
+}
+
+.menu :global(.ant-menu-item) {
+  color: rgba(44, 62, 80, 0.7);
+  transition: all 0.3s ease;
+}
+
+.menu :global(.ant-menu-item:hover) {
+  color: #4fc3f7;
+}
+
+.menu :global(.ant-menu-item-selected) {
+  color: #4fc3f7 !important;
+  background: rgba(79, 195, 247, 0.1) !important;
+}
+
+.menu :global(.ant-menu-item-selected)::after {
+  border-bottom-color: #4fc3f7;
+}
+
+.userSection {
+  display: flex;
+  align-items: center;
+  margin-left: 24px;
+}
+
+.userButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(44, 62, 80, 0.85);
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.userButton:hover {
+  background: rgba(79, 195, 247, 0.1);
+  color: #4fc3f7;
+}
+
+.username {
+  font-size: 14px;
+}
+
+.content {
+  padding: 0;
+  overflow: auto;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .header {
+    padding: 0 16px;
+  }
+
+  .logo {
+    margin-right: 16px;
+  }
+
+  .logoText {
+    display: none;
+  }
+
+  .username {
+    display: none;
+  }
+
+  .content {
+    padding: 0;
+  }
+}

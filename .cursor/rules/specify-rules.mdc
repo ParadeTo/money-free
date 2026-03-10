@@ -1,0 +1,41 @@
+---
+description: Project Development Guidelines
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# money-free Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2026-02-28
+
+## Active Technologies
+- Python 3.11+ (后端), TypeScript 5.x (前端) (001-stock-analysis-tool)
+- SQLite (单文件数据库，预估12-15GB，存储约1000只股票的20年历史K线数据及技术指标) (001-stock-analysis-tool)
+- Node.js 18+ LTS, TypeScript 5.x (001-stock-analysis-tool)
+- SQLite 3.40+ (单文件数据库，WAL模式，预估12-15GB，存储约1000只股票的20年历史K线数据及技术指标) (001-stock-analysis-tool)
+
+- (001-stock-analysis-tool)
+
+## Project Structure
+
+```text
+src/
+tests/
+```
+
+## Commands
+
+# Add commands for 
+
+## Code Style
+
+: Follow standard conventions
+
+## Recent Changes
+- 001-stock-analysis-tool: Added Node.js 18+ LTS, TypeScript 5.x
+- 001-stock-analysis-tool: Added Python 3.11+ (后端), TypeScript 5.x (前端)
+
+- 001-stock-analysis-tool: Added
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->

@@ -1,0 +1,34 @@
+.container {
+  padding: 8px 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.checkList {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 24px;
+}
+
+.checkItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #f5f7fa;
+}
+
+.label {
+  font-size: 13px;
+}
+
+.values {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
