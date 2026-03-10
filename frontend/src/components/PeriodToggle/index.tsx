@@ -11,14 +11,14 @@ export function PeriodToggle() {
 
   return (
     <Card 
-      title="周期" 
+      title="Period" 
       size="small" 
       style={{ marginBottom: 16 }}
       bodyStyle={{ padding: 12 }}
     >
       <Radio.Group value={period} onChange={handleChange} buttonStyle="solid">
-        <Radio.Button value="daily">日线</Radio.Button>
-        <Radio.Button value="weekly">周线</Radio.Button>
+        <Radio.Button value="daily">Daily</Radio.Button>
+        <Radio.Button value="weekly">Weekly</Radio.Button>
       </Radio.Group>
     </Card>
   );

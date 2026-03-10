@@ -13,7 +13,7 @@ export function TimeRangeSelector() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.label}>时间范围</div>
+      <div className={styles.label}>Time Range</div>
       <Radio.Group 
         value={timeRange} 
         onChange={handleChange}

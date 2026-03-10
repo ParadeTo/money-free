@@ -25,18 +25,18 @@ export function ChartDataDisplay({ data, stockName }: ChartDataDisplayProps) {
 
   const formatVolume = (vol: number) => {
     if (vol >= 100000000) {
-      return `${(vol / 100000000).toFixed(2)}亿`;
+      return `${(vol / 100000000).toFixed(2)}B`;
     } else if (vol >= 10000) {
-      return `${(vol / 10000).toFixed(2)}万`;
+      return `${(vol / 10000).toFixed(2)}K`;
     }
     return vol.toFixed(0);
   };
 
   const formatAmount = (amount: number) => {
     if (amount >= 100000000) {
-      return `${(amount / 100000000).toFixed(2)}亿`;
+      return `${(amount / 100000000).toFixed(2)}B`;
     } else if (amount >= 10000) {
-      return `${(amount / 10000).toFixed(2)}万`;
+      return `${(amount / 10000).toFixed(2)}K`;
     }
     return amount.toFixed(0);
   };
@@ -68,36 +68,36 @@ export function ChartDataDisplay({ data, stockName }: ChartDataDisplayProps) {
 
         <Space size="middle" className={styles.dataList}>
           <div className={styles.dataItem}>
-            <span className={styles.label}>时间</span>
+            <span className={styles.label}>Time</span>
             <span className={styles.value}>
               {formatDateTime(data.date)}
             </span>
           </div>
           
           <div className={styles.dataItem}>
-            <span className={styles.label}>开</span>
+            <span className={styles.label}>Open</span>
             <span className={styles.value}>{formatNumber(data.open)}</span>
           </div>
           
           <div className={styles.dataItem}>
-            <span className={styles.label}>高</span>
+            <span className={styles.label}>High</span>
             <span className={styles.value}>{formatNumber(data.high)}</span>
           </div>
           
           <div className={styles.dataItem}>
-            <span className={styles.label}>低</span>
+            <span className={styles.label}>Low</span>
             <span className={styles.value}>{formatNumber(data.low)}</span>
           </div>
 
           <div className={styles.divider} />
 
           <div className={styles.dataItem}>
-            <span className={styles.label}>量</span>
+            <span className={styles.label}>Vol</span>
             <span className={styles.value}>{formatVolume(data.volume)}</span>
           </div>
 
           <div className={styles.dataItem}>
-            <span className={styles.label}>额</span>
+            <span className={styles.label}>Amt</span>
             <span className={styles.value}>{formatAmount(data.amount)}</span>
           </div>
         </Space>
