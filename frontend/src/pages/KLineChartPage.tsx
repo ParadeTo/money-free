@@ -7,8 +7,10 @@ import { KLineChart } from '../components/KLineChart';
 import { ChartToolbar } from '../components/ChartToolbar';
 import { ChartDataDisplay } from '../components/ChartDataDisplay';
 import { IndicatorValueDisplay } from '../components/IndicatorValueDisplay';
+import { VcpIndicator } from '../components/VcpIndicator';
 import { useKLineData } from '../hooks/useKLineData';
 import { useIndicators } from '../hooks/useIndicators';
+import { useVcpDetail } from '../hooks/useVcpDetail';
 import { useChartStore } from '../store/chart.store';
 import type { Stock, KLineData } from '../types';
 import styles from './KLineChartPage.module.css';
@@ -50,6 +52,13 @@ export function KLineChartPage() {
     loading: indicatorLoading,
     error: indicatorError,
   } = useIndicators(stockCode || '', period, subChart1Indicator, subChart2Indicator, showMA, timeRange);
+
+  // Load VCP detail
+  const {
+    data: vcpData,
+    loading: vcpLoading,
+    error: vcpError,
+  } = useVcpDetail(stockCode || '');
 
   const handleStockSelect = (stock: Stock) => {
     // Open stock chart in new tab
@@ -119,6 +128,11 @@ export function KLineChartPage() {
             indicators={indicatorData}
             period={period}
             showMA={showMA}
+          />
+          <VcpIndicator
+            data={vcpData}
+            loading={vcpLoading}
+            error={vcpError}
           />
           <div className={styles.chartWrapper}>
             <KLineChart

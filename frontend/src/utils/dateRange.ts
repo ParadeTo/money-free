@@ -1,13 +1,13 @@
 import type { TimeRange } from '../store/chart.store';
 
 /**
- * 根据时间范围类型计算起始日期
- * 不返回 endDate，让后端自动返回到最新日期的数据
+ * Calculate start date based on time range type
+ * Does not return endDate, let backend automatically return data up to latest date
  */
 export function getDateRangeFromTimeRange(timeRange: TimeRange): {
   startDate: string;
 } {
-  // 使用当前日期作为参考点计算起始日期
+  // Use current date as reference point to calculate start date
   const today = new Date();
   const startDate = new Date(today);
 
@@ -31,7 +31,7 @@ export function getDateRangeFromTimeRange(timeRange: TimeRange): {
       startDate.setFullYear(today.getFullYear() - 5);
       break;
     case 'ALL':
-      // 获取所有数据，设置一个很早的日期
+      // Get all data, set to an early date
       startDate.setFullYear(2000);
       break;
   }
@@ -42,14 +42,14 @@ export function getDateRangeFromTimeRange(timeRange: TimeRange): {
 }
 
 /**
- * 时间范围选项配置
+ * Time range options configuration
  */
 export const TIME_RANGE_OPTIONS = [
-  { label: '1个月', value: '1M' as TimeRange },
-  { label: '3个月', value: '3M' as TimeRange },
-  { label: '6个月', value: '6M' as TimeRange },
-  { label: '1年', value: '1Y' as TimeRange },
-  { label: '2年', value: '2Y' as TimeRange },
-  { label: '5年', value: '5Y' as TimeRange },
-  { label: '全部', value: 'ALL' as TimeRange },
+  { label: '1 Month', value: '1M' as TimeRange },
+  { label: '3 Months', value: '3M' as TimeRange },
+  { label: '6 Months', value: '6M' as TimeRange },
+  { label: '1 Year', value: '1Y' as TimeRange },
+  { label: '2 Years', value: '2Y' as TimeRange },
+  { label: '5 Years', value: '5Y' as TimeRange },
+  { label: 'All', value: 'ALL' as TimeRange },
 ];

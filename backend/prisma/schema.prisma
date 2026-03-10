@@ -257,12 +257,16 @@ model VcpScanResult {
   priceChangePct      Float    @map("price_change_pct")
   distFrom52WeekHigh  Float    @map("dist_from_52_week_high")
   distFrom52WeekLow   Float    @map("dist_from_52_week_low")
+  inPullback          Boolean  @default(false) @map("in_pullback")
+  pullbackCount       Int      @default(0) @map("pullback_count")
+  lastPullbackData    String?  @map("last_pullback_data")
   createdAt           DateTime @default(now()) @map("created_at")
 
   stock               Stock    @relation(fields: [stockCode], references: [stockCode], onDelete: Cascade)
 
   @@unique([stockCode, scanDate])
   @@index([scanDate])
+  @@index([inPullback])
   @@index([trendTemplatePass, scanDate])
   @@map("vcp_scan_results")
 }

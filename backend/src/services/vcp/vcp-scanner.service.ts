@@ -67,6 +67,9 @@ export class VcpScannerService {
             priceChangePct: result.priceChangePct,
             distFrom52WeekHigh: result.distFrom52WeekHigh,
             distFrom52WeekLow: result.distFrom52WeekLow,
+            inPullback: result.inPullback,
+            pullbackCount: result.pullbackCount,
+            lastPullbackData: result.lastPullback ? JSON.stringify(result.lastPullback) : null,
           },
         });
         
@@ -104,18 +107,21 @@ export class VcpScannerService {
   private async analyzeStock(stockCode: string, rsRating: number) {
     const klines = await this.prisma.kLineData.findMany({
       where: { stockCode, period: 'daily' },
-      orderBy: { date: 'asc' },
+      orderBy: { date: 'desc' },
       take: 300,
       select: { date: true, open: true, high: true, low: true, close: true, volume: true, amount: true },
     });
 
     if (klines.length < 252) return null;
 
+    // 反转数组，使其按日期升序排列用于分析
+    const sortedKlines = klines.reverse();
+
     const latestIndicators = await this.getLatestIndicators(stockCode);
     if (!latestIndicators) return null;
 
-    const latest = klines[klines.length - 1];
-    const prev = klines.length >= 2 ? klines[klines.length - 2] : latest;
+    const latest = sortedKlines[sortedKlines.length - 1];
+    const prev = sortedKlines.length >= 2 ? sortedKlines[sortedKlines.length - 2] : latest;
     const priceChangePct = prev.close > 0 ? ((latest.close - prev.close) / prev.close) * 100 : 0;
 
     const ttInput: TrendTemplateInput = {
@@ -131,7 +137,7 @@ export class VcpScannerService {
 
     const ttResult = this.trendTemplate.runAllChecks(ttInput);
 
-    const bars: KLineBar[] = klines.map((k: { date: Date; open: number; high: number; low: number; close: number; volume: number }) => ({
+    const bars: KLineBar[] = sortedKlines.map((k: { date: Date; open: number; high: number; low: number; close: number; volume: number }) => ({
       date: k.date.toISOString().split('T')[0],
       open: k.open,
       high: k.high,
@@ -149,6 +155,11 @@ export class VcpScannerService {
       ? ((latest.close - latestIndicators.low52Week) / latestIndicators.low52Week) * 100
       : 0;
 
+    // 检测是否处于回调中
+    const pullbacks = vcpResult.pullbacks || [];
+    const inPullback = this.checkIfInPullback(pullbacks, latest.close, sortedKlines);
+    const lastPullback = pullbacks.length > 0 ? pullbacks[pullbacks.length - 1] : null;
+
     return {
       trendTemplatePass: ttResult.allPass,
       trendTemplateResult: ttResult,
@@ -158,6 +169,9 @@ export class VcpScannerService {
       priceChangePct: Math.round(priceChangePct * 100) / 100,
       distFrom52WeekHigh: Math.round(distHigh * 100) / 100,
       distFrom52WeekLow: Math.round(distLow * 100) / 100,
+      inPullback,
+      lastPullback,
+      pullbackCount: pullbacks.length,
     };
   }
 
@@ -220,5 +234,31 @@ export class VcpScannerService {
     }
 
     return this.rsRating.calculateAllRsRatings(returns);
+  }
+
+  /**
+   * 检查当前价格是否处于回调中
+   */
+  private checkIfInPullback(pullbacks: any[], currentPrice: number, klines: any[]): boolean {
+    if (pullbacks.length === 0) return false;
+    
+    const lastPullback = pullbacks[pullbacks.length - 1];
+    const lastKline = klines[klines.length - 1];
+    
+    // 检查最后一个回调的低点日期
+    const lowDate = new Date(lastPullback.lowDate).getTime();
+    const currentDate = new Date(lastKline.date).getTime();
+    const daysSinceLow = (currentDate - lowDate) / (1000 * 60 * 60 * 24);
+    
+    // 如果在回调低点之后5天内，且价格还在低点到高点的范围内
+    if (daysSinceLow >= 0 && daysSinceLow <= 5) {
+      // 价格在低点附近（低点的-5%到+10%之间）
+      const nearLow = currentPrice >= lastPullback.lowPrice * 0.95 && 
+                      currentPrice <= lastPullback.lowPrice * 1.10;
+      
+      if (nearLow) return true;
+    }
+    
+    return false;
   }
 }

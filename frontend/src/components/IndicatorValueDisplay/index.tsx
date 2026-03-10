@@ -23,7 +23,7 @@ export function IndicatorValueDisplay({
 
   const dateStr = new Date(currentData.date).toISOString().split('T')[0];
   
-  // 找到当前日期的指标数据
+  // Find indicator data for current date
   const maIndicator = indicators.find(
     (ind) => ind.indicatorType === 'ma' && 
     new Date(ind.date).toISOString().split('T')[0] === dateStr

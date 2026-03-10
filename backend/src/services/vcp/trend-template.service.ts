@@ -33,7 +33,7 @@ export class TrendTemplateService {
       this.checkPriceAboveMA150(input),
       this.checkPriceAboveMA200(input),
       this.checkMA150AboveMA200(input),
-      this.checkMA200TrendingUp(input),
+      // this.checkMA200TrendingUp(input), // 已移除：不需要检查MA200连续上升
       this.checkMA50AboveMA150(input),
       this.checkMA50AboveMA200(input),
       this.checkPriceAboveMA50(input),

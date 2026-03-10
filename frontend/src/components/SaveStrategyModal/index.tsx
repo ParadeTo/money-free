@@ -53,7 +53,7 @@ export const SaveStrategyModal: React.FC<SaveStrategyModalProps> = ({
             { max: 100, message: 'Name cannot exceed 100 characters' },
           ]}
         >
-          <Input placeholder="e.g., 超跌反弹策略" />
+          <Input placeholder="e.g., Oversold Rebound Strategy" />
         </Form.Item>
 
         <Form.Item

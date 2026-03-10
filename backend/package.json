@@ -26,6 +26,7 @@
     "seed": "ts-node src/scripts/seed.ts",
     "create-test-user": "ts-node src/scripts/create-test-user.ts",
     "test:tushare": "ts-node src/scripts/test-tushare.ts",
+    "calculate-vcp": "ts-node src/scripts/calculate-vcp.ts",
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {

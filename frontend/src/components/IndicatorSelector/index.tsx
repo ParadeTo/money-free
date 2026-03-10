@@ -3,11 +3,11 @@ import type { CheckboxChangeEvent } from 'antd/es/checkbox';
 import { useChartStore, type IndicatorType } from '../../store/chart.store';
 
 const INDICATOR_OPTIONS = [
-  { value: 'ma', label: '移动平均线 (MA)' },
+  { value: 'ma', label: 'Moving Average (MA)' },
   { value: 'kdj', label: 'KDJ' },
   { value: 'rsi', label: 'RSI' },
-  { value: 'volume', label: '成交量' },
-  { value: 'amount', label: '成交额' },
+  { value: 'volume', label: 'Volume' },
+  { value: 'amount', label: 'Amount' },
 ] as const;
 
 export function IndicatorSelector() {
@@ -20,7 +20,7 @@ export function IndicatorSelector() {
 
   return (
     <Card 
-      title="技术指标" 
+      title="Technical Indicators" 
       size="small" 
       style={{ marginBottom: 16 }}
       bodyStyle={{ padding: 12 }}

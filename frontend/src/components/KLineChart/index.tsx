@@ -332,11 +332,11 @@ export function KLineChart({
           if (subChart2Indicator === 'volume' && values.volume !== undefined) {
             const vol = values.volume / 10000;
             const volMA = values.volumeMA ? (values.volumeMA / 10000).toFixed(0) : '-';
-            chart2Text = `成交量: ${vol.toFixed(0)}万  MA: ${volMA}万`;
+            chart2Text = `Volume: ${vol.toFixed(0)}K  MA: ${volMA}K`;
           } else if (subChart2Indicator === 'amount' && values.amount !== undefined) {
             const amt = values.amount / 10000;
             const amtMA = values.amountMA ? (values.amountMA / 10000).toFixed(0) : '-';
-            chart2Text = `成交额: ${amt.toFixed(0)}万  MA: ${amtMA}万`;
+            chart2Text = `Amount: ${amt.toFixed(0)}K  MA: ${amtMA}K`;
           }
         }
         
@@ -475,7 +475,7 @@ function addWeek52Markers(
     lineWidth: 1,
     lineStyle: 2,
     axisLabelVisible: true,
-    title: '52周最高',
+    title: '52W High',
   });
 
   series.createPriceLine({
@@ -484,7 +484,7 @@ function addWeek52Markers(
     lineWidth: 1,
     lineStyle: 2,
     axisLabelVisible: true,
-    title: '52周最低',
+    title: '52W Low',
   });
 }
 

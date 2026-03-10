@@ -1,37 +1,37 @@
 /**
- * 应用常量配置
+ * Application Configuration Constants
  */
 
 // ============================================================================
-// API 端点
+// API Endpoints
 // ============================================================================
 
 export const API_ENDPOINTS = {
-  // 认证
+  // Authentication
   AUTH: {
     LOGIN: '/auth/login',
     ME: '/auth/me',
     LOGOUT: '/auth/logout',
   },
 
-  // 股票
+  // Stocks
   STOCKS: {
     LIST: '/stocks',
     DETAIL: (stockCode: string) => `/stocks/${stockCode}`,
   },
 
-  // K线数据
+  // K-Line Data
   KLINE: {
     LIST: (stockCode: string) => `/stocks/${stockCode}/kline`,
   },
 
-  // 技术指标
+  // Technical Indicators
   INDICATORS: {
     LIST: (stockCode: string) => `/stocks/${stockCode}/indicators`,
     BY_TYPE: (stockCode: string, type: string) => `/stocks/${stockCode}/indicators/${type}`,
   },
 
-  // 收藏
+  // Favorites
   FAVORITES: {
     LIST: '/favorites',
     ADD: '/favorites',
@@ -40,28 +40,28 @@ export const API_ENDPOINTS = {
     BY_GROUP: (groupName: string) => `/favorites/groups/${groupName}`,
   },
 
-  // 选股策略
+  // Screener Strategy
   SCREENER: {
     STRATEGIES: '/screener/strategies',
     DETAIL: (strategyId: string) => `/screener/strategies/${strategyId}`,
     EXECUTE: (strategyId: string) => `/screener/strategies/${strategyId}/execute`,
   },
 
-  // 绘图
+  // Drawings
   DRAWINGS: {
     LIST: (stockCode: string) => `/drawings/${stockCode}`,
     CREATE: '/drawings',
     DELETE: (drawingId: string) => `/drawings/${drawingId}`,
   },
 
-  // 数据更新
+  // Data Update
   DATA_UPDATE: {
     TRIGGER: '/data-update/trigger',
     STATUS: (taskId: string) => `/data-update/status/${taskId}`,
     LOGS: '/data-update/logs',
   },
 
-  // 健康检查
+  // Health Check
   HEALTH: {
     CHECK: '/health',
     DB: '/health/db',
@@ -69,115 +69,115 @@ export const API_ENDPOINTS = {
 };
 
 // ============================================================================
-// 应用配置
+// Application Config
 // ============================================================================
 
 export const APP_CONFIG = {
   NAME: 'StockHub',
   VERSION: '1.0.0',
-  DESCRIPTION: 'A股技术分析平台',
+  DESCRIPTION: 'A-Share Technical Analysis Platform',
   DEFAULT_PAGE_SIZE: 20,
   MAX_PAGE_SIZE: 100,
 };
 
 // ============================================================================
-// 股票市场
+// Stock Markets
 // ============================================================================
 
 export const MARKETS = {
-  SH: { value: 'SH', label: '上海证券交易所' },
-  SZ: { value: 'SZ', label: '深圳证券交易所' },
+  SH: { value: 'SH', label: 'Shanghai Stock Exchange' },
+  SZ: { value: 'SZ', label: 'Shenzhen Stock Exchange' },
 } as const;
 
 export const MARKET_OPTIONS = Object.values(MARKETS);
 
 // ============================================================================
-// K线周期
+// K-Line Periods
 // ============================================================================
 
 export const PERIODS = {
-  DAILY: { value: 'daily', label: '日线' },
-  WEEKLY: { value: 'weekly', label: '周线' },
+  DAILY: { value: 'daily', label: 'Daily' },
+  WEEKLY: { value: 'weekly', label: 'Weekly' },
 } as const;
 
 export const PERIOD_OPTIONS = Object.values(PERIODS);
 
 // ============================================================================
-// 技术指标
+// Technical Indicators
 // ============================================================================
 
 export const INDICATOR_TYPES = {
-  MA: { value: 'ma', label: '均线 (MA)' },
-  KDJ: { value: 'kdj', label: '随机指标 (KDJ)' },
-  RSI: { value: 'rsi', label: '相对强弱指标 (RSI)' },
-  VOLUME: { value: 'volume', label: '成交量' },
-  AMOUNT: { value: 'amount', label: '成交额' },
-  WEEK52_MARKER: { value: 'week52_marker', label: '52周标注' },
+  MA: { value: 'ma', label: 'Moving Average (MA)' },
+  KDJ: { value: 'kdj', label: 'Stochastic (KDJ)' },
+  RSI: { value: 'rsi', label: 'Relative Strength Index (RSI)' },
+  VOLUME: { value: 'volume', label: 'Volume' },
+  AMOUNT: { value: 'amount', label: 'Amount' },
+  WEEK52_MARKER: { value: 'week52_marker', label: '52-Week Marker' },
 } as const;
 
 export const INDICATOR_OPTIONS = Object.values(INDICATOR_TYPES);
 
-// MA 参数配置
+// MA Parameter Config
 export const MA_PERIODS = {
   DAILY: [50, 150, 200],
   WEEKLY: [10, 30, 40],
 };
 
-// KDJ 参数配置
+// KDJ Parameter Config
 export const KDJ_PARAMS = {
   PERIOD: 9,
   K_PERIOD: 3,
   D_PERIOD: 3,
 };
 
-// RSI 参数配置
+// RSI Parameter Config
 export const RSI_PERIOD = 14;
 
 // ============================================================================
-// 选股条件
+// Screening Conditions
 // ============================================================================
 
 export const CONDITION_TYPES = {
-  INDICATOR_VALUE: { value: 'indicator_value', label: '指标数值' },
-  PATTERN: { value: 'pattern', label: '形态识别' },
-  PRICE_CHANGE: { value: 'price_change', label: '价格变化' },
-  VOLUME_CHANGE: { value: 'volume_change', label: '成交量变化' },
-  WEEK_52_HIGH: { value: 'week_52_high', label: '52周新高' },
-  WEEK_52_LOW: { value: 'week_52_low', label: '52周新低' },
+  INDICATOR_VALUE: { value: 'indicator_value', label: 'Indicator Value' },
+  PATTERN: { value: 'pattern', label: 'Pattern Recognition' },
+  PRICE_CHANGE: { value: 'price_change', label: 'Price Change' },
+  VOLUME_CHANGE: { value: 'volume_change', label: 'Volume Change' },
+  WEEK_52_HIGH: { value: 'week_52_high', label: '52-Week High' },
+  WEEK_52_LOW: { value: 'week_52_low', label: '52-Week Low' },
 } as const;
 
 export const CONDITION_TYPE_OPTIONS = Object.values(CONDITION_TYPES);
 
 export const OPERATORS = [
-  { value: '>', label: '大于 (>)' },
-  { value: '<', label: '小于 (<)' },
-  { value: '>=', label: '大于等于 (>=)' },
-  { value: '<=', label: '小于等于 (<=)' },
-  { value: '=', label: '等于 (=)' },
+  { value: '>', label: 'Greater than (>)' },
+  { value: '<', label: 'Less than (<)' },
+  { value: '>=', label: 'Greater than or equal (>=)' },
+  { value: '<=', label: 'Less than or equal (<=)' },
+  { value: '=', label: 'Equal (=)' },
 ];
 
 export const PATTERNS = [
-  { value: 'kdj_golden_cross', label: 'KDJ 金叉' },
-  { value: 'kdj_death_cross', label: 'KDJ 死叉' },
-  { value: 'price_above_ma', label: '价格站上均线' },
-  { value: 'price_below_ma', label: '价格跌破均线' },
+  { value: 'kdj_golden_cross', label: 'KDJ Golden Cross' },
+  { value: 'kdj_death_cross', label: 'KDJ Death Cross' },
+  { value: 'price_above_ma', label: 'Price Above MA' },
+  { value: 'price_below_ma', label: 'Price Below MA' },
 ];
 
 // ============================================================================
-// 绘图类型
+// Drawing Types
 // ============================================================================
 
 export const DRAWING_TYPES = {
-  TREND_LINE: { value: 'trend_line', label: '趋势线' },
-  HORIZONTAL_LINE: { value: 'horizontal_line', label: '水平线' },
-  VERTICAL_LINE: { value: 'vertical_line', label: '垂直线' },
-  RECTANGLE: { value: 'rectangle', label: '矩形' },
+  TREND_LINE: { value: 'trend_line', label: 'Trend Line' },
+  HORIZONTAL_LINE: { value: 'horizontal_line', label: 'Horizontal Line' },
+  VERTICAL_LINE: { value: 'vertical_line', label: 'Vertical Line' },
+  RECTANGLE: { value: 'rectangle', label: 'Rectangle' },
 } as const;
 
 export const DRAWING_TYPE_OPTIONS = Object.values(DRAWING_TYPES);
 
 // ============================================================================
-// 本地存储键
+// Local Storage Keys
 // ============================================================================
 
 export const STORAGE_KEYS = {
@@ -189,7 +189,7 @@ export const STORAGE_KEYS = {
 } as const;
 
 // ============================================================================
-// 日期格式
+// Date Formats
 // ============================================================================
 
 export const DATE_FORMATS = {
@@ -198,37 +198,37 @@ export const DATE_FORMATS = {
   DATE_TIME_SHORT: 'YYYY-MM-DD HH:mm',
   TIME: 'HH:mm:ss',
   YEAR_MONTH: 'YYYY-MM',
-  API_DATE: 'YYYYMMDD', // API 使用的日期格式
+  API_DATE: 'YYYYMMDD', // Date format used by API
 } as const;
 
 // ============================================================================
-// 错误消息
+// Error Messages
 // ============================================================================
 
 export const ERROR_MESSAGES = {
-  NETWORK_ERROR: '网络连接失败，请检查网络后重试',
-  UNAUTHORIZED: '未登录或登录已过期，请重新登录',
-  FORBIDDEN: '您没有权限执行此操作',
-  NOT_FOUND: '请求的资源不存在',
-  SERVER_ERROR: '服务器错误，请稍后重试',
-  VALIDATION_ERROR: '数据验证失败，请检查输入',
+  NETWORK_ERROR: 'Network connection failed, please check network and retry',
+  UNAUTHORIZED: 'Not logged in or session expired, please login again',
+  FORBIDDEN: 'You do not have permission to perform this operation',
+  NOT_FOUND: 'The requested resource does not exist',
+  SERVER_ERROR: 'Server error, please try again later',
+  VALIDATION_ERROR: 'Data validation failed, please check input',
 } as const;
 
 // ============================================================================
-// 成功消息
+// Success Messages
 // ============================================================================
 
 export const SUCCESS_MESSAGES = {
-  LOGIN_SUCCESS: '登录成功',
-  LOGOUT_SUCCESS: '登出成功',
-  SAVE_SUCCESS: '保存成功',
-  DELETE_SUCCESS: '删除成功',
-  UPDATE_SUCCESS: '更新成功',
-  CREATE_SUCCESS: '创建成功',
+  LOGIN_SUCCESS: 'Login successful',
+  LOGOUT_SUCCESS: 'Logout successful',
+  SAVE_SUCCESS: 'Save successful',
+  DELETE_SUCCESS: 'Delete successful',
+  UPDATE_SUCCESS: 'Update successful',
+  CREATE_SUCCESS: 'Create successful',
 } as const;
 
 // ============================================================================
-// 路由路径
+// Route Paths
 // ============================================================================
 
 export const ROUTES = {

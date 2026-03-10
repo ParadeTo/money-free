@@ -9,6 +9,9 @@ export interface VcpScanItem {
   lastContractionPct: number;
   volumeDryingUp: boolean;
   rsRating: number;
+  inPullback: boolean;
+  pullbackCount: number;
+  lastPullback?: Pullback;
 }
 
 export interface VcpScanResponse {
@@ -20,6 +23,7 @@ export interface VcpScanResponse {
 export interface VcpScanQuery {
   sortBy?: 'contractionCount' | 'lastContractionPct' | 'volumeDryingUp' | 'rsRating' | 'priceChangePct';
   sortOrder?: 'asc' | 'desc';
+  inPullbackOnly?: boolean;
 }
 
 export interface TrendTemplateCheck {
@@ -41,6 +45,18 @@ export interface Contraction {
   avgVolume: number;
 }
 
+export interface Pullback {
+  index: number;
+  highDate: string;
+  highPrice: number;
+  lowDate: string;
+  lowPrice: number;
+  pullbackPct: number;
+  durationDays: number;
+  avgVolume: number;
+  isInUptrend: boolean;
+}
+
 export interface VcpDetailResponse {
   stockCode: string;
   stockName: string;
@@ -54,4 +70,5 @@ export interface VcpDetailResponse {
   lastContractionPct: number;
   volumeDryingUp: boolean;
   rsRating: number;
+  pullbacks?: Pullback[];
 }

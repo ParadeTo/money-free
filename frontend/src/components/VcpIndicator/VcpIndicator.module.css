@@ -1,0 +1,249 @@
+.container {
+  margin-bottom: 16px;
+}
+
+.card {
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.loadingContainer,
+.errorContainer,
+.noVcpContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  color: #595959;
+  font-size: 14px;
+}
+
+.noVcpText {
+  color: #8c8c8c;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.statusSection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.passIcon {
+  font-size: 18px;
+  color: #52c41a;
+}
+
+.failIcon {
+  font-size: 18px;
+  color: #ff4d4f;
+}
+
+.statusText {
+  font-size: 15px;
+  font-weight: 600;
+  color: #262626;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background-color: #fafafa;
+  border-radius: 6px;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.metricLabel {
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.metricValue {
+  font-size: 16px;
+  font-weight: 600;
+  color: #262626;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.metricPassIcon {
+  font-size: 14px;
+  color: #52c41a;
+}
+
+.collapse {
+  margin-bottom: 12px;
+}
+
+.panelHeader {
+  font-size: 13px;
+  font-weight: 500;
+  color: #595959;
+}
+
+.checkList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.checkItem {
+  padding: 8px;
+  background-color: #fafafa;
+  border-radius: 4px;
+}
+
+.checkHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.checkPassIcon {
+  color: #52c41a;
+  font-size: 14px;
+}
+
+.checkFailIcon {
+  color: #ff4d4f;
+  font-size: 14px;
+}
+
+.checkLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: #262626;
+}
+
+.checkDetails {
+  display: flex;
+  gap: 16px;
+  margin-left: 22px;
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.contractionList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contractionItem {
+  padding: 8px;
+  background-color: #fafafa;
+  border-radius: 4px;
+}
+
+.contractionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.contractionIndex {
+  font-size: 13px;
+  font-weight: 600;
+  color: #262626;
+}
+
+.contractionDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #595959;
+}
+
+.contractionRow {
+  display: flex;
+  gap: 8px;
+}
+
+.contractionLabel {
+  min-width: 40px;
+  color: #8c8c8c;
+}
+
+.footer {
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+  text-align: right;
+}
+
+.scanDate {
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.pullbackList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pullbackItem {
+  padding: 8px;
+  background-color: #e6f7ff;
+  border-left: 3px solid #1890ff;
+  border-radius: 4px;
+}
+
+.pullbackHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.pullbackIndex {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1890ff;
+}
+
+.pullbackDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #595959;
+}
+
+.pullbackRow {
+  display: flex;
+  gap: 8px;
+}
+
+.pullbackLabel {
+  min-width: 50px;
+  color: #8c8c8c;
+  font-weight: 500;
+}
+
+.pullbackTip {
+  margin-top: 12px;
+  padding: 8px;
+  background-color: #fffbe6;
+  border-left: 3px solid #faad14;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #d46b08;
+}

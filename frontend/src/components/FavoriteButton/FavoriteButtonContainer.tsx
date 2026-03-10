@@ -22,14 +22,14 @@ export function FavoriteButtonContainer({ stockCode, stockName }: FavoriteButton
       if (favorited && favoriteId !== null) {
         await favoriteService.removeFavorite(favoriteId);
         removeFavorite(favoriteId);
-        message.success(`已取消收藏 ${stockName || stockCode}`);
+        message.success(`Removed favorite ${stockName || stockCode}`);
       } else {
         const result = await favoriteService.addFavorite(stockCode);
         addFavorite(result);
-        message.success(`已添加收藏 ${stockName || result.stock?.stockName || stockCode}`);
+        message.success(`Added favorite ${stockName || result.stock?.stockName || stockCode}`);
       }
     } catch (error: any) {
-      const errorMsg = error?.response?.data?.message || error?.message || '操作失败';
+      const errorMsg = error?.response?.data?.message || error?.message || 'Operation failed';
       message.error(errorMsg);
     } finally {
       setIsLoading(false);
