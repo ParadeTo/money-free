@@ -1,5 +1,11 @@
 import { api } from './api';
-import type { VcpScanResponse, VcpScanQuery, VcpDetailResponse } from '../types/vcp';
+import type { 
+  VcpScanResponse, 
+  VcpScanQuery, 
+  VcpDetailResponse,
+  FilterConditions,
+  FilterEarlyStageResponse,
+} from '../types/vcp';
 
 export const vcpService = {
   async getVcpScanResults(query: VcpScanQuery = {}): Promise<VcpScanResponse> {
@@ -13,5 +19,9 @@ export const vcpService = {
 
   async getVcpDetail(stockCode: string): Promise<VcpDetailResponse> {
     return api.get<VcpDetailResponse>(`/vcp/${stockCode}/detail`);
+  },
+
+  async filterEarlyStage(conditions: FilterConditions): Promise<FilterEarlyStageResponse> {
+    return api.post<FilterEarlyStageResponse>('/vcp/early-stage', conditions);
   },
 };

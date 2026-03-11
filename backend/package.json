@@ -32,6 +32,8 @@
     "analyze-stock": "ts-node src/scripts/analyze-stock-vcp.ts",
     "export-vcp": "ts-node src/scripts/export-vcp-pullback.ts",
     "export-all-vcp": "ts-node src/scripts/export-all-vcp.ts",
+    "show-vcp-early": "ts-node src/scripts/show-vcp-early-stage.ts",
+    "export-vcp-early": "ts-node src/scripts/export-vcp-early-stage.ts",
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
@@ -51,6 +53,7 @@
     "bull": "^4.11.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
+    "commander": "^14.0.3",
     "p-limit": "^7.3.0",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",

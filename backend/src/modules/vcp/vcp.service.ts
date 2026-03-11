@@ -2,6 +2,8 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { GetVcpScanDto } from './dto/get-vcp-scan.dto';
 import { VcpAnalyzerService, KLineBar, PullbackResult } from '../../services/vcp/vcp-analyzer.service';
+import { VcpEarlyFilterService } from '../../services/vcp/vcp-early-filter.service';
+import { FilterConditions, FilterResult } from '../../types/vcp-early-stage';
 
 @Injectable()
 export class VcpService {
@@ -10,6 +12,7 @@ export class VcpService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly vcpAnalyzer: VcpAnalyzerService,
+    private readonly vcpEarlyFilter: VcpEarlyFilterService,
   ) { }
 
   async getLatestScanResults(dto: GetVcpScanDto) {
@@ -135,5 +138,9 @@ export class VcpService {
       rsRating: result.rsRating,
       pullbacks,
     };
+  }
+
+  async filterEarlyStage(conditions: FilterConditions): Promise<FilterResult> {
+    return this.vcpEarlyFilter.filterEarlyStage(conditions);
   }
 }

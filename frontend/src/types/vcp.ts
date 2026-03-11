@@ -72,3 +72,68 @@ export interface VcpDetailResponse {
   rsRating: number;
   pullbacks?: Pullback[];
 }
+
+// Early Stage Filter Types
+export interface FilterConditions {
+  distFrom52WeekLow: number;
+  distFrom52WeekHigh: number;
+  contractionCountMin: number;
+  contractionCountMax: number;
+}
+
+export enum VcpStage {
+  CONTRACTION = 'contraction',
+  IN_PULLBACK = 'in_pullback',
+  PULLBACK_ENDED = 'pullback_ended',
+}
+
+export interface PullbackInfo {
+  durationDays: number;
+  pullbackPct: number;
+  highPrice: number;
+  lowPrice: number;
+  highDate: string;
+  lowDate: string;
+  daysSinceLow: number;
+  recoveryPct: number;
+}
+
+export interface EarlyStageStock {
+  stockCode: string;
+  stockName: string;
+  latestPrice: number;
+  priceChangePct: number;
+  distFrom52WeekHigh: number;
+  distFrom52WeekLow: number;
+  contractionCount: number;
+  lastContractionPct: number;
+  rsRating: number;
+  volumeDryingUp: boolean;
+  vcpStage: VcpStage;
+  pullbackInfo?: PullbackInfo;
+}
+
+export interface QuickAction {
+  label: string;
+  adjustments: Partial<FilterConditions>;
+}
+
+export interface ResultTip {
+  type: 'warning' | 'info' | 'error';
+  message: string;
+  suggestedActions: QuickAction[];
+}
+
+export interface FilterEarlyStageResponse {
+  stocks: EarlyStageStock[];
+  total: number;
+  appliedConditions: FilterConditions;
+  tip?: ResultTip;
+}
+
+export const DEFAULT_FILTER_CONDITIONS: FilterConditions = {
+  distFrom52WeekLow: 50,   // 提高到50%以包含更多早期股票
+  distFrom52WeekHigh: 10,  // 从30%降低到10%，符合VCP股票的实际特征
+  contractionCountMin: 3,
+  contractionCountMax: 4,
+};

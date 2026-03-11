@@ -1,20 +1,23 @@
 import { Table, Tag, Empty, Typography, Tooltip } from 'antd';
 import type { ColumnsType, TableProps } from 'antd/es/table';
-import type { VcpScanItem, VcpScanQuery } from '../../types/vcp';
+import type { VcpScanItem, VcpScanQuery, EarlyStageStock, VcpStage } from '../../types/vcp';
 import styles from './VcpResultTable.module.css';
 
 const { Text } = Typography;
 
 interface VcpResultTableProps {
-  data: VcpScanItem[];
+  data: VcpScanItem[] | EarlyStageStock[];
   loading: boolean;
-  sortBy: VcpScanQuery['sortBy'];
-  sortOrder: VcpScanQuery['sortOrder'];
-  onSortChange: (sortBy: VcpScanQuery['sortBy'], sortOrder: VcpScanQuery['sortOrder']) => void;
-  expandedRowRender?: (record: VcpScanItem) => React.ReactNode;
+  sortBy?: VcpScanQuery['sortBy'];
+  sortOrder?: VcpScanQuery['sortOrder'];
+  onSortChange?: (sortBy: VcpScanQuery['sortBy'], sortOrder: VcpScanQuery['sortOrder']) => void;
+  expandedRowRender?: (record: VcpScanItem | EarlyStageStock) => React.ReactNode;
   expandedRowKeys?: string[];
-  onExpand?: (expanded: boolean, record: VcpScanItem) => void;
-  actionColumn?: ColumnsType<VcpScanItem>[number];
+  onExpand?: (expanded: boolean, record: VcpScanItem | EarlyStageStock) => void;
+  actionColumn?: ColumnsType<VcpScanItem | EarlyStageStock>[number];
+  highlightStage?: VcpStage;
+  sortByStage?: boolean;
+  showVcpStage?: boolean;
 }
 
 export function VcpResultTable({
@@ -27,8 +30,28 @@ export function VcpResultTable({
   expandedRowKeys,
   onExpand,
   actionColumn,
+  highlightStage,
+  sortByStage = false,
+  showVcpStage = false,
 }: VcpResultTableProps) {
-  const columns: ColumnsType<VcpScanItem> = [
+  const isEarlyStageData = (record: any): record is EarlyStageStock => {
+    return 'vcpStage' in record;
+  };
+
+  const getStageInfo = (stage: VcpStage) => {
+    switch (stage) {
+      case 'contraction':
+        return { label: '收缩中', color: 'green', icon: '🟢' };
+      case 'in_pullback':
+        return { label: '回调中', color: 'orange', icon: '🟡' };
+      case 'pullback_ended':
+        return { label: '回调结束', color: 'blue', icon: '🟠' };
+      default:
+        return { label: '未知', color: 'default', icon: '' };
+    }
+  };
+
+  const columns: ColumnsType<VcpScanItem | EarlyStageStock> = [
     {
       title: 'Stock Code',
       dataIndex: 'stockCode',
@@ -42,6 +65,23 @@ export function VcpResultTable({
       key: 'stockName',
       width: 100,
     },
+    ...(showVcpStage ? [{
+      title: 'VCP Stage',
+      key: 'vcpStage',
+      width: 110,
+      align: 'center' as const,
+      render: (_: unknown, record: VcpScanItem | EarlyStageStock) => {
+        if (!isEarlyStageData(record)) return <Tag color="default">-</Tag>;
+        const stageInfo = getStageInfo(record.vcpStage);
+        return (
+          <Tooltip title={stageInfo.label}>
+            <Tag color={stageInfo.color}>
+              {stageInfo.icon} {stageInfo.label}
+            </Tag>
+          </Tooltip>
+        );
+      },
+    }] : []),
     {
       title: 'Current Price',
       dataIndex: 'latestPrice',
@@ -173,9 +213,16 @@ export function VcpResultTable({
     }
   };
 
+  const rowClassName = (record: VcpScanItem | EarlyStageStock) => {
+    if (isEarlyStageData(record) && highlightStage && record.vcpStage === highlightStage) {
+      return `${styles.container} vcp-stage-highlight`;
+    }
+    return styles.container;
+  };
+
   return (
     <div className={styles.container}>
-      <Table<VcpScanItem>
+      <Table<VcpScanItem | EarlyStageStock>
         columns={columns}
         dataSource={data}
         rowKey="stockCode"
@@ -184,6 +231,7 @@ export function VcpResultTable({
         pagination={false}
         scroll={{ x: 1100 }}
         size="small"
+        rowClassName={rowClassName}
         expandable={expandedRowRender ? {
           expandedRowRender,
           expandedRowKeys,
@@ -194,6 +242,15 @@ export function VcpResultTable({
           emptyText: <Empty description="No stocks meeting VCP criteria" />,
         }}
       />
+      <style jsx global>{`
+        .vcp-stage-highlight {
+          background-color: #f6ffed !important;
+          border-left: 3px solid #52c41a;
+        }
+        .vcp-stage-highlight:hover {
+          background-color: #efffdb !important;
+        }
+      `}</style>
     </div>
   );
 }

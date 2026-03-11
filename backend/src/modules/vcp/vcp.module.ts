@@ -6,6 +6,7 @@ import { TrendTemplateService } from '../../services/vcp/trend-template.service'
 import { RsRatingService } from '../../services/vcp/rs-rating.service';
 import { VcpAnalyzerService } from '../../services/vcp/vcp-analyzer.service';
 import { VcpScannerService } from '../../services/vcp/vcp-scanner.service';
+import { VcpEarlyFilterService } from '../../services/vcp/vcp-early-filter.service';
 
 @Module({
   imports: [PrismaModule],
@@ -16,6 +17,7 @@ import { VcpScannerService } from '../../services/vcp/vcp-scanner.service';
     RsRatingService,
     VcpAnalyzerService,
     VcpScannerService,
+    VcpEarlyFilterService,
   ],
   exports: [VcpService, VcpScannerService],
 })

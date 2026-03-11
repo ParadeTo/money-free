@@ -85,6 +85,11 @@ server logs. Structured data enables tooling and faster incident resolution.
 - **Frontend**: Modern framework (React, Vue, Svelte, etc.) with standard tooling
   (Vite, esbuild, or equivalent)
 - **Node.js**: LTS version; used for tooling, scripts, dev servers, or backend services
+  - **Backend requires Node.js 20.x** (critical for compatibility)
+  - For AI/automated execution, use manual PATH specification:
+    ```bash
+    cd /Users/youxingzhi/ayou/money-free/backend && PATH="/Users/youxingzhi/.nvm/versions/node/v20.19.5/bin:$PATH" && node --version && npm --version
+    ```
 - **Package Manager**: npm, pnpm, or yarn (project MUST pin one)
 - **Linting/Formatting**: ESLint + Prettier (or project-equivalent) MUST be configured
 

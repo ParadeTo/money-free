@@ -75,8 +75,6 @@ npm run dev            # Start development server
 ## Recent Changes
 - 2026-03-11: Updated Node.js requirement to 20.x (CRITICAL)
 - 2026-03-11: Added VCP lastPullback display in frontend table
-- 2026-03-11: Created comprehensive documentation (README.md, QUICK_START.md)
-- 2026-03-11: Added backend-environment.mdc rule
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

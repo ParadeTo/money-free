@@ -1,13 +1,15 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Typography, Alert, Space, Checkbox } from 'antd';
-import { ThunderboltOutlined } from '@ant-design/icons';
+import { Typography, Alert, Space, Checkbox, Tabs, Card } from 'antd';
+import { ThunderboltOutlined, RocketOutlined } from '@ant-design/icons';
 import { vcpService } from '../services/vcp.service';
 import { favoriteService } from '../services/favorite.service';
 import { useFavoritesStore } from '../store/favorites.store';
 import { VcpResultTable } from '../components/VcpResultTable';
 import { VcpDetailPanel } from '../components/VcpDetailPanel';
 import { FavoriteButtonContainer } from '../components/FavoriteButton/FavoriteButtonContainer';
-import type { VcpScanItem, VcpScanQuery, VcpScanResponse } from '../types/vcp';
+import { VcpEarlyStageFilter } from '../components/VcpEarlyStageFilter';
+import { useVcpEarlyFilter } from '../hooks/useVcpEarlyFilter';
+import type { VcpScanItem, VcpScanQuery, VcpScanResponse, EarlyStageStock } from '../types/vcp';
 import styles from './VcpScreenerPage.module.css';
 
 const { Title, Text } = Typography;
@@ -20,7 +22,11 @@ export function VcpScreenerPage() {
   const [sortOrder, setSortOrder] = useState<VcpScanQuery['sortOrder']>('asc');
   const [inPullbackOnly, setInPullbackOnly] = useState(false);
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'standard' | 'early'>('standard');
   const setFavorites = useFavoritesStore(s => s.setFavorites);
+  
+  // Early stage filter hook
+  const earlyFilter = useVcpEarlyFilter();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -62,40 +68,118 @@ export function VcpScreenerPage() {
     ),
   };
 
+  const earlyFavoriteColumn = {
+    title: 'Favorite',
+    key: 'favorite',
+    width: 60,
+    align: 'center' as const,
+    render: (_: unknown, record: EarlyStageStock) => (
+      <FavoriteButtonContainer stockCode={record.stockCode} stockName={record.stockName} />
+    ),
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <Space align="center">
           <ThunderboltOutlined className={styles.headerIcon} />
-          <Title level={4} style={{ margin: 0 }}>VCP Breakout Screener</Title>
-        </Space>
-        <Space align="center">
-          <Checkbox 
-            checked={inPullbackOnly}
-            onChange={(e) => setInPullbackOnly(e.target.checked)}
-          >
-            <span className={styles.checkboxLabel}>
-              🎯 只看回调中的股票
-            </span>
-          </Checkbox>
-          {data?.scanDate && (
-            <Text type="secondary">Date: {data.scanDate} | Total: {data.totalCount} stocks</Text>
-          )}
+          <Title level={4} style={{ margin: 0 }}>VCP 选股工具</Title>
         </Space>
       </div>
 
-      {error && <Alert type="error" message={error} style={{ marginBottom: 16 }} closable />}
+      <Tabs
+        activeKey={activeTab}
+        onChange={(key) => setActiveTab(key as 'standard' | 'early')}
+        items={[
+          {
+            key: 'standard',
+            label: (
+              <span>
+                <ThunderboltOutlined /> 标准VCP扫描
+              </span>
+            ),
+            children: (
+              <>
+                <div style={{ marginBottom: 16 }}>
+                  <Space align="center">
+                    <Checkbox 
+                      checked={inPullbackOnly}
+                      onChange={(e) => setInPullbackOnly(e.target.checked)}
+                    >
+                      <span className={styles.checkboxLabel}>
+                        🎯 只看回调中的股票
+                      </span>
+                    </Checkbox>
+                    {data?.scanDate && (
+                      <Text type="secondary">扫描日期: {data.scanDate} | 总数: {data.totalCount} 只</Text>
+                    )}
+                  </Space>
+                </div>
 
-      <VcpResultTable
-        data={data?.stocks ?? []}
-        loading={loading}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        onSortChange={handleSortChange}
-        expandedRowRender={(record) => <VcpDetailPanel stockCode={record.stockCode} />}
-        expandedRowKeys={expandedKey ? [expandedKey] : []}
-        onExpand={handleExpand}
-        actionColumn={favoriteColumn}
+                {error && <Alert type="error" message={error} style={{ marginBottom: 16 }} closable />}
+
+                <VcpResultTable
+                  data={data?.stocks ?? []}
+                  loading={loading}
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
+                  onSortChange={handleSortChange}
+                  expandedRowRender={(record) => <VcpDetailPanel stockCode={record.stockCode} />}
+                  expandedRowKeys={expandedKey ? [expandedKey] : []}
+                  onExpand={handleExpand}
+                  actionColumn={favoriteColumn}
+                />
+              </>
+            ),
+          },
+          {
+            key: 'early',
+            label: (
+              <span>
+                <RocketOutlined /> 早期启动筛选
+              </span>
+            ),
+            children: (
+              <>
+                <VcpEarlyStageFilter
+                  conditions={earlyFilter.conditions}
+                  onChange={earlyFilter.updateConditions}
+                  onFilter={earlyFilter.filter}
+                  onReset={earlyFilter.reset}
+                  loading={earlyFilter.loading}
+                  tip={earlyFilter.result?.tip}
+                  onApplyQuickAction={earlyFilter.applyQuickAction}
+                />
+
+                {earlyFilter.result && (
+                  <Card 
+                    style={{ marginTop: 24 }}
+                    title={
+                      <Space>
+                        <Text strong>筛选结果</Text>
+                        <Text type="secondary">
+                          共 {earlyFilter.result.total} 只股票
+                        </Text>
+                      </Space>
+                    }
+                  >
+                    <VcpResultTable
+                      data={earlyFilter.result.stocks}
+                      loading={earlyFilter.loading}
+                      expandedRowRender={(record) => <VcpDetailPanel stockCode={record.stockCode} />}
+                      expandedRowKeys={expandedKey ? [expandedKey] : []}
+                      onExpand={handleExpand}
+                      actionColumn={earlyFavoriteColumn}
+                      highlightStage="contraction"
+                      sortByStage={true}
+                      showVcpStage={true}
+                    />
+                  </Card>
+                )}
+              </>
+            ),
+          },
+        ]}
       />
     </div>
   );
