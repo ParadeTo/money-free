@@ -1,4 +1,4 @@
-import { Table, Tag, Empty, Typography } from 'antd';
+import { Table, Tag, Empty, Typography, Tooltip } from 'antd';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import type { VcpScanItem, VcpScanQuery } from '../../types/vcp';
 import styles from './VcpResultTable.module.css';
@@ -91,18 +91,40 @@ export function VcpResultTable({
       render: (v: number) => <Tag color="blue">{v}</Tag>,
     },
     {
-      title: '回调状态',
-      key: 'pullbackStatus',
-      width: 100,
+      title: '最后回调',
+      key: 'lastPullbackInfo',
+      width: 150,
       align: 'center',
       render: (_: unknown, record: VcpScanItem) => {
-        if (record.inPullback) {
-          return <Tag color="orange">🎯 回调中</Tag>;
+        if (!record.lastPullback) {
+          return <Tag color="default">-</Tag>;
         }
-        if (record.pullbackCount > 0) {
-          return <Tag color="default">已恢复</Tag>;
-        }
-        return <Tag color="default">-</Tag>;
+        
+        const { pullbackPct, lowDate, highDate, highPrice, lowPrice, durationDays } = record.lastPullback;
+        const isRecent = (new Date().getTime() - new Date(lowDate).getTime()) < 30 * 24 * 60 * 60 * 1000;
+        
+        const tooltipContent = (
+          <div>
+            <div>高点: {new Date(highDate).toLocaleDateString('zh-CN')} - ¥{highPrice.toFixed(2)}</div>
+            <div>低点: {new Date(lowDate).toLocaleDateString('zh-CN')} - ¥{lowPrice.toFixed(2)}</div>
+            <div>持续: {durationDays} 天</div>
+            <div>回调幅度: {pullbackPct.toFixed(2)}%</div>
+          </div>
+        );
+        
+        return (
+          <Tooltip title={tooltipContent}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', cursor: 'pointer' }}>
+              <Tag color={record.inPullback ? 'orange' : 'blue'}>
+                {record.inPullback ? '🎯 ' : ''}{pullbackPct.toFixed(1)}%
+              </Tag>
+              <Text type="secondary" style={{ fontSize: '11px' }}>
+                {new Date(lowDate).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
+                {isRecent && ' 🔥'}
+              </Text>
+            </div>
+          </Tooltip>
+        );
       },
     },
     {

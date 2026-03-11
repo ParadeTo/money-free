@@ -22,6 +22,7 @@ import { AkShareService } from '../services/datasource/akshare.service';
 import { DataSourceManagerService } from '../services/datasource/datasource-manager.service';
 import { TechnicalIndicatorsService, PriceData } from '../services/indicators/technical-indicators.service';
 import { PythonBridgeService } from '../services/python-bridge/python-bridge.service';
+import pLimit from 'p-limit';
 
 const prisma = new PrismaClient();
 
@@ -419,31 +420,53 @@ async function main() {
     totalNewRecords: 0,
   };
 
-  // 逐个处理股票
-  for (let i = 0; i < stocks.length; i++) {
-    const stock = stocks[i];
-    console.log(`\n[${i + 1}/${stocks.length}] Progress: ${((i / stocks.length) * 100).toFixed(1)}%`);
+  let completed = 0;
+  const startTime = Date.now();
 
-    const result = await processStockIncremental(stock, dataSourceManager, indicatorsService);
+  // 并发控制：同时处理 8 只股票
+  const CONCURRENCY = 8;
+  const concurrencyLimit = pLimit(CONCURRENCY);
 
-    if (result.success) {
-      if (result.reason === 'already_updated') {
-        stats.alreadyUpdated++;
-      } else if (result.reason === 'no_new_data') {
-        stats.noNewData++;
+  console.log(`🚀 并行处理模式：${CONCURRENCY} 个并发任务\n`);
+
+  const tasks = stocks.map((stock) =>
+    concurrencyLimit(async () => {
+      const result = await processStockIncremental(stock, dataSourceManager, indicatorsService);
+
+      if (result.success) {
+        if (result.reason === 'already_updated') {
+          stats.alreadyUpdated++;
+        } else if (result.reason === 'no_new_data') {
+          stats.noNewData++;
+        } else {
+          stats.success++;
+          stats.totalNewRecords += result.newRecords || 0;
+        }
       } else {
-        stats.success++;
-        stats.totalNewRecords += result.newRecords || 0;
+        stats.failed++;
       }
-    } else {
-      stats.failed++;
-    }
 
-    // 避免 API 限流：每处理一只股票后等待
-    if (i < stocks.length - 1) {
-      await new Promise(resolve => setTimeout(resolve, 2000)); // 等待2秒
-    }
-  }
+      completed++;
+      const progress = ((completed / stocks.length) * 100).toFixed(1);
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
+      const rate = (completed / (Date.now() - startTime)) * 60000;
+      const remaining = Math.ceil((stocks.length - completed) / rate);
+
+      if (completed % 10 === 0 || completed === stocks.length) {
+        console.log(
+          `\n📊 Progress: ${completed}/${stocks.length} (${progress}%) | ` +
+          `Updated: ${stats.success} | Already: ${stats.alreadyUpdated} | ` +
+          `NoData: ${stats.noNewData} | Failed: ${stats.failed} | ` +
+          `Elapsed: ${elapsed}s | Rate: ${rate.toFixed(1)}/min | ` +
+          `ETA: ${remaining}min`
+        );
+      }
+
+      return result;
+    })
+  );
+
+  await Promise.all(tasks);
 
   // 最终统计
   console.log('\n======================================');

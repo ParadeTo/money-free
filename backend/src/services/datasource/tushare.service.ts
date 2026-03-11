@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
+import { RateLimiter } from '../../utils/rate-limiter';
 
 export interface TushareKLineData {
   ts_code: string;
@@ -32,6 +33,7 @@ export class TushareService {
   private readonly apiUrl = 'http://api.tushare.pro';
   private readonly token: string;
   private readonly client: AxiosInstance;
+  private readonly rateLimiter: RateLimiter;
 
   constructor(private configService: ConfigService) {
     this.token = this.configService.get<string>('TUSHARE_TOKEN') || '';
@@ -47,6 +49,10 @@ export class TushareService {
         'Content-Type': 'application/json',
       },
     });
+
+    // Free tier: 120 requests/min, set to 100/min for safety (20% buffer)
+    this.rateLimiter = new RateLimiter(100);
+    this.logger.log('🚦 Rate limiter initialized: 100 requests/minute');
   }
 
   /**
@@ -58,6 +64,7 @@ export class TushareService {
     ts_code?: string;
   }): Promise<TushareStockBasic[]> {
     try {
+      await this.rateLimiter.acquire();
       const response = await this.client.post('', {
         api_name: 'stock_basic',
         token: this.token,
@@ -96,6 +103,7 @@ export class TushareService {
     trade_date?: string; // YYYYMMDD
   }): Promise<Array<{ ts_code: string; trade_date: string; adj_factor: number }>> {
     try {
+      await this.rateLimiter.acquire();
       const response = await this.client.post('', {
         api_name: 'adj_factor',
         token: this.token,
@@ -135,6 +143,7 @@ export class TushareService {
   }): Promise<TushareKLineData[]> {
     try {
       // 1. 获取不复权数据
+      await this.rateLimiter.acquire();
       const response = await this.client.post('', {
         api_name: 'daily',
         token: this.token,
@@ -216,6 +225,7 @@ export class TushareService {
   }): Promise<TushareKLineData[]> {
     try {
       // 1. 获取不复权数据
+      await this.rateLimiter.acquire();
       const response = await this.client.post('', {
         api_name: 'weekly',
         token: this.token,
@@ -294,6 +304,7 @@ export class TushareService {
     trade_date?: string; // YYYYMMDD
   }): Promise<any[]> {
     try {
+      await this.rateLimiter.acquire();
       const response = await this.client.post('', {
         api_name: 'daily_basic',
         token: this.token,
@@ -341,6 +352,7 @@ export class TushareService {
         
         for (let i = 0; i < 10; i++) {
           const dateStr = tryDate.toISOString().split('T')[0].replace(/-/g, '');
+          await this.rateLimiter.acquire();
           const response = await this.client.post('', {
             api_name: 'index_weight',
             token: this.token,
@@ -370,6 +382,7 @@ export class TushareService {
         return [];
       }
 
+      await this.rateLimiter.acquire();
       const response = await this.client.post('', {
         api_name: 'index_weight',
         token: this.token,

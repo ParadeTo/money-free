@@ -1,0 +1,112 @@
+# AI Runtime Commands
+
+## Backend Commands for AI Execution
+
+### Critical: Node 20 PATH Configuration
+
+When AI agents run backend commands, they MUST use the full PATH specification because:
+- nvm is not available in non-interactive shells
+- Environment variables don't persist between command executions
+- Direct PATH specification ensures correct Node version
+
+### Verify Node Version
+
+```bash
+cd /Users/youxingzhi/ayou/money-free/backend && PATH="/Users/youxingzhi/.nvm/versions/node/v20.19.5/bin:$PATH" && node --version && npm --version
+```
+
+Expected output:
+```
+v20.19.5
+10.8.2
+```
+
+### Start Backend Server
+
+```bash
+cd /Users/youxingzhi/ayou/money-free/backend && PATH="/Users/youxingzhi/.nvm/versions/node/v20.19.5/bin:$PATH" npm run start:dev
+```
+
+Server will run on: http://localhost:3000
+
+### Generate Prisma Client
+
+```bash
+cd /Users/youxingzhi/ayou/money-free/backend && PATH="/Users/youxingzhi/.nvm/versions/node/v20.19.5/bin:$PATH" npx prisma generate
+```
+
+### Sync Database Schema
+
+```bash
+cd /Users/youxingzhi/ayou/money-free/backend && PATH="/Users/youxingzhi/.nvm/versions/node/v20.19.5/bin:$PATH" npx prisma db push
+```
+
+### Run Scripts
+
+```bash
+cd /Users/youxingzhi/ayou/money-free/backend && PATH="/Users/youxingzhi/.nvm/versions/node/v20.19.5/bin:$PATH" npx ts-node src/scripts/[script-name].ts
+```
+
+## Testing Commands
+
+### Check if Backend is Running
+
+```bash
+lsof -ti:3000 && echo "✅ Backend running" || echo "❌ Backend not running"
+```
+
+### Test API Endpoint
+
+```bash
+curl -s http://localhost:3000/api/v1/vcp/scan | head -50
+```
+
+### Check Database
+
+```bash
+sqlite3 /Users/youxingzhi/money-free/data/stocks.db ".tables"
+```
+
+## Common Issues
+
+### Issue: Prisma Client Errors
+
+**Solution:**
+```bash
+cd /Users/youxingzhi/ayou/money-free/backend && PATH="/Users/youxingzhi/.nvm/versions/node/v20.19.5/bin:$PATH" && rm -rf node_modules/.prisma && npx prisma generate
+```
+
+### Issue: Port 3000 Already in Use
+
+**Solution:**
+```bash
+lsof -ti:3000 | xargs kill -9
+```
+
+## Important Notes for AI Agents
+
+1. **Always use full PATH**: Never rely on nvm or shell aliases
+2. **Always cd to backend first**: Ensure working directory is correct
+3. **Chain commands with &&**: Ensure each step succeeds before proceeding
+4. **Verify Node version**: Check version before running critical commands
+5. **Use block_until_ms appropriately**: Set to 0 for long-running processes like npm run start:dev
+
+## Template for Starting Backend in AI
+
+```bash
+# Step 1: Verify environment
+cd /Users/youxingzhi/ayou/money-free/backend && PATH="/Users/youxingzhi/.nvm/versions/node/v20.19.5/bin:$PATH" && node --version && npm --version
+
+# Step 2: Generate Prisma Client (if needed)
+cd /Users/youxingzhi/ayou/money-free/backend && PATH="/Users/youxingzhi/.nvm/versions/node/v20.19.5/bin:$PATH" npx prisma generate
+
+# Step 3: Start server (in background)
+cd /Users/youxingzhi/ayou/money-free/backend && PATH="/Users/youxingzhi/.nvm/versions/node/v20.19.5/bin:$PATH" npm run start:dev
+# Use block_until_ms: 0 for this command
+
+# Step 4: Wait for startup
+sleep 12
+
+# Step 5: Verify server is running
+lsof -ti:3000 && echo "✅ Backend running"
+```

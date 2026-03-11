@@ -13,7 +13,7 @@ export class VcpScannerService {
     private readonly trendTemplate: TrendTemplateService,
     private readonly rsRating: RsRatingService,
     private readonly vcpAnalyzer: VcpAnalyzerService,
-  ) {}
+  ) { }
 
   async scanAllStocks(scanDate?: Date): Promise<{ passed: number; skipped: number; failed: number; total: number }> {
     const date = scanDate || new Date();
@@ -72,7 +72,7 @@ export class VcpScannerService {
             lastPullbackData: result.lastPullback ? JSON.stringify(result.lastPullback) : null,
           },
         });
-        
+
         if (result.trendTemplatePass && result.hasVcp) {
           passed++;
         } else {
@@ -241,24 +241,24 @@ export class VcpScannerService {
    */
   private checkIfInPullback(pullbacks: any[], currentPrice: number, klines: any[]): boolean {
     if (pullbacks.length === 0) return false;
-    
+
     const lastPullback = pullbacks[pullbacks.length - 1];
     const lastKline = klines[klines.length - 1];
-    
+
     // 检查最后一个回调的低点日期
     const lowDate = new Date(lastPullback.lowDate).getTime();
     const currentDate = new Date(lastKline.date).getTime();
     const daysSinceLow = (currentDate - lowDate) / (1000 * 60 * 60 * 24);
-    
+
     // 如果在回调低点之后5天内，且价格还在低点到高点的范围内
     if (daysSinceLow >= 0 && daysSinceLow <= 5) {
       // 价格在低点附近（低点的-5%到+10%之间）
-      const nearLow = currentPrice >= lastPullback.lowPrice * 0.95 && 
-                      currentPrice <= lastPullback.lowPrice * 1.10;
-      
+      const nearLow = currentPrice >= lastPullback.lowPrice * 0.95 &&
+        currentPrice <= lastPullback.lowPrice * 1.10;
+
       if (nearLow) return true;
     }
-    
+
     return false;
   }
 }

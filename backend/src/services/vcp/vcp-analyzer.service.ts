@@ -50,13 +50,13 @@ export interface VcpAnalysisResult {
 @Injectable()
 export class VcpAnalyzerService {
   private readonly logger = new Logger(VcpAnalyzerService.name);
-  
+
   private readonly LOOKBACK = 5;
   private readonly MIN_CONTRACTION_DEPTH = 5;
   private readonly MAX_FIRST_CONTRACTION_DEPTH = 35;
   private readonly MIN_PIVOT_GAP = 3;
   private readonly DETECTION_WINDOW = 126;
-  
+
   // 回调检测参数（更灵活）
   private readonly PULLBACK_LOOKBACK = 3;
   private readonly MIN_PULLBACK_DEPTH = 3;
@@ -72,16 +72,16 @@ export class VcpAnalyzerService {
     const swingLows = this.findSwingLows(window);
     const contractions = this.extractContractions(swingHighs, swingLows, window);
     const filtered = contractions.filter(c => c.depthPct >= this.MIN_CONTRACTION_DEPTH);
-    
+
     // 检测上涨趋势中的回调
     const pullbacks = this.findPullbacksInUptrend(klines);
-    
+
     if (filtered.length < 2) {
-      return { 
-        hasVcp: false, 
-        contractions: filtered, 
-        contractionCount: filtered.length, 
-        lastContractionPct: filtered.length > 0 ? filtered[filtered.length - 1].depthPct : 0, 
+      return {
+        hasVcp: false,
+        contractions: filtered,
+        contractionCount: filtered.length,
+        lastContractionPct: filtered.length > 0 ? filtered[filtered.length - 1].depthPct : 0,
         volumeDryingUp: false,
         pullbacks,
       };
@@ -129,20 +129,20 @@ export class VcpAnalyzerService {
 
   extractContractions(highs: SwingPoint[], lows: SwingPoint[], bars: KLineBar[]): ContractionResult[] {
     const contractions: ContractionResult[] = [];
-    
+
     for (const high of highs) {
       const matchingLow = lows.find(low => low.index > high.index && (lows.find(nextLow => nextLow.index > high.index) === low));
       if (!matchingLow) continue;
-      
+
       const nextLow = lows
         .filter(l => l.index > high.index)
         .sort((a, b) => a.index - b.index)[0];
-      
+
       if (!nextLow) continue;
 
       const depthPct = ((high.price - nextLow.price) / high.price) * 100;
       const durationDays = nextLow.index - high.index;
-      
+
       const contractionBars = bars.slice(high.index, nextLow.index + 1);
       const avgVolume = contractionBars.length > 0
         ? contractionBars.reduce((sum, b) => sum + b.volume, 0) / contractionBars.length
@@ -201,7 +201,7 @@ export class VcpAnalyzerService {
     const localLows = this.findLocalLows(window, this.PULLBACK_LOOKBACK);
 
     const pullbacks: PullbackResult[] = [];
-    
+
     // 判断是否在上涨趋势中
     const isInUptrend = this.detectUptrend(window);
 
@@ -214,7 +214,7 @@ export class VcpAnalyzerService {
       const hasRecovery = this.checkRecovery(window, nextLow.index, high.price);
 
       const pullbackPct = ((high.price - nextLow.price) / high.price) * 100;
-      
+
       // 过滤：回调深度要合理（3%-30%），在上涨趋势中可以不要求完全恢复
       if (pullbackPct >= this.MIN_PULLBACK_DEPTH && pullbackPct <= 30) {
         const durationDays = nextLow.index - high.index;
@@ -245,18 +245,18 @@ export class VcpAnalyzerService {
    */
   private findLocalHighs(bars: KLineBar[], lookback: number): SwingPoint[] {
     const points: SwingPoint[] = [];
-    
+
     // 允许检查到最后lookback个点（部分确认）
     for (let i = lookback; i < bars.length; i++) {
       const startIdx = Math.max(0, i - lookback);
       const endIdx = Math.min(bars.length, i + lookback + 1);
       const windowHighs = bars.slice(startIdx, endIdx).map(b => b.high);
-      
+
       if (bars[i].high === Math.max(...windowHighs)) {
         points.push({ index: i, date: bars[i].date, price: bars[i].high });
       }
     }
-    
+
     return points;
   }
 
@@ -265,17 +265,17 @@ export class VcpAnalyzerService {
    */
   private findLocalLows(bars: KLineBar[], lookback: number): SwingPoint[] {
     const points: SwingPoint[] = [];
-    
+
     for (let i = lookback; i < bars.length; i++) {
       const startIdx = Math.max(0, i - lookback);
       const endIdx = Math.min(bars.length, i + lookback + 1);
       const windowLows = bars.slice(startIdx, endIdx).map(b => b.low);
-      
+
       if (bars[i].low === Math.min(...windowLows)) {
         points.push({ index: i, date: bars[i].date, price: bars[i].low });
       }
     }
-    
+
     return points;
   }
 
@@ -284,21 +284,21 @@ export class VcpAnalyzerService {
    */
   private detectUptrend(bars: KLineBar[]): boolean {
     if (bars.length < 20) return false;
-    
+
     const recentBars = bars.slice(-30);
     const firstPrice = recentBars[0].close;
     const lastPrice = recentBars[recentBars.length - 1].close;
-    
+
     // 最近30天价格上涨超过5%，或者整个窗口上涨超过20%
     const recentGain = (lastPrice - firstPrice) / firstPrice;
-    
+
     if (recentGain > 0.05) return true;
-    
+
     // 或者检查整个窗口
     const windowFirstPrice = bars[0].close;
     const windowLastPrice = bars[bars.length - 1].close;
     const windowGain = (windowLastPrice - windowFirstPrice) / windowFirstPrice;
-    
+
     return windowGain > 0.2;
   }
 
@@ -309,14 +309,14 @@ export class VcpAnalyzerService {
     // 检查低点之后的5天内，价格是否有所恢复
     const afterLow = bars.slice(lowIndex + 1, Math.min(lowIndex + 6, bars.length));
     if (afterLow.length < 2) return false;
-    
+
     const lowPrice = bars[lowIndex].low;
     const maxAfterLow = Math.max(...afterLow.map(b => b.high));
-    
+
     // 恢复幅度至少是回调的30%，或者已经接近前高
     const recoveryPct = (maxAfterLow - lowPrice) / lowPrice;
     const nearPreviousHigh = maxAfterLow >= previousHigh * 0.95;
-    
+
     return recoveryPct > 0.03 || nearPreviousHigh;
   }
 }

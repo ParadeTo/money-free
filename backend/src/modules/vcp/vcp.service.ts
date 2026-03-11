@@ -15,7 +15,7 @@ export class VcpService {
   async getLatestScanResults(dto: GetVcpScanDto) {
     const sortBy = dto.sortBy || 'lastContractionPct';
     const sortOrder = dto.sortOrder || 'asc';
-    
+
     // 手动处理 inPullbackOnly 参数
     let inPullbackOnly = false;
     if (dto.inPullbackOnly !== undefined && dto.inPullbackOnly !== null) {
@@ -45,7 +45,7 @@ export class VcpService {
       priceChangePct: { priceChangePct: sortOrder },
     };
 
-    const whereClause: any = { 
+    const whereClause: any = {
       scanDate,
       trendTemplatePass: true,
       contractionCount: { gte: 3 },

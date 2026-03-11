@@ -1,0 +1,68 @@
+# Backend Environment Requirements
+
+## Node.js Version
+
+**CRITICAL**: The backend MUST run on **Node.js 20.x**
+
+### Why Node 20?
+
+- Prisma Client has compatibility issues with Node 18
+- Project dependencies require Node 20 features
+- Ensures best performance and stability
+
+### How to Start Backend
+
+Always use one of these methods:
+
+**Method 1: Using start script (Recommended for users)**
+```bash
+cd /Users/youxingzhi/ayou/money-free/backend
+./start-backend.sh
+```
+
+**Method 2: Using nvm**
+```bash
+cd /Users/youxingzhi/ayou/money-free/backend
+nvm use 20
+npm run start:dev
+```
+
+**Method 3: Manual PATH (REQUIRED for AI runtime)**
+
+Verify Node version first:
+```bash
+cd /Users/youxingzhi/ayou/money-free/backend && PATH="/Users/youxingzhi/.nvm/versions/node/v20.19.5/bin:$PATH" && node --version && npm --version
+```
+
+Start server:
+```bash
+cd /Users/youxingzhi/ayou/money-free/backend && PATH="/Users/youxingzhi/.nvm/versions/node/v20.19.5/bin:$PATH" npm run start:dev
+```
+
+**IMPORTANT for AI Agents**: 
+When running commands programmatically (through Shell tool), ALWAYS use the full PATH method (Method 3) because nvm is not available in non-interactive shells.
+
+### Verify Node Version
+
+```bash
+node --version  # Should show v20.x.x
+```
+
+### Troubleshooting
+
+If you encounter Prisma Client errors:
+1. Ensure Node 20 is active: `node --version`
+2. Clean and regenerate: `rm -rf node_modules/.prisma && npx prisma generate`
+3. Restart server: `npm run start:dev`
+
+## Server Addresses
+
+- Backend API: http://localhost:3000
+- Swagger Docs: http://localhost:3000/api-docs
+- Frontend Dev: http://localhost:5173
+
+## Documentation
+
+- [Backend README](../backend/README.md)
+- [Quick Start Guide](../backend/QUICK_START.md)
+- [Start Script](../backend/start-backend.sh)

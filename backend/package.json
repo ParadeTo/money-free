@@ -27,6 +27,9 @@
     "create-test-user": "ts-node src/scripts/create-test-user.ts",
     "test:tushare": "ts-node src/scripts/test-tushare.ts",
     "calculate-vcp": "ts-node src/scripts/calculate-vcp.ts",
+    "show-vcp-pullback": "ts-node src/scripts/show-vcp-pullback.ts",
+    "analyze-stock": "ts-node src/scripts/analyze-stock-vcp.ts",
+    "export-vcp": "ts-node src/scripts/export-vcp-pullback.ts",
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
@@ -46,6 +49,7 @@
     "bull": "^4.11.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
+    "p-limit": "^7.3.0",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",

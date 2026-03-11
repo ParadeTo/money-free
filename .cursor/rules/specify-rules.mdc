@@ -6,36 +6,77 @@ alwaysApply: true
 
 # money-free Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-02-28
+Last updated: 2026-03-11
 
 ## Active Technologies
-- Python 3.11+ (后端), TypeScript 5.x (前端) (001-stock-analysis-tool)
-- SQLite (单文件数据库，预估12-15GB，存储约1000只股票的20年历史K线数据及技术指标) (001-stock-analysis-tool)
-- Node.js 18+ LTS, TypeScript 5.x (001-stock-analysis-tool)
-- SQLite 3.40+ (单文件数据库，WAL模式，预估12-15GB，存储约1000只股票的20年历史K线数据及技术指标) (001-stock-analysis-tool)
 
-- (001-stock-analysis-tool)
+### Backend
+- **Node.js 20.x** (REQUIRED - see backend-environment.mdc)
+- NestJS
+- TypeScript 5.x
+- Prisma ORM
+- SQLite 3.40+ (单文件数据库，WAL模式，约2.6GB)
+
+### Frontend
+- Node.js 18+
+- React 18
+- TypeScript 5.x
+- Vite
+- Ant Design
 
 ## Project Structure
 
 ```text
-src/
-tests/
+money-free/
+├── backend/          # NestJS backend
+│   ├── src/
+│   │   ├── modules/  # Business modules (vcp, prisma, etc.)
+│   │   ├── services/ # Business services
+│   │   └── scripts/  # Data processing scripts
+│   ├── prisma/       # Database schema
+│   └── data/         # SQLite database
+├── frontend/         # React frontend
+│   └── src/
+│       ├── components/
+│       ├── pages/
+│       └── services/
+└── .cursor/
+    └── rules/        # Development guidelines
 ```
 
-## Commands
+## Important Commands
 
-# Add commands for 
+### Backend (Node 20 Required!)
+```bash
+cd backend
+nvm use 20              # Switch to Node 20
+npm run start:dev       # Start development server
+./start-backend.sh      # Or use start script
+
+# Database
+npx prisma generate     # Generate Prisma Client
+npx prisma db push      # Sync schema to database
+npx prisma studio       # Open database GUI
+```
+
+### Frontend
+```bash
+cd frontend
+npm run dev            # Start development server
+```
 
 ## Code Style
 
-: Follow standard conventions
+- TypeScript strict mode enabled
+- Follow ESLint and Prettier configurations
+- Use functional components with hooks in React
+- Use NestJS decorators and dependency injection in backend
 
 ## Recent Changes
-- 001-stock-analysis-tool: Added Node.js 18+ LTS, TypeScript 5.x
-- 001-stock-analysis-tool: Added Python 3.11+ (后端), TypeScript 5.x (前端)
-
-- 001-stock-analysis-tool: Added
+- 2026-03-11: Updated Node.js requirement to 20.x (CRITICAL)
+- 2026-03-11: Added VCP lastPullback display in frontend table
+- 2026-03-11: Created comprehensive documentation (README.md, QUICK_START.md)
+- 2026-03-11: Added backend-environment.mdc rule
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

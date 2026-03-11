@@ -18,6 +18,7 @@ import { AkShareService } from '../services/datasource/akshare.service';
 import { DataSourceManagerService } from '../services/datasource/datasource-manager.service';
 import { TechnicalIndicatorsService, PriceData } from '../services/indicators/technical-indicators.service';
 import { PythonBridgeService } from '../services/python-bridge/python-bridge.service';
+import pLimit from 'p-limit';
 
 const prisma = new PrismaClient();
 
@@ -291,24 +292,45 @@ async function main() {
   console.log(`日期范围: ${startDateStr} 到 ${endDateStr}\n`);
 
   let stats = { success: 0, failed: 0 };
+  let completed = 0;
+  const startTime = Date.now();
 
-  for (let i = 0; i < stocks.length; i++) {
-    const stock = stocks[i];
-    console.log(`\n[${i + 1}/${stocks.length}] Progress: ${((i / stocks.length) * 100).toFixed(1)}%`);
+  // 并发控制：同时处理 8 只股票
+  const CONCURRENCY = 8;
+  const concurrencyLimit = pLimit(CONCURRENCY);
 
-    const result = await processStock(stock, dataSourceManager, indicatorsService, startDateStr, endDateStr);
+  console.log(`🚀 并行处理模式：${CONCURRENCY} 个并发任务\n`);
 
-    if (result.success) {
-      stats.success++;
-    } else {
-      stats.failed++;
-    }
+  const tasks = stocks.map((stock, index) =>
+    concurrencyLimit(async () => {
+      const result = await processStock(stock, dataSourceManager, indicatorsService, startDateStr, endDateStr);
 
-    // API 限流
-    if (i < stocks.length - 1) {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    }
-  }
+      if (result.success) {
+        stats.success++;
+      } else {
+        stats.failed++;
+      }
+
+      completed++;
+      const progress = ((completed / stocks.length) * 100).toFixed(1);
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
+      const rate = (completed / (Date.now() - startTime)) * 60000;
+      const remaining = Math.ceil((stocks.length - completed) / rate);
+
+      if (completed % 10 === 0 || completed === stocks.length) {
+        console.log(
+          `\n📊 Progress: ${completed}/${stocks.length} (${progress}%) | ` +
+          `Success: ${stats.success} | Failed: ${stats.failed} | ` +
+          `Elapsed: ${elapsed}s | Rate: ${rate.toFixed(1)}/min | ` +
+          `ETA: ${remaining}min`
+        );
+      }
+
+      return result;
+    })
+  );
+
+  await Promise.all(tasks);
 
   console.log('\n======================================');
   console.log('🎉 初始化完成！');
