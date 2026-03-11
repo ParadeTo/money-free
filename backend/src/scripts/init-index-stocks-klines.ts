@@ -1,7 +1,7 @@
 /**
- * 初始化指数成分股的K线数据（沪深300+中证1000）
+ * 初始化指数成分股的K线数据（沪深300+中证500）
  * 
- * 功能：只初始化标记为指数成分股的股票（约1037只），大幅减少初始化时间
+ * 功能：只初始化标记为指数成分股的股票（约800只），大幅减少初始化时间
  * 
  * 使用:
  * npx ts-node src/scripts/init-index-stocks-klines.ts [limit] [offset]
@@ -252,7 +252,7 @@ async function processStock(
 }
 
 async function main() {
-  console.log(`📊 初始化指数成分股K线数据 (沪深300+中证1000)...\n`);
+  console.log(`📊 初始化指数成分股K线数据 (沪深300+中证500)...\n`);
 
   const configService = new ConfigService();
   const pythonBridgeService = new PythonBridgeService();

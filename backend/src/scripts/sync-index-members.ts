@@ -1,7 +1,7 @@
 /**
  * 同步指数成分股标记
  * 
- * 通过 AkShare 获取沪深300和中证1000的成分股列表，
+ * 通过 AkShare 获取沪深300和中证500的成分股列表，
  * 更新 stocks 表的 index_code 字段。
  * 
  * 使用:
@@ -16,7 +16,7 @@ const prisma = new PrismaClient();
 
 const INDEX_CONFIG = [
   { code: '000300', label: 'HS300', name: '沪深300' },
-  // { code: '000905', label: 'ZZ500', name: '中证500' },  // 未来扩展
+  { code: '000905', label: 'ZZ500', name: '中证500' },
 ];
 
 function fetchIndexMembers(indexCode: string): Promise<string[]> {

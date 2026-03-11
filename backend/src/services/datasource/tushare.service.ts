@@ -324,7 +324,7 @@ export class TushareService {
 
   /**
    * 获取指数成分股
-   * index_code: '000300.SH' (沪深300), '000852.SH' (中证1000)
+   * index_code: '000300.SH' (沪深300), '000905.SH' (中证500)
    */
   async getIndexWeight(params: {
     index_code: string;

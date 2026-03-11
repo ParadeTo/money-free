@@ -26,7 +26,7 @@ import { PythonBridgeService } from '../services/python-bridge/python-bridge.ser
 const prisma = new PrismaClient();
 
 // 从命令行参数获取 limit 和 offset
-// 支持 --index-only 参数：只更新指数成分股（沪深300+中证1000）
+// 支持 --index-only 参数：只更新指数成分股（沪深300+中证500）
 const indexOnly = process.argv.includes('--index-only');
 const positionalArgs = process.argv.slice(2).filter(a => !a.startsWith('--'));
 const limit = parseInt(positionalArgs[0]) || 0; // 0表示全部
@@ -381,7 +381,7 @@ async function processStockIncremental(
 }
 
 async function main() {
-  const mode = indexOnly ? '指数成分股(沪深300+中证1000)' : 'ALL';
+  const mode = indexOnly ? '指数成分股(沪深300+中证500)' : 'ALL';
   console.log(`📊 Starting incremental update (mode: ${mode}, limit: ${limit || 'ALL'}, offset: ${offset})...\n`);
 
   const configService = new ConfigService();
@@ -403,7 +403,7 @@ async function main() {
 
   if (indexOnly) {
     console.log(`Total stocks in DB: ${totalStocks}`);
-    console.log(`Index members (HS300+ZZ1000): ${stocks.length} stocks`);
+    console.log(`Index members (HS300+ZZ500): ${stocks.length} stocks`);
     console.log(`Processing: ${stocks.length} stocks (index-only mode)\n`);
   } else {
     console.log(`Total stocks in DB: ${totalStocks}`);
