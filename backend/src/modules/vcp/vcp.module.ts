@@ -7,6 +7,7 @@ import { RsRatingService } from '../../services/vcp/rs-rating.service';
 import { VcpAnalyzerService } from '../../services/vcp/vcp-analyzer.service';
 import { VcpScannerService } from '../../services/vcp/vcp-scanner.service';
 import { VcpEarlyFilterService } from '../../services/vcp/vcp-early-filter.service';
+import { VcpFormatterService } from '../../services/vcp/vcp-formatter.service';
 
 @Module({
   imports: [PrismaModule],
@@ -18,7 +19,8 @@ import { VcpEarlyFilterService } from '../../services/vcp/vcp-early-filter.servi
     VcpAnalyzerService,
     VcpScannerService,
     VcpEarlyFilterService,
+    VcpFormatterService,
   ],
-  exports: [VcpService, VcpScannerService],
+  exports: [VcpService, VcpScannerService, VcpFormatterService],
 })
 export class VcpModule {}

@@ -8,6 +8,7 @@ import { ChartToolbar } from '../components/ChartToolbar';
 import { ChartDataDisplay } from '../components/ChartDataDisplay';
 import { IndicatorValueDisplay } from '../components/IndicatorValueDisplay';
 import { VcpIndicator } from '../components/VcpIndicator';
+import { VcpGenerateButton } from '../components/VcpGenerateButton';
 import { useKLineData } from '../hooks/useKLineData';
 import { useIndicators } from '../hooks/useIndicators';
 import { useVcpDetail } from '../hooks/useVcpDetail';
@@ -19,6 +20,7 @@ export function KLineChartPage() {
   const { stockCode } = useParams<{ stockCode?: string }>();
   const navigate = useNavigate();
   const [currentData, setCurrentData] = useState<KLineData | undefined>();
+  const [isGeneratingVcp, setIsGeneratingVcp] = useState(false);
 
   const {
     period,
@@ -67,6 +69,20 @@ export function KLineChartPage() {
 
   const handleDataHover = (data: KLineData | undefined) => {
     setCurrentData(data || (klineData.length > 0 ? klineData[klineData.length - 1] : undefined));
+  };
+
+  const handleGenerateVcp = () => {
+    if (!stockCode) return;
+    
+    setIsGeneratingVcp(true);
+    
+    // Open VCP analysis page in new tab
+    window.open(`/vcp-analysis/${stockCode}`, '_blank');
+    
+    // Reset loading state after a short delay
+    setTimeout(() => {
+      setIsGeneratingVcp(false);
+    }, 500);
   };
 
   // Set default display to latest data when data is loaded
@@ -129,11 +145,18 @@ export function KLineChartPage() {
             period={period}
             showMA={showMA}
           />
-          <VcpIndicator
-            data={vcpData}
-            loading={vcpLoading}
-            error={vcpError}
-          />
+          <div className={styles.vcpSection}>
+            <VcpIndicator
+              data={vcpData}
+              loading={vcpLoading}
+              error={vcpError}
+            />
+            <VcpGenerateButton
+              stockCode={stockCode}
+              onClick={handleGenerateVcp}
+              loading={isGeneratingVcp}
+            />
+          </div>
           <div className={styles.chartWrapper}>
             <KLineChart
               data={klineData}

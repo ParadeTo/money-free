@@ -52,3 +52,11 @@
   flex: 1;
 }
 
+.vcpSection {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+  justify-content: space-between;
+}
+

@@ -4,6 +4,8 @@ import { VcpService } from './vcp.service';
 import { GetVcpScanDto } from './dto/get-vcp-scan.dto';
 import { VcpScanResponseDto, VcpDetailResponseDto } from './dto/vcp-response.dto';
 import { FilterEarlyStageRequestDto, FilterEarlyStageResponseDto } from './dto/filter-early-stage.dto';
+import { GenerateVcpAnalysisDto } from './dto/generate-vcp-analysis.dto';
+import { VcpAnalysisResponseDto } from './dto/vcp-analysis-response.dto';
 
 @ApiTags('vcp')
 @Controller('vcp')
@@ -68,6 +70,76 @@ export class VcpController {
         action: 'filter_early_stage_error',
         error: error.message,
         conditions,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Generate VCP analysis for a single stock (T025-T026 [US1])
+   * 
+   * @param stockCode Stock code
+   * @param dto Query parameters (forceRefresh)
+   * @returns Complete VCP analysis result
+   */
+  @Get(':stockCode/analysis')
+  @ApiOperation({ summary: '生成单只股票的 VCP 分析报告' })
+  @ApiParam({ 
+    name: 'stockCode', 
+    description: '股票代码', 
+    example: '605117',
+  })
+  @ApiQuery({
+    name: 'forceRefresh',
+    required: false,
+    type: Boolean,
+    description: '是否强制实时重新计算（忽略缓存）',
+    example: false,
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'VCP 分析报告', 
+    type: VcpAnalysisResponseDto,
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: '未找到股票代码',
+    schema: {
+      example: {
+        statusCode: 404,
+        message: '未找到股票代码 999999，请检查输入',
+        error: 'Not Found',
+      },
+    },
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'K线数据不足',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: '该股票暂无足够的K线数据进行VCP分析（需要至少30天数据）',
+        error: 'Bad Request',
+      },
+    },
+  })
+  async generateAnalysis(
+    @Param('stockCode') stockCode: string,
+    @Query() dto: GenerateVcpAnalysisDto,
+  ) {
+    this.logger.log({
+      action: 'vcp_analysis_request',
+      stockCode,
+      forceRefresh: dto.forceRefresh,
+    });
+
+    try {
+      return await this.vcpService.generateAnalysis(stockCode, dto.forceRefresh);
+    } catch (error: any) {
+      this.logger.error({
+        action: 'vcp_analysis_error',
+        stockCode,
+        error: error.message,
       });
       throw error;
     }

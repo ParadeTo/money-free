@@ -169,7 +169,8 @@ async function main() {
       return;
     }
 
-    const outputDir = path.join(process.cwd(), '..', 'docs', 'vcp', 'daily-reports');
+    const baseDir = path.join(process.cwd(), '..', 'docs', 'vcp', 'daily-reports');
+    const outputDir = path.join(baseDir, dateStr);
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }

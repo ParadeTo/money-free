@@ -3,7 +3,6 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './modules/prisma/prisma.module';
-import { AuthModule } from './modules/auth/auth.module';
 import { StocksModule } from './modules/stocks/stocks.module';
 import { KLinesModule } from './modules/klines/klines.module';
 import { IndicatorsModule } from './modules/indicators/indicators.module';
@@ -19,7 +18,6 @@ import { VcpModule } from './modules/vcp/vcp.module';
       envFilePath: '.env',
     }),
     PrismaModule,
-    AuthModule,
     StocksModule,
     KLinesModule,
     IndicatorsModule,

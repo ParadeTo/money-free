@@ -9,20 +9,16 @@ import {
   Delete,
   Body,
   Param,
-  UseGuards,
   Logger,
   HttpCode,
   HttpStatus,
-  Request,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { StrategiesService } from './strategies.service';
 import { ScreenerService } from '../screener/screener.service';
 import {
@@ -34,8 +30,6 @@ import { FilterResultDto } from '../screener/dto/execute-filter.dto';
 
 @ApiTags('strategies')
 @Controller('strategies')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
 export class StrategiesController {
   private readonly logger = new Logger(StrategiesController.name);
 
@@ -57,13 +51,11 @@ export class StrategiesController {
     type: StrategyResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Invalid strategy data' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async create(
-    @Request() req: any,
     @Body() dto: CreateStrategyDto,
   ): Promise<StrategyResponseDto> {
-    const userId = req.user.userId;
-    this.logger.log(`User ${userId} creating strategy: ${dto.strategyName}`);
+    const userId = 'default-user';
+    this.logger.log(`Creating strategy: ${dto.strategyName}`);
 
     return this.strategiesService.create(userId, dto);
   }
@@ -71,17 +63,16 @@ export class StrategiesController {
   @Get()
   @ApiOperation({
     summary: 'Get all strategies',
-    description: 'Retrieve all screening strategies for the authenticated user',
+    description: 'Retrieve all screening strategies',
   })
   @ApiResponse({
     status: 200,
     description: 'Strategies retrieved successfully',
     type: [StrategyResponseDto],
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async findAll(@Request() req: any): Promise<StrategyResponseDto[]> {
-    const userId = req.user.userId;
-    this.logger.log(`User ${userId} fetching all strategies`);
+  async findAll(): Promise<StrategyResponseDto[]> {
+    const userId = 'default-user';
+    this.logger.log(`Fetching all strategies`);
 
     return this.strategiesService.findAll(userId);
   }
@@ -102,13 +93,11 @@ export class StrategiesController {
     type: StrategyResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Strategy not found' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async findOne(
-    @Request() req: any,
     @Param('strategyId') strategyId: string,
   ): Promise<StrategyResponseDto> {
-    const userId = req.user.userId;
-    this.logger.log(`User ${userId} fetching strategy ${strategyId}`);
+    const userId = 'default-user';
+    this.logger.log(`Fetching strategy ${strategyId}`);
 
     return this.strategiesService.findOne(userId, strategyId);
   }
@@ -129,14 +118,12 @@ export class StrategiesController {
     type: StrategyResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Strategy not found' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async update(
-    @Request() req: any,
     @Param('strategyId') strategyId: string,
     @Body() dto: UpdateStrategyDto,
   ): Promise<StrategyResponseDto> {
-    const userId = req.user.userId;
-    this.logger.log(`User ${userId} updating strategy ${strategyId}`);
+    const userId = 'default-user';
+    this.logger.log(`Updating strategy ${strategyId}`);
 
     return this.strategiesService.update(userId, strategyId, dto);
   }
@@ -156,13 +143,11 @@ export class StrategiesController {
     description: 'Strategy deleted successfully',
   })
   @ApiResponse({ status: 404, description: 'Strategy not found' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async remove(
-    @Request() req: any,
     @Param('strategyId') strategyId: string,
   ): Promise<{ message: string }> {
-    const userId = req.user.userId;
-    this.logger.log(`User ${userId} deleting strategy ${strategyId}`);
+    const userId = 'default-user';
+    this.logger.log(`Deleting strategy ${strategyId}`);
 
     return this.strategiesService.remove(userId, strategyId);
   }
@@ -185,13 +170,11 @@ export class StrategiesController {
     type: FilterResultDto,
   })
   @ApiResponse({ status: 404, description: 'Strategy not found' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async executeStrategy(
-    @Request() req: any,
     @Param('strategyId') strategyId: string,
   ): Promise<FilterResultDto> {
-    const userId = req.user.userId;
-    this.logger.log(`User ${userId} executing strategy ${strategyId}`);
+    const userId = 'default-user';
+    this.logger.log(`Executing strategy ${strategyId}`);
 
     // Get strategy conditions
     const conditions = await this.strategiesService.getConditions(

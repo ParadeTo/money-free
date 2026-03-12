@@ -45,6 +45,85 @@ export interface Contraction {
   avgVolume: number;
 }
 
+/**
+ * VCP Analysis complete result (for single stock analysis)
+ */
+export interface VcpAnalysis {
+  stockCode: string;
+  stockName: string;
+  scanDate: string;
+  cached: boolean;
+  isExpired: boolean;
+  hasVcp: boolean;
+  summary: VcpSummary;
+  contractions: Contraction[];
+  pullbacks: PullbackWithStatus[];
+  klines: KLineData[];
+  trendTemplate: TrendTemplate;
+}
+
+/**
+ * VCP Summary
+ */
+export interface VcpSummary {
+  contractionCount: number;
+  lastContractionPct: number;
+  volumeDryingUp: boolean;
+  rsRating: number;
+  inPullback: boolean;
+  pullbackCount: number;
+  latestPrice: number;
+  priceChangePct: number;
+  distFrom52WeekHigh: number;
+  distFrom52WeekLow: number;
+}
+
+/**
+ * Pullback with daysSinceLow status
+ */
+export interface PullbackWithStatus {
+  index: number;
+  highDate: string;
+  highPrice: number;
+  lowDate: string;
+  lowPrice: number;
+  pullbackPct: number;
+  durationDays: number;
+  avgVolume: number;
+  isInUptrend: boolean;
+  daysSinceLow: number;
+}
+
+/**
+ * K-Line data with changePct
+ */
+export interface KLineData {
+  date: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  changePct: number;
+}
+
+/**
+ * Trend template check
+ */
+export interface TrendTemplateCheckResult {
+  name: string;
+  pass: boolean;
+  description?: string;
+}
+
+/**
+ * Trend template
+ */
+export interface TrendTemplate {
+  pass: boolean;
+  checks: TrendTemplateCheckResult[];
+}
+
 export interface Pullback {
   index: number;
   highDate: string;

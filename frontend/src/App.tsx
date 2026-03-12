@@ -19,6 +19,7 @@ const KLineChartPage = lazy(() => import('./pages/KLineChartPage').then(m => ({ 
 const FavoritePage = lazy(() => import('./pages/FavoritePage').then(m => ({ default: m.FavoritePage })));
 const ScreenerPage = lazy(() => import('./pages/ScreenerPage').then(m => ({ default: m.ScreenerPage })));
 const VcpScreenerPage = lazy(() => import('./pages/VcpScreenerPage').then(m => ({ default: m.VcpScreenerPage })));
+const VcpAnalysisPage = lazy(() => import('./pages/VcpAnalysisPage').then(m => ({ default: m.VcpAnalysisPage })));
 
 function App() {
   const loadingFallback = (
@@ -94,6 +95,18 @@ function App() {
                   <ProtectedRoute>
                     <MainLayout>
                       <VcpScreenerPage />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* VCP 分析报告页面 */}
+              <Route
+                path="/vcp-analysis/:stockCode"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <VcpAnalysisPage />
                     </MainLayout>
                   </ProtectedRoute>
                 }

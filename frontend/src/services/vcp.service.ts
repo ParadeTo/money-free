@@ -5,6 +5,7 @@ import type {
   VcpDetailResponse,
   FilterConditions,
   FilterEarlyStageResponse,
+  VcpAnalysis,
 } from '../types/vcp';
 
 export const vcpService = {
@@ -23,5 +24,20 @@ export const vcpService = {
 
   async filterEarlyStage(conditions: FilterConditions): Promise<FilterEarlyStageResponse> {
     return api.post<FilterEarlyStageResponse>('/vcp/early-stage', conditions);
+  },
+
+  /**
+   * Generate VCP analysis for a single stock
+   * @param stockCode Stock code (e.g., "605117")
+   * @param forceRefresh Force real-time analysis (ignore cache)
+   * @returns VCP analysis result
+   */
+  async generateVcpAnalysis(stockCode: string, forceRefresh = false): Promise<VcpAnalysis> {
+    const params = new URLSearchParams();
+    if (forceRefresh) {
+      params.set('forceRefresh', 'true');
+    }
+    const qs = params.toString();
+    return api.get<VcpAnalysis>(`/vcp/${stockCode}/analysis${qs ? `?${qs}` : ''}`);
   },
 };

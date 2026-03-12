@@ -5,20 +5,16 @@ import {
   Controller,
   Post,
   Body,
-  UseGuards,
   Logger,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ScreenerService } from './screener.service';
 import { ExecuteFilterDto, FilterResultDto } from './dto/execute-filter.dto';
 
 @ApiTags('screener')
 @Controller('screener')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
 export class ScreenerController {
   private readonly logger = new Logger(ScreenerController.name);
 
@@ -37,7 +33,6 @@ export class ScreenerController {
     type: FilterResultDto,
   })
   @ApiResponse({ status: 400, description: 'Invalid filter conditions' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async executeFilter(@Body() dto: ExecuteFilterDto): Promise<FilterResultDto> {
     this.logger.log(
       `Executing filter with ${dto.conditions.length} condition(s)`,

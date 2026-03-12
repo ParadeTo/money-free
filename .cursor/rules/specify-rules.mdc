@@ -9,6 +9,8 @@ alwaysApply: true
 Last updated: 2026-03-11
 
 ## Active Technologies
+- TypeScript 5.x, Node.js 20.x (backend), Node.js 18+ (frontend) (004-stock-vcp-analysis)
+- SQLite (已存在 VcpScanResult, KLineData, Stock 表) (004-stock-vcp-analysis)
 
 ### Backend
 - **Node.js 20.x** (REQUIRED - see backend-environment.mdc)
@@ -73,6 +75,7 @@ npm run dev            # Start development server
 - Use NestJS decorators and dependency injection in backend
 
 ## Recent Changes
+- 004-stock-vcp-analysis: Added TypeScript 5.x, Node.js 20.x (backend), Node.js 18+ (frontend)
 - 2026-03-11: Updated Node.js requirement to 20.x (CRITICAL)
 - 2026-03-11: Added VCP lastPullback display in frontend table
 

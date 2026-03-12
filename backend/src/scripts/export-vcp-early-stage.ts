@@ -55,6 +55,7 @@ async function main() {
       'docs',
       'vcp',
       'daily-reports',
+      today,
       `VCP选股-早期启动-${today}.md`
     );
     const outputPath = options.output || defaultOutput;

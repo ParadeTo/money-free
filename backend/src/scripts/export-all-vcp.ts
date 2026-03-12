@@ -174,8 +174,9 @@ async function main() {
     // 生成 Markdown 内容
     const markdown = generateMarkdown(scanDateStr, allVcpStocks.length, inPullback, pullbackEnded, contractionSorted);
 
-    // 输出到文件
-    const outputDir = path.join(process.cwd(), '..', 'docs', 'vcp', 'daily-reports');
+    // 输出到文件（按日期分组到子目录）
+    const baseDir = path.join(process.cwd(), '..', 'docs', 'vcp', 'daily-reports');
+    const outputDir = path.join(baseDir, scanDateStr);
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }

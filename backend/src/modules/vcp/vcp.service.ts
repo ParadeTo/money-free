@@ -1,9 +1,10 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { GetVcpScanDto } from './dto/get-vcp-scan.dto';
 import { VcpAnalyzerService, KLineBar, PullbackResult } from '../../services/vcp/vcp-analyzer.service';
 import { VcpEarlyFilterService } from '../../services/vcp/vcp-early-filter.service';
 import { FilterConditions, FilterResult } from '../../types/vcp-early-stage';
+import { VcpAnalysisResponseDto, ContractionDto, PullbackDto, KLineDto, TrendTemplateCheckDto } from './dto/vcp-analysis-response.dto';
 
 @Injectable()
 export class VcpService {
@@ -142,5 +143,220 @@ export class VcpService {
 
   async filterEarlyStage(conditions: FilterConditions): Promise<FilterResult> {
     return this.vcpEarlyFilter.filterEarlyStage(conditions);
+  }
+
+  /**
+   * Generate VCP analysis for a single stock (T024 [US1])
+   * 
+   * @param stockCode Stock code (e.g., "605117")
+   * @param forceRefresh Force real-time analysis (ignore cache)
+   * @returns Complete VCP analysis result
+   * @throws NotFoundException if stock not found
+   * @throws BadRequestException if K-line data insufficient
+   */
+  async generateAnalysis(
+    stockCode: string,
+    forceRefresh = false,
+  ): Promise<VcpAnalysisResponseDto> {
+    const startTime = Date.now();
+
+    // 1. Get stock information
+    const stock = await this.prisma.stock.findUnique({
+      where: { stockCode },
+    });
+
+    if (!stock) {
+      throw new NotFoundException(`Stock ${stockCode} not found`);
+    }
+
+    let cached = false;
+    let scanDate: Date = new Date();
+    let analysisData: any;
+
+    // 2. Check cache (if not forcing refresh)
+    if (!forceRefresh) {
+      const cachedResult = await this.prisma.vcpScanResult.findFirst({
+        where: { stockCode },
+        orderBy: { scanDate: 'desc' },
+      });
+
+      if (cachedResult) {
+        cached = true;
+        scanDate = cachedResult.scanDate;
+        analysisData = {
+          hasVcp: cachedResult.contractionCount >= 2,
+          summary: {
+            contractionCount: cachedResult.contractionCount,
+            lastContractionPct: cachedResult.lastContractionPct,
+            volumeDryingUp: cachedResult.volumeDryingUp,
+            rsRating: cachedResult.rsRating,
+            inPullback: cachedResult.inPullback,
+            pullbackCount: cachedResult.pullbackCount,
+            latestPrice: cachedResult.latestPrice,
+            priceChangePct: cachedResult.priceChangePct,
+            distFrom52WeekHigh: cachedResult.distFrom52WeekHigh,
+            distFrom52WeekLow: cachedResult.distFrom52WeekLow,
+          },
+          contractions: JSON.parse(cachedResult.contractions),
+          trendTemplate: JSON.parse(cachedResult.trendTemplateDetails),
+          lastPullbackData: cachedResult.lastPullbackData ? JSON.parse(cachedResult.lastPullbackData) : null,
+        };
+      }
+    }
+
+    // 3. If no cache or force refresh, perform real-time analysis
+    if (!cached || forceRefresh) {
+      const klines = await this.prisma.kLineData.findMany({
+        where: { stockCode, period: 'daily' },
+        orderBy: { date: 'desc' },
+        take: 300,
+        select: { date: true, open: true, high: true, low: true, close: true, volume: true },
+      });
+
+      if (klines.length < 30) {
+        throw new BadRequestException(
+          `Insufficient K-line data for ${stockCode} (< 30 days, found: ${klines.length})`
+        );
+      }
+
+      const sortedKlines = klines.reverse();
+      const bars: KLineBar[] = sortedKlines.map((k: any) => ({
+        date: k.date.toISOString().split('T')[0],
+        open: k.open,
+        high: k.high,
+        low: k.low,
+        close: k.close,
+        volume: k.volume,
+      }));
+
+      const vcpAnalysisResult = this.vcpAnalyzer.analyze(bars);
+      scanDate = new Date();
+
+      // Get trend template data (from latest scan result or calculate)
+      const latestScan = await this.prisma.vcpScanResult.findFirst({
+        where: { stockCode },
+        orderBy: { scanDate: 'desc' },
+      });
+
+      const trendTemplateDetails = latestScan 
+        ? JSON.parse(latestScan.trendTemplateDetails)
+        : { pass: false, checks: [] };
+
+      const latestBar = bars[bars.length - 1];
+      const prevBar = bars[bars.length - 2];
+      const priceChangePct = prevBar 
+        ? ((latestBar.close - prevBar.close) / prevBar.close) * 100
+        : 0;
+
+      analysisData = {
+        hasVcp: vcpAnalysisResult.hasVcp,
+        summary: {
+          contractionCount: vcpAnalysisResult.contractionCount,
+          lastContractionPct: vcpAnalysisResult.lastContractionPct,
+          volumeDryingUp: vcpAnalysisResult.volumeDryingUp,
+          rsRating: latestScan?.rsRating || 0,
+          inPullback: vcpAnalysisResult.pullbacks && vcpAnalysisResult.pullbacks.length > 0,
+          pullbackCount: vcpAnalysisResult.pullbacks ? vcpAnalysisResult.pullbacks.length : 0,
+          latestPrice: latestBar.close,
+          priceChangePct,
+          distFrom52WeekHigh: latestScan?.distFrom52WeekHigh || 0,
+          distFrom52WeekLow: latestScan?.distFrom52WeekLow || 0,
+        },
+        contractions: vcpAnalysisResult.contractions,
+        trendTemplate: trendTemplateDetails,
+        pullbacks: vcpAnalysisResult.pullbacks || [],
+        latestKLines: bars.slice(-10),
+      };
+    }
+
+    // 4. Calculate if expired (>7 days)
+    const daysSinceScan = Math.floor(
+      (Date.now() - scanDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    const isExpired = daysSinceScan > 7;
+
+    // 5. Get pullbacks with daysSinceLow calculation
+    let pullbacks: PullbackDto[] = [];
+    if (analysisData.lastPullbackData || analysisData.pullbacks) {
+      const rawPullbacks = analysisData.pullbacks || (analysisData.lastPullbackData ? [analysisData.lastPullbackData] : []);
+      const now = new Date();
+      
+      pullbacks = rawPullbacks.map((p: any, index: number) => {
+        const lowDate = new Date(p.lowDate);
+        const daysSinceLow = Math.floor((now.getTime() - lowDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        return {
+          index: index + 1,
+          highDate: p.highDate,
+          highPrice: p.highPrice,
+          lowDate: p.lowDate,
+          lowPrice: p.lowPrice,
+          pullbackPct: p.pullbackPct,
+          durationDays: p.durationDays,
+          avgVolume: p.avgVolume,
+          isInUptrend: p.isInUptrend !== undefined ? p.isInUptrend : true,
+          daysSinceLow,
+        };
+      });
+    }
+
+    // 6. Get recent K-line data with changePct
+    const recentKLines = analysisData.latestKLines || [];
+    const klines: KLineDto[] = recentKLines.map((k: KLineBar, i: number) => {
+      const prevClose = i > 0 ? recentKLines[i - 1].close : k.open;
+      const changePct = ((k.close - prevClose) / prevClose) * 100;
+      
+      return {
+        date: k.date,
+        open: k.open,
+        high: k.high,
+        low: k.low,
+        close: k.close,
+        volume: k.volume,
+        changePct: Math.round(changePct * 100) / 100,
+      };
+    });
+
+    // 7. Format contractions
+    const contractions: ContractionDto[] = (analysisData.contractions || []).map((c: any) => ({
+      index: c.index,
+      swingHighDate: c.swingHighDate,
+      swingHighPrice: c.swingHighPrice,
+      swingLowDate: c.swingLowDate,
+      swingLowPrice: c.swingLowPrice,
+      depthPct: c.depthPct,
+      durationDays: c.durationDays,
+      avgVolume: c.avgVolume,
+    }));
+
+    // 8. Build response
+    const response: VcpAnalysisResponseDto = {
+      stockCode: stock.stockCode,
+      stockName: stock.stockName,
+      scanDate: scanDate.toISOString().split('T')[0],
+      cached,
+      isExpired,
+      hasVcp: analysisData.hasVcp,
+      summary: analysisData.summary,
+      contractions,
+      pullbacks,
+      klines,
+      trendTemplate: analysisData.trendTemplate,
+    };
+
+    // 9. Log analysis generation (T027)
+    const elapsed = Date.now() - startTime;
+    this.logger.log({
+      action: 'vcp_analysis_generated',
+      stockCode,
+      cached,
+      isExpired,
+      hasVcp: analysisData.hasVcp,
+      contractionCount: analysisData.summary.contractionCount,
+      pullbackCount: analysisData.summary.pullbackCount,
+      durationMs: elapsed,
+    });
+
+    return response;
   }
 }
