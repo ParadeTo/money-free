@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Typography, Alert, Space, Checkbox, Tabs, Card } from 'antd';
+import { Typography, Alert, Space, Checkbox, Tabs, Card, InputNumber } from 'antd';
 import { ThunderboltOutlined, RocketOutlined } from '@ant-design/icons';
 import { vcpService } from '../services/vcp.service';
 import { favoriteService } from '../services/favorite.service';
@@ -21,6 +21,7 @@ export function VcpScreenerPage() {
   const [sortBy, setSortBy] = useState<VcpScanQuery['sortBy']>('lastContractionPct');
   const [sortOrder, setSortOrder] = useState<VcpScanQuery['sortOrder']>('asc');
   const [inPullbackOnly, setInPullbackOnly] = useState(false);
+  const [maxPullbackPct, setMaxPullbackPct] = useState<number | undefined>(10);
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'standard' | 'early'>('standard');
   const setFavorites = useFavoritesStore(s => s.setFavorites);
@@ -33,7 +34,7 @@ export function VcpScreenerPage() {
     setError(null);
     try {
       const [result, favResult] = await Promise.all([
-        vcpService.getVcpScanResults({ sortBy, sortOrder, inPullbackOnly }),
+        vcpService.getVcpScanResults({ sortBy, sortOrder, inPullbackOnly, maxPullbackPct }),
         favoriteService.getFavorites(),
       ]);
       setData(result);
@@ -43,7 +44,7 @@ export function VcpScreenerPage() {
     } finally {
       setLoading(false);
     }
-  }, [sortBy, sortOrder, inPullbackOnly, setFavorites]);
+  }, [sortBy, sortOrder, inPullbackOnly, maxPullbackPct, setFavorites]);
 
   useEffect(() => {
     fetchData();
@@ -101,7 +102,7 @@ export function VcpScreenerPage() {
             children: (
               <>
                 <div style={{ marginBottom: 16 }}>
-                  <Space align="center">
+                  <Space align="center" wrap>
                     <Checkbox 
                       checked={inPullbackOnly}
                       onChange={(e) => setInPullbackOnly(e.target.checked)}
@@ -110,6 +111,24 @@ export function VcpScreenerPage() {
                         🎯 In Pullback Only
                       </span>
                     </Checkbox>
+                    <Space align="center" size="small">
+                      <Text>Max Pullback:</Text>
+                      <InputNumber
+                        min={1}
+                        max={50}
+                        step={1}
+                        value={maxPullbackPct}
+                        onChange={(value) => setMaxPullbackPct(value ?? undefined)}
+                        addonAfter="%"
+                        style={{ width: 100 }}
+                      />
+                      <Checkbox
+                        checked={maxPullbackPct === undefined}
+                        onChange={(e) => setMaxPullbackPct(e.target.checked ? undefined : 10)}
+                      >
+                        No Limit
+                      </Checkbox>
+                    </Space>
                     {data?.scanDate && (
                       <Text type="secondary">Scan Date: {data.scanDate} | Total: {data.totalCount} stocks</Text>
                     )}

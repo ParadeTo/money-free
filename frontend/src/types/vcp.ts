@@ -24,6 +24,7 @@ export interface VcpScanQuery {
   sortBy?: 'contractionCount' | 'lastContractionPct' | 'volumeDryingUp' | 'rsRating' | 'priceChangePct';
   sortOrder?: 'asc' | 'desc';
   inPullbackOnly?: boolean;
+  maxPullbackPct?: number;
 }
 
 export interface TrendTemplateCheck {

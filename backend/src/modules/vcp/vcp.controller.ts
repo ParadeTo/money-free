@@ -20,6 +20,7 @@ export class VcpController {
   @ApiQuery({ name: 'sortBy', required: false, enum: ['contractionCount', 'lastContractionPct', 'volumeDryingUp', 'rsRating', 'priceChangePct'] })
   @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'] })
   @ApiQuery({ name: 'inPullbackOnly', required: false, type: Boolean, description: '只返回处于回调中的股票' })
+  @ApiQuery({ name: 'maxPullbackPct', required: false, type: Number, description: '最大回调幅度（百分比），过滤掉回调幅度大于此值的股票' })
   async getScanResults(@Query() dto: GetVcpScanDto) {
     return this.vcpService.getLatestScanResults(dto);
   }

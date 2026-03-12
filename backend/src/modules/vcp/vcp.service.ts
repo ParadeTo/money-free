@@ -19,6 +19,7 @@ export class VcpService {
   async getLatestScanResults(dto: GetVcpScanDto) {
     const sortBy = dto.sortBy || 'lastContractionPct';
     const sortOrder = dto.sortOrder || 'asc';
+    const maxPullbackPct = dto.maxPullbackPct;
 
     // 手动处理 inPullbackOnly 参数
     let inPullbackOnly = false;
@@ -66,21 +67,89 @@ export class VcpService {
       include: { stock: { select: { stockName: true } } },
     });
 
-    const stocks = results.map((r: typeof results[number]) => ({
-      stockCode: r.stockCode,
-      stockName: r.stock.stockName,
-      latestPrice: r.latestPrice,
-      priceChangePct: r.priceChangePct,
-      distFrom52WeekHigh: r.distFrom52WeekHigh,
-      distFrom52WeekLow: r.distFrom52WeekLow,
-      contractionCount: r.contractionCount,
-      lastContractionPct: r.lastContractionPct,
-      volumeDryingUp: r.volumeDryingUp,
-      rsRating: r.rsRating,
-      inPullback: r.inPullback,
-      pullbackCount: r.pullbackCount,
-      lastPullback: r.lastPullbackData ? JSON.parse(r.lastPullbackData) : null,
-    }));
+    // 如果设置了最大回调幅度，需要实时分析K线获取当前回调状态
+    let stocks = [];
+    if (maxPullbackPct !== undefined && maxPullbackPct > 0) {
+      // 实时分析每只股票的当前回调状态
+      for (const r of results) {
+        const klines = await this.prisma.kLineData.findMany({
+          where: { stockCode: r.stockCode, period: 'daily' },
+          orderBy: { date: 'desc' },
+          take: 300,
+          select: { date: true, open: true, high: true, low: true, close: true, volume: true },
+        });
+
+        if (klines.length === 0) continue;
+
+        const sortedKlines = klines.reverse();
+        const bars: KLineBar[] = sortedKlines.map((k: any) => ({
+          date: k.date.toISOString().split('T')[0],
+          open: k.open,
+          high: k.high,
+          low: k.low,
+          close: k.close,
+          volume: k.volume,
+        }));
+
+        const analysis = this.vcpAnalyzer.analyze(bars);
+        const pullbacks = analysis.pullbacks || [];
+        const lastBar = bars[bars.length - 1];
+
+        let currentPullback = null;
+        if (pullbacks.length > 0) {
+          const lastPullback = pullbacks[pullbacks.length - 1];
+          const lastPullbackLowDate = new Date(lastPullback.lowDate);
+          const lastBarDate = new Date(lastBar.date);
+          const daysSinceLow = Math.floor((lastBarDate.getTime() - lastPullbackLowDate.getTime()) / (1000 * 60 * 60 * 24));
+
+          // 只关注最近20天内的回调
+          if (daysSinceLow <= 20) {
+            const recoveryPct = ((lastBar.close - lastPullback.lowPrice) / lastPullback.lowPrice) * 100;
+            currentPullback = {
+              ...lastPullback,
+              daysSinceLow,
+              recoveryPct,
+            };
+          }
+        }
+
+        // 过滤：只保留没有回调或回调幅度 < maxPullbackPct 的股票
+        if (!currentPullback || currentPullback.pullbackPct < maxPullbackPct) {
+          stocks.push({
+            stockCode: r.stockCode,
+            stockName: r.stock.stockName,
+            latestPrice: r.latestPrice,
+            priceChangePct: r.priceChangePct,
+            distFrom52WeekHigh: r.distFrom52WeekHigh,
+            distFrom52WeekLow: r.distFrom52WeekLow,
+            contractionCount: r.contractionCount,
+            lastContractionPct: r.lastContractionPct,
+            volumeDryingUp: r.volumeDryingUp,
+            rsRating: r.rsRating,
+            inPullback: r.inPullback,
+            pullbackCount: r.pullbackCount,
+            lastPullback: currentPullback,
+          });
+        }
+      }
+    } else {
+      // 不过滤，直接映射
+      stocks = results.map((r: typeof results[number]) => ({
+        stockCode: r.stockCode,
+        stockName: r.stock.stockName,
+        latestPrice: r.latestPrice,
+        priceChangePct: r.priceChangePct,
+        distFrom52WeekHigh: r.distFrom52WeekHigh,
+        distFrom52WeekLow: r.distFrom52WeekLow,
+        contractionCount: r.contractionCount,
+        lastContractionPct: r.lastContractionPct,
+        volumeDryingUp: r.volumeDryingUp,
+        rsRating: r.rsRating,
+        inPullback: r.inPullback,
+        pullbackCount: r.pullbackCount,
+        lastPullback: r.lastPullbackData ? JSON.parse(r.lastPullbackData) : null,
+      }));
+    }
 
     return {
       stocks,

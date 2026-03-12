@@ -163,16 +163,22 @@ async function main() {
       });
     }
 
-    // 分类统计
+    // 分类统计并过滤回调幅度小于10%
+    const MAX_PULLBACK_PCT = 10;
     const inContraction = allVcpStocks.filter(s => s.status === 'contraction');
-    const inPullback = allVcpStocks.filter(s => s.status === 'in_pullback').sort((a, b) => a.pullbackInfo!.pullbackPct - b.pullbackInfo!.pullbackPct);
-    const pullbackEnded = allVcpStocks.filter(s => s.status === 'pullback_ended').sort((a, b) => b.rsRating - a.rsRating);
+    const inPullback = allVcpStocks
+      .filter(s => s.status === 'in_pullback' && s.pullbackInfo && s.pullbackInfo.pullbackPct < MAX_PULLBACK_PCT)
+      .sort((a, b) => a.pullbackInfo!.pullbackPct - b.pullbackInfo!.pullbackPct);
+    const pullbackEnded = allVcpStocks
+      .filter(s => s.status === 'pullback_ended' && s.pullbackInfo && s.pullbackInfo.pullbackPct < MAX_PULLBACK_PCT)
+      .sort((a, b) => b.rsRating - a.rsRating);
     const contractionSorted = inContraction.sort((a, b) => b.rsRating - a.rsRating);
 
-    logger.log(`分类完成: 回调中 ${inPullback.length} 只 | 回调结束 ${pullbackEnded.length} 只 | 收缩中 ${inContraction.length} 只\n`);
+    const totalFiltered = inPullback.length + pullbackEnded.length + inContraction.length;
+    logger.log(`分类完成 (过滤回调>${MAX_PULLBACK_PCT}%): 回调中 ${inPullback.length} 只 | 回调结束 ${pullbackEnded.length} 只 | 收缩中 ${inContraction.length} 只\n`);
 
     // 生成 Markdown 内容
-    const markdown = generateMarkdown(scanDateStr, allVcpStocks.length, inPullback, pullbackEnded, contractionSorted);
+    const markdown = generateMarkdown(scanDateStr, totalFiltered, inPullback, pullbackEnded, contractionSorted);
 
     // 输出到文件（按日期分组到子目录）
     const baseDir = path.join(process.cwd(), '..', 'docs', 'vcp', 'daily-reports');
@@ -212,6 +218,7 @@ function generateMarkdown(
 **生成日期**: ${scanDate}
 **股票数量**: ${totalCount} 只
 **数据来源**: 实时K线分析
+**筛选条件**: 回调幅度 < 10%
 
 ---
 
@@ -219,15 +226,15 @@ function generateMarkdown(
 
 | 分类 | 数量 | 说明 |
 |-----|------|------|
-| ⚡ 回调中 | ${inPullback.length} 只 | 今天就是回调低点，可能的买点 |
-| ✅ 回调结束 | ${pullbackEnded.length} 只 | 已到达回调低点，正在反弹（1-20天内） |
+| ⚡ 回调中 | ${inPullback.length} 只 | 今天就是回调低点，回调幅度 < 10% |
+| ✅ 回调结束 | ${pullbackEnded.length} 只 | 已到达回调低点（1-20天内），回调幅度 < 10% |
 | 📊 收缩中 | ${inContraction.length} 只 | 还未进入回调，等待时机 |
 
 ---
 
 ## ⚡ 正在回调中的股票（${inPullback.length} 只）
 
-**特点**: 今天就是回调低点，如果明天企稳并开始反弹，可能是最佳买入点。
+**特点**: 今天就是回调低点，回调幅度 < 10%，如果明天企稳并开始反弹，可能是最佳买入点。
 
 ### 总览表格
 
@@ -261,7 +268,7 @@ function generateMarkdown(
 
 ## ✅ 回调刚结束的股票（${pullbackEnded.length} 只）
 
-**特点**: 已经到达回调低点并开始反弹，确认趋势后可考虑追涨。
+**特点**: 已经到达回调低点并开始反弹（回调幅度 < 10%），确认趋势后可考虑追涨。
 
 ### 总览表格（按RS评分排序）
 
