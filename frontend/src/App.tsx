@@ -1,18 +1,16 @@
 /**
- * 应用主入口
+ * Application Entry Point
  * 
- * 配置路由和全局样式
+ * Configure routes and global styles
  */
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
-import zhCN from 'antd/locale/zh_CN';
+import enUS from 'antd/locale/en_US';
 import { lazy, Suspense } from 'react';
 import { Spin } from 'antd';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
-import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { MainLayout } from './components/Layout/MainLayout';
-import { LoginPage } from './pages/LoginPage';
 import { theme as customTheme } from './styles/theme';
 
 const KLineChartPage = lazy(() => import('./pages/KLineChartPage').then(m => ({ default: m.KLineChartPage })));
@@ -36,95 +34,73 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <ConfigProvider locale={zhCN} theme={customTheme}>
+      <ConfigProvider locale={enUS} theme={customTheme}>
         <BrowserRouter>
           <Suspense fallback={loadingFallback}>
             <Routes>
-              {/* 公开路由 */}
-              <Route path="/login" element={<LoginPage />} />
+              {/* Default route */}
+              <Route path="/" element={<Navigate to="/chart" replace />} />
               
-              {/* 受保护的路由 - 使用 MainLayout */}
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <Navigate to="/chart" replace />
-                  </ProtectedRoute>
-                }
-              />
-              
-              {/* K线图页面 */}
+              {/* K-line chart page */}
               <Route
                 path="/chart"
                 element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <KLineChartPage />
-                    </MainLayout>
-                  </ProtectedRoute>
+                  <MainLayout>
+                    <KLineChartPage />
+                  </MainLayout>
                 }
               />
               
               <Route
                 path="/chart/:stockCode"
                 element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <KLineChartPage />
-                    </MainLayout>
-                  </ProtectedRoute>
+                  <MainLayout>
+                    <KLineChartPage />
+                  </MainLayout>
                 }
               />
               
-              {/* 选股页面 */}
+              {/* Stock screener page */}
               <Route
                 path="/screener"
                 element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <ScreenerPage />
-                    </MainLayout>
-                  </ProtectedRoute>
+                  <MainLayout>
+                    <ScreenerPage />
+                  </MainLayout>
                 }
               />
               
-              {/* VCP 筛选页面 */}
+              {/* VCP scanner page */}
               <Route
                 path="/vcp"
                 element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <VcpScreenerPage />
-                    </MainLayout>
-                  </ProtectedRoute>
+                  <MainLayout>
+                    <VcpScreenerPage />
+                  </MainLayout>
                 }
               />
               
-              {/* VCP 分析报告页面 */}
+              {/* VCP analysis report page */}
               <Route
                 path="/vcp-analysis/:stockCode"
                 element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <VcpAnalysisPage />
-                    </MainLayout>
-                  </ProtectedRoute>
+                  <MainLayout>
+                    <VcpAnalysisPage />
+                  </MainLayout>
                 }
               />
               
-              {/* 收藏页面 */}
+              {/* Favorites page */}
               <Route
                 path="/favorites"
                 element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <FavoritePage />
-                    </MainLayout>
-                  </ProtectedRoute>
+                  <MainLayout>
+                    <FavoritePage />
+                  </MainLayout>
                 }
               />
               
-              {/* 默认重定向到首页 */}
+              {/* Default redirect to home */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>

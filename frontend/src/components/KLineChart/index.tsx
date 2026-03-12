@@ -58,7 +58,7 @@ export function KLineChart({
       return;
     }
 
-    // 清理旧图表
+    // Clean up old charts
     [mainChartInstanceRef, subChart1InstanceRef, subChart2InstanceRef].forEach(ref => {
       if (ref.current) {
         try {
@@ -73,7 +73,7 @@ export function KLineChart({
 
     const containerWidth = mainChartRef.current.clientWidth;
     
-    // 通用图表配置
+    // Common chart configuration
     const commonOptions = {
       width: containerWidth,
       layout: {
@@ -81,7 +81,7 @@ export function KLineChart({
         textColor: '#333333',
       },
       localization: {
-        locale: 'zh-CN',
+        locale: 'en-US',
       },
       grid: {
         vertLines: { color: '#f0f0f0' },

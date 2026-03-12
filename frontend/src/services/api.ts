@@ -9,7 +9,7 @@ class ApiService {
 
   constructor() {
     this.instance = axios.create({
-      baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1',
+      baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
       timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
@@ -36,20 +36,6 @@ class ApiService {
    * 设置请求和响应拦截器
    */
   private setupInterceptors(): void {
-    // 请求拦截器 - 添加 JWT token
-    this.instance.interceptors.request.use(
-      (config) => {
-        const token = localStorage.getItem('access_token');
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => {
-        return Promise.reject(error);
-      },
-    );
-
     // 响应拦截器 - 统一错误处理
     this.instance.interceptors.response.use(
       (response: AxiosResponse) => {
@@ -60,11 +46,6 @@ class ApiService {
           const { status } = error.response;
 
           switch (status) {
-            case 401:
-              // 未授权，清除 token 并跳转到登录页
-              localStorage.removeItem('access_token');
-              window.location.href = '/login';
-              break;
             case 403:
               console.error('Forbidden: You do not have permission');
               break;

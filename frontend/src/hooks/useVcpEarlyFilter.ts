@@ -19,8 +19,8 @@ export function useVcpEarlyFilter() {
   const [conditions, setConditions, resetConditions] = useLocalStoragePersist<FilterConditions>({
     key: 'filter-conditions',
     defaultValue: {
-      distFrom52WeekLow: 50,   // 提高到50%以包含更多早期股票
-      distFrom52WeekHigh: 10,  // 从30%降低到10%，符合VCP股票的实际特征
+      distFrom52WeekLow: 50,   // Increased to 50% to include more early-stage stocks
+      distFrom52WeekHigh: 10,  // Decreased from 30% to 10%, matching actual VCP characteristics
       contractionCountMin: 3,
       contractionCountMax: 4,
     },
@@ -33,26 +33,26 @@ export function useVcpEarlyFilter() {
   const validateConditions = useCallback((cond: FilterConditions): string | null => {
     if (cond.distFrom52WeekLow < VALIDATION_RULES.distFrom52WeekLow.min || 
         cond.distFrom52WeekLow > VALIDATION_RULES.distFrom52WeekLow.max) {
-      return `距52周低点阈值必须在${VALIDATION_RULES.distFrom52WeekLow.min}-${VALIDATION_RULES.distFrom52WeekLow.max}之间`;
+      return `From 52W Low must be between ${VALIDATION_RULES.distFrom52WeekLow.min}-${VALIDATION_RULES.distFrom52WeekLow.max}`;
     }
 
     if (cond.distFrom52WeekHigh < VALIDATION_RULES.distFrom52WeekHigh.min || 
         cond.distFrom52WeekHigh > VALIDATION_RULES.distFrom52WeekHigh.max) {
-      return `距52周高点阈值必须在${VALIDATION_RULES.distFrom52WeekHigh.min}-${VALIDATION_RULES.distFrom52WeekHigh.max}之间`;
+      return `From 52W High must be between ${VALIDATION_RULES.distFrom52WeekHigh.min}-${VALIDATION_RULES.distFrom52WeekHigh.max}`;
     }
 
     if (cond.contractionCountMin < VALIDATION_RULES.contractionCountMin.min || 
         cond.contractionCountMin > VALIDATION_RULES.contractionCountMin.max) {
-      return `最小收缩次数必须在${VALIDATION_RULES.contractionCountMin.min}-${VALIDATION_RULES.contractionCountMin.max}之间`;
+      return `Min contraction count must be between ${VALIDATION_RULES.contractionCountMin.min}-${VALIDATION_RULES.contractionCountMin.max}`;
     }
 
     if (cond.contractionCountMax < VALIDATION_RULES.contractionCountMax.min || 
         cond.contractionCountMax > VALIDATION_RULES.contractionCountMax.max) {
-      return `最大收缩次数必须在${VALIDATION_RULES.contractionCountMax.min}-${VALIDATION_RULES.contractionCountMax.max}之间`;
+      return `Max contraction count must be between ${VALIDATION_RULES.contractionCountMax.min}-${VALIDATION_RULES.contractionCountMax.max}`;
     }
 
     if (cond.contractionCountMin > cond.contractionCountMax) {
-      return '最小收缩次数不能大于最大收缩次数';
+      return 'Min contraction count cannot be greater than max';
     }
 
     return null;
@@ -83,7 +83,7 @@ export function useVcpEarlyFilter() {
         }
       }
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || err.message || '筛选失败';
+      const errorMsg = err.response?.data?.message || err.message || 'Filter failed';
       setError(errorMsg);
       message.error(errorMsg);
       setResult(null);

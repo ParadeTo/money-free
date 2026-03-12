@@ -211,8 +211,8 @@ export interface FilterEarlyStageResponse {
 }
 
 export const DEFAULT_FILTER_CONDITIONS: FilterConditions = {
-  distFrom52WeekLow: 50,   // 提高到50%以包含更多早期股票
-  distFrom52WeekHigh: 10,  // 从30%降低到10%，符合VCP股票的实际特征
+  distFrom52WeekLow: 50,   // Increased to 50% to include more early-stage stocks
+  distFrom52WeekHigh: 10,  // Decreased from 30% to 10%, matching actual VCP characteristics
   contractionCountMin: 3,
   contractionCountMax: 4,
 };

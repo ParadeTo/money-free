@@ -28,7 +28,7 @@ export function VcpGenerateButton({ onClick, loading }: VcpGenerateButtonProps) 
       disabled={loading}
       className={styles.generateButton}
     >
-      {loading ? '生成中...' : '生成VCP分析报告'}
+      {loading ? 'Generating...' : 'Generate VCP Analysis'}
     </Button>
   );
 }

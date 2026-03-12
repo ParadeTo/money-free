@@ -83,7 +83,7 @@ export function VcpScreenerPage() {
       <div className={styles.header}>
         <Space align="center">
           <ThunderboltOutlined className={styles.headerIcon} />
-          <Title level={4} style={{ margin: 0 }}>VCP 选股工具</Title>
+          <Title level={4} style={{ margin: 0 }}>VCP Scanner</Title>
         </Space>
       </div>
 
@@ -95,7 +95,7 @@ export function VcpScreenerPage() {
             key: 'standard',
             label: (
               <span>
-                <ThunderboltOutlined /> 标准VCP扫描
+                <ThunderboltOutlined /> Standard VCP Scan
               </span>
             ),
             children: (
@@ -107,11 +107,11 @@ export function VcpScreenerPage() {
                       onChange={(e) => setInPullbackOnly(e.target.checked)}
                     >
                       <span className={styles.checkboxLabel}>
-                        🎯 只看回调中的股票
+                        🎯 In Pullback Only
                       </span>
                     </Checkbox>
                     {data?.scanDate && (
-                      <Text type="secondary">扫描日期: {data.scanDate} | 总数: {data.totalCount} 只</Text>
+                      <Text type="secondary">Scan Date: {data.scanDate} | Total: {data.totalCount} stocks</Text>
                     )}
                   </Space>
                 </div>
@@ -136,7 +136,7 @@ export function VcpScreenerPage() {
             key: 'early',
             label: (
               <span>
-                <RocketOutlined /> 早期启动筛选
+                <RocketOutlined /> Early Stage Filter
               </span>
             ),
             children: (
@@ -156,9 +156,9 @@ export function VcpScreenerPage() {
                     style={{ marginTop: 24 }}
                     title={
                       <Space>
-                        <Text strong>筛选结果</Text>
+                        <Text strong>Filter Results</Text>
                         <Text type="secondary">
-                          共 {earlyFilter.result.total} 只股票
+                          Total {earlyFilter.result.total} stocks
                         </Text>
                       </Space>
                     }

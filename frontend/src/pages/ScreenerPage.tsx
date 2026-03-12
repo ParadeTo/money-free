@@ -107,14 +107,14 @@ export function ScreenerPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [isTruncated, setIsTruncated] = useState(false);
   
-  // 策略相关状态
+  // Strategy related state
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [saveModalVisible, setSaveModalVisible] = useState(false);
   const [strategyName, setStrategyName] = useState('');
   const [strategyDescription, setStrategyDescription] = useState('');
   const [currentStrategyId, setCurrentStrategyId] = useState<string>();
 
-  // 加载策略列表
+  // Load strategy list
   useEffect(() => {
     loadStrategies();
   }, []);

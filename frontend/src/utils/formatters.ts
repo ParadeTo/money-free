@@ -21,29 +21,29 @@ export function formatPercent(value: number): string {
  * @example formatPrice(1234.56) => "1,234.56"
  */
 export function formatPrice(value: number): string {
-  return value.toLocaleString('zh-CN', {
+  return value.toLocaleString('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 }
 
 /**
- * Format volume to "手" (lots)
- * @example formatVolume(123456) => "1,234 手"
+ * Format volume to lots
+ * @example formatVolume(123456) => "1,234 lots"
  */
 export function formatVolume(value: number): string {
   const lots = Math.floor(value / 100);
-  return `${lots.toLocaleString('zh-CN')} 手`;
+  return `${lots.toLocaleString('en-US')} lots`;
 }
 
 /**
- * Format date to Chinese locale
- * @example formatDate('2026-03-11') => "2026年3月11日"
- * @example formatDate(new Date('2026-03-11')) => "2026年3月11日"
+ * Format date to locale
+ * @example formatDate('2026-03-11') => "March 11, 2026"
+ * @example formatDate(new Date('2026-03-11')) => "March 11, 2026"
  */
 export function formatDate(date: string | Date): string {
   const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('zh-CN', {
+  return d.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -64,7 +64,7 @@ export function formatDateShort(date: string | Date): string {
  * @example formatNumber(1234567) => "1,234,567"
  */
 export function formatNumber(value: number): string {
-  return value.toLocaleString('zh-CN');
+  return value.toLocaleString('en-US');
 }
 
 /**
@@ -83,29 +83,29 @@ export function formatPercentWithSign(value: number): string {
  * @example getPercentChangeColor(-1.5) => "text-red-600"
  */
 export function getPercentChangeColor(value: number): string {
-  if (value > 0) return 'text-green-600'; // 涨
-  if (value < 0) return 'text-red-600'; // 跌
-  return 'text-gray-600'; // 平
+  if (value > 0) return 'text-green-600'; // Up
+  if (value < 0) return 'text-red-600'; // Down
+  return 'text-gray-600'; // Flat
 }
 
 /**
  * Format pullback status based on daysSinceLow
- * @example formatPullbackStatus(0) => "🔴 正在回调中"
- * @example formatPullbackStatus(3) => "🟡 3天前到达最低点"
- * @example formatPullbackStatus(10) => "🟢 10天前到达最低点"
+ * @example formatPullbackStatus(0) => "🔴 In Pullback"
+ * @example formatPullbackStatus(3) => "🟡 Low 3 days ago"
+ * @example formatPullbackStatus(10) => "🟢 Low 10 days ago"
  */
 export function formatPullbackStatus(daysSinceLow: number): string {
-  if (daysSinceLow === 0) return '🔴 正在回调中';
-  if (daysSinceLow <= 3) return `🟡 ${daysSinceLow}天前到达最低点`;
-  return `🟢 ${daysSinceLow}天前到达最低点`;
+  if (daysSinceLow === 0) return '🔴 In Pullback';
+  if (daysSinceLow <= 3) return `🟡 Low ${daysSinceLow} day${daysSinceLow > 1 ? 's' : ''} ago`;
+  return `🟢 Low ${daysSinceLow} days ago`;
 }
 
 /**
  * Format scan date with expiry warning
- * @example formatScanDate('2026-03-11', false) => "扫描日期: 2026年3月11日"
- * @example formatScanDate('2026-03-01', true) => "扫描日期: 2026年3月1日 ⚠️ 已过期"
+ * @example formatScanDate('2026-03-11', false) => "Scan Date: March 11, 2026"
+ * @example formatScanDate('2026-03-01', true) => "Scan Date: March 1, 2026 ⚠️ Expired"
  */
 export function formatScanDate(date: string, isExpired: boolean): string {
   const formattedDate = formatDate(date);
-  return `扫描日期: ${formattedDate}${isExpired ? ' ⚠️ 已过期' : ''}`;
+  return `Scan Date: ${formattedDate}${isExpired ? ' ⚠️ Expired' : ''}`;
 }

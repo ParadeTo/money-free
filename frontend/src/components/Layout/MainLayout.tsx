@@ -1,15 +1,13 @@
 /**
- * 主布局组件 - 包含导航菜单
+ * Main Layout Component - Includes navigation menu
  */
 
-import { Layout, Menu, Button, Avatar, Dropdown } from 'antd';
+import { Layout, Menu } from 'antd';
 import { 
   AreaChartOutlined, 
   StarOutlined, 
   FilterOutlined, 
   ThunderboltOutlined,
-  UserOutlined,
-  LogoutOutlined 
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ReactNode } from 'react';
@@ -24,11 +22,6 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
-  };
 
   const menuItems = [
     {
@@ -50,15 +43,6 @@ export function MainLayout({ children }: MainLayoutProps) {
       key: '/favorites',
       icon: <StarOutlined />,
       label: 'Favorites',
-    },
-  ];
-
-  const userMenuItems = [
-    {
-      key: 'logout',
-      icon: <LogoutOutlined />,
-      label: 'Logout',
-      onClick: handleLogout,
     },
   ];
 
@@ -87,15 +71,6 @@ export function MainLayout({ children }: MainLayoutProps) {
           onClick={({ key }) => navigate(key)}
           className={styles.menu}
         />
-
-        <div className={styles.userSection}>
-          <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-            <Button type="text" className={styles.userButton}>
-              <Avatar size="small" icon={<UserOutlined />} />
-              <span className={styles.username}>admin</span>
-            </Button>
-          </Dropdown>
-        </div>
       </Header>
 
       <Content className={styles.content}>

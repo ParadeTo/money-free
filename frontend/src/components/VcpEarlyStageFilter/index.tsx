@@ -43,8 +43,8 @@ export const VcpEarlyStageFilter: React.FC<VcpEarlyStageFilterProps> = ({
       title={
         <div className="filter-card-title">
           <ThunderboltOutlined className="title-icon" />
-          <span className="title-text">早期启动阶段筛选</span>
-          <Tooltip title="筛选处于底部区域、刚开始形成VCP形态的股票">
+          <span className="title-text">Early Stage VCP Filter</span>
+          <Tooltip title="Filter stocks in bottom area just starting to form VCP patterns">
             <InfoCircleOutlined className="title-info" />
           </Tooltip>
         </div>
@@ -57,7 +57,7 @@ export const VcpEarlyStageFilter: React.FC<VcpEarlyStageFilterProps> = ({
             disabled={loading}
             className="reset-button"
           >
-            重置
+            Reset
           </Button>
           <Button
             type="primary"
@@ -65,7 +65,7 @@ export const VcpEarlyStageFilter: React.FC<VcpEarlyStageFilterProps> = ({
             loading={loading}
             className="filter-button"
           >
-            开始筛选
+            Start Filter
           </Button>
         </Space>
       }
@@ -105,8 +105,8 @@ export const VcpEarlyStageFilter: React.FC<VcpEarlyStageFilterProps> = ({
           <Col xs={24} sm={12}>
             <div className="filter-control-group">
               <div className="control-label">
-                <span className="label-text">距52周低点</span>
-                <Tooltip title="股票价格距离52周最低点的百分比，越小说明越接近底部">
+                <span className="label-text">From 52W Low</span>
+                <Tooltip title="Percentage from 52-week low, lower means closer to bottom">
                   <InfoCircleOutlined className="label-icon" />
                 </Tooltip>
               </div>
@@ -138,8 +138,8 @@ export const VcpEarlyStageFilter: React.FC<VcpEarlyStageFilterProps> = ({
           <Col xs={24} sm={12}>
             <div className="filter-control-group">
               <div className="control-label">
-                <span className="label-text">距52周高点</span>
-                <Tooltip title="股票价格距离52周最高点的百分比，越大说明还有更多上涨空间">
+                <span className="label-text">From 52W High</span>
+                <Tooltip title="Percentage from 52-week high, higher means more upside potential">
                   <InfoCircleOutlined className="label-icon" />
                 </Tooltip>
               </div>
@@ -171,8 +171,8 @@ export const VcpEarlyStageFilter: React.FC<VcpEarlyStageFilterProps> = ({
           <Col xs={24}>
             <div className="filter-control-group">
               <div className="control-label">
-                <span className="label-text">收缩次数范围</span>
-                <Tooltip title="VCP形态收缩的次数，2-3次为极早期，3-4次为典型早期，4-5次为稳健早期">
+                <span className="label-text">Contraction Count Range</span>
+                <Tooltip title="Number of VCP contractions: 2-3 for very early, 3-4 for typical early, 4-5 for stable early">
                   <InfoCircleOutlined className="label-icon" />
                 </Tooltip>
               </div>
@@ -184,9 +184,9 @@ export const VcpEarlyStageFilter: React.FC<VcpEarlyStageFilterProps> = ({
                   value={[conditions.contractionCountMin, conditions.contractionCountMax]}
                   onChange={handleRangeChange}
                   disabled={loading}
-                  marks={{ 2: '2次', 4: '4次', 6: '6次', 8: '8次' }}
+                  marks={{ 2: '2', 4: '4', 6: '6', 8: '8' }}
                   tooltip={{ 
-                    formatter: (value) => value ? `${value}次` : '',
+                    formatter: (value) => value ? `${value}` : '',
                   }}
                   className="control-slider control-slider-range"
                 />
@@ -197,8 +197,7 @@ export const VcpEarlyStageFilter: React.FC<VcpEarlyStageFilterProps> = ({
                     value={conditions.contractionCountMin}
                     onChange={handleChange('contractionCountMin')}
                     disabled={loading}
-                    addonBefore="最小"
-                    addonAfter="次"
+                    addonBefore="Min"
                     className="control-number"
                   />
                   <span className="range-separator">~</span>
@@ -208,8 +207,7 @@ export const VcpEarlyStageFilter: React.FC<VcpEarlyStageFilterProps> = ({
                     value={conditions.contractionCountMax}
                     onChange={handleChange('contractionCountMax')}
                     disabled={loading}
-                    addonBefore="最大"
-                    addonAfter="次"
+                    addonBefore="Max"
                     className="control-number"
                   />
                 </Space>
@@ -220,7 +218,7 @@ export const VcpEarlyStageFilter: React.FC<VcpEarlyStageFilterProps> = ({
 
         {/* Preset Buttons */}
         <div className="preset-buttons">
-          <span className="preset-label">快捷预设：</span>
+          <span className="preset-label">Quick Presets:</span>
           <Space wrap>
             <Button
               size="small"
@@ -233,7 +231,7 @@ export const VcpEarlyStageFilter: React.FC<VcpEarlyStageFilterProps> = ({
               disabled={loading}
               className="preset-btn"
             >
-              极早期
+              Very Early
             </Button>
             <Button
               size="small"
@@ -246,7 +244,7 @@ export const VcpEarlyStageFilter: React.FC<VcpEarlyStageFilterProps> = ({
               disabled={loading}
               className="preset-btn"
             >
-              典型早期（推荐）
+              Typical Early (Recommended)
             </Button>
             <Button
               size="small"
@@ -259,7 +257,7 @@ export const VcpEarlyStageFilter: React.FC<VcpEarlyStageFilterProps> = ({
               disabled={loading}
               className="preset-btn"
             >
-              稳健早期
+              Stable Early
             </Button>
           </Space>
         </div>

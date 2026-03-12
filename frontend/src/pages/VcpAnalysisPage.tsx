@@ -30,7 +30,7 @@ export function VcpAnalysisPage() {
   if (isLoading) {
     return (
       <div className={styles.loadingContainer}>
-        <Spin size="large" tip="正在加载VCP分析数据..." />
+        <Spin size="large" tip="Loading VCP analysis data..." />
       </div>
     );
   }
@@ -39,8 +39,8 @@ export function VcpAnalysisPage() {
     return (
       <div className={styles.errorContainer}>
         <Alert
-          message="加载失败"
-          description={error.message || '无法加载VCP分析数据，请稍后重试'}
+          message="Load Failed"
+          description={error.message || 'Unable to load VCP analysis data, please try again later'}
           type="error"
           showIcon
         />
@@ -52,8 +52,8 @@ export function VcpAnalysisPage() {
     return (
       <div className={styles.errorContainer}>
         <Alert
-          message="无数据"
-          description="未找到该股票的VCP分析数据"
+          message="No Data"
+          description="VCP analysis data not found for this stock"
           type="warning"
           showIcon
         />
@@ -76,17 +76,17 @@ export function VcpAnalysisPage() {
           </Title>
           <Space>
             <Tag color={hasVcp ? 'success' : 'default'} icon={hasVcp ? <CheckCircleOutlined /> : <CloseCircleOutlined />}>
-              VCP形态: {hasVcp ? '有效' : '无效'}
+              VCP Pattern: {hasVcp ? 'Valid' : 'Invalid'}
             </Tag>
-            {cached && <Tag color="blue">来源: 缓存</Tag>}
+            {cached && <Tag color="blue">Source: Cached</Tag>}
           </Space>
         </div>
         <div className={styles.headerRight}>
-          <Text type="secondary">扫描日期: {formatScanDate(scanDate)}</Text>
+          <Text type="secondary">Scan Date: {formatScanDate(scanDate)}</Text>
           {isExpired && (
             <Alert
-              message="数据已过期"
-              description={`分析数据已超过7天（${formatScanDate(scanDate)}），建议重新扫描`}
+              message="Data Expired"
+              description={`Analysis data is over 7 days old (${formatScanDate(scanDate)}), recommend re-scanning`}
               type="warning"
               icon={<WarningOutlined />}
               showIcon
@@ -98,62 +98,62 @@ export function VcpAnalysisPage() {
       </div>
 
       {/* Summary Section */}
-      <Card title="概览" className={styles.summaryCard}>
+      <Card title="Summary" className={styles.summaryCard}>
         <Descriptions column={{ xs: 1, sm: 2, md: 3 }} bordered>
-          <Descriptions.Item label="最新价格">
+          <Descriptions.Item label="Latest Price">
             ¥{formatPrice(summary.latestPrice)}
             <Text type={summary.priceChangePct >= 0 ? 'success' : 'danger'} className={styles.changeText}>
               ({formatPercent(summary.priceChangePct, true)})
             </Text>
           </Descriptions.Item>
-          <Descriptions.Item label="收缩阶段数">
-            {summary.contractionCount} 次
+          <Descriptions.Item label="Contractions">
+            {summary.contractionCount} times
           </Descriptions.Item>
-          <Descriptions.Item label="最后收缩幅度">
+          <Descriptions.Item label="Last Contraction">
             {formatPercent(summary.lastContractionPct)}
           </Descriptions.Item>
-          <Descriptions.Item label="成交量萎缩">
+          <Descriptions.Item label="Volume Dry Up">
             {summary.volumeDryingUp ? (
-              <Tag color="success" icon={<CheckCircleOutlined />}>是</Tag>
+              <Tag color="success" icon={<CheckCircleOutlined />}>Yes</Tag>
             ) : (
-              <Tag color="default" icon={<CloseCircleOutlined />}>否</Tag>
+              <Tag color="default" icon={<CloseCircleOutlined />}>No</Tag>
             )}
           </Descriptions.Item>
-          <Descriptions.Item label="RS评分">
+          <Descriptions.Item label="RS Rating">
             <Text strong>{summary.rsRating}</Text>
           </Descriptions.Item>
-          <Descriptions.Item label="回调状态">
+          <Descriptions.Item label="Pullback Status">
             <Tag color={summary.inPullback ? 'warning' : 'default'}>
-              {summary.inPullback ? '处于回调中' : '未在回调'}
+              {summary.inPullback ? 'In Pullback' : 'Not in Pullback'}
             </Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="回调次数">
-            {summary.pullbackCount} 次
+          <Descriptions.Item label="Pullbacks">
+            {summary.pullbackCount} times
           </Descriptions.Item>
-          <Descriptions.Item label="距52周高点">
+          <Descriptions.Item label="From 52W High">
             {formatPercent(summary.distFrom52WeekHigh, true)}
           </Descriptions.Item>
-          <Descriptions.Item label="距52周低点">
+          <Descriptions.Item label="From 52W Low">
             {formatPercent(summary.distFrom52WeekLow, true)}
           </Descriptions.Item>
         </Descriptions>
       </Card>
 
       {/* Placeholder for future sections */}
-      <Card title="收缩阶段" className={styles.sectionCard}>
-        <Text type="secondary">收缩阶段详情将在下一阶段实现...</Text>
+      <Card title="Contraction Stages" className={styles.sectionCard}>
+        <Text type="secondary">Contraction stage details will be implemented in the next phase...</Text>
       </Card>
 
-      <Card title="回调阶段" className={styles.sectionCard}>
-        <Text type="secondary">回调阶段详情将在下一阶段实现...</Text>
+      <Card title="Pullback Stages" className={styles.sectionCard}>
+        <Text type="secondary">Pullback stage details will be implemented in the next phase...</Text>
       </Card>
 
-      <Card title="最近K线数据" className={styles.sectionCard}>
-        <Text type="secondary">K线数据将在下一阶段实现...</Text>
+      <Card title="Recent K-Line Data" className={styles.sectionCard}>
+        <Text type="secondary">K-line data will be implemented in the next phase...</Text>
       </Card>
 
-      <Card title="趋势模板检查" className={styles.sectionCard}>
-        <Text type="secondary">趋势模板检查详情将在下一阶段实现...</Text>
+      <Card title="Trend Template Check" className={styles.sectionCard}>
+        <Text type="secondary">Trend template check details will be implemented in the next phase...</Text>
       </Card>
     </div>
   );

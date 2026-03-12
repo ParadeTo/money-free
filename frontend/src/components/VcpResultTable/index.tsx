@@ -41,13 +41,13 @@ export function VcpResultTable({
   const getStageInfo = (stage: VcpStage) => {
     switch (stage) {
       case 'contraction':
-        return { label: '收缩中', color: 'green', icon: '🟢' };
+        return { label: 'Contracting', color: 'green', icon: '🟢' };
       case 'in_pullback':
-        return { label: '回调中', color: 'orange', icon: '🟡' };
+        return { label: 'In Pullback', color: 'orange', icon: '🟡' };
       case 'pullback_ended':
-        return { label: '回调结束', color: 'blue', icon: '🟠' };
+        return { label: 'Pullback Ended', color: 'blue', icon: '🟠' };
       default:
-        return { label: '未知', color: 'default', icon: '' };
+        return { label: 'Unknown', color: 'default', icon: '' };
     }
   };
 
@@ -131,7 +131,7 @@ export function VcpResultTable({
       render: (v: number) => <Tag color="blue">{v}</Tag>,
     },
     {
-      title: '最后回调',
+      title: 'Last Pullback',
       key: 'lastPullbackInfo',
       width: 150,
       align: 'center',
@@ -145,10 +145,10 @@ export function VcpResultTable({
         
         const tooltipContent = (
           <div>
-            <div>高点: {new Date(highDate).toLocaleDateString('zh-CN')} - ¥{highPrice.toFixed(2)}</div>
-            <div>低点: {new Date(lowDate).toLocaleDateString('zh-CN')} - ¥{lowPrice.toFixed(2)}</div>
-            <div>持续: {durationDays} 天</div>
-            <div>回调幅度: {pullbackPct.toFixed(2)}%</div>
+            <div>High: {new Date(highDate).toLocaleDateString('en-US')} - ¥{highPrice.toFixed(2)}</div>
+            <div>Low: {new Date(lowDate).toLocaleDateString('en-US')} - ¥{lowPrice.toFixed(2)}</div>
+            <div>Duration: {durationDays} days</div>
+            <div>Pullback: {pullbackPct.toFixed(2)}%</div>
           </div>
         );
         
@@ -159,7 +159,7 @@ export function VcpResultTable({
                 {record.inPullback ? '🎯 ' : ''}{pullbackPct.toFixed(1)}%
               </Tag>
               <Text type="secondary" style={{ fontSize: '11px' }}>
-                {new Date(lowDate).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
+                {new Date(lowDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 {isRecent && ' 🔥'}
               </Text>
             </div>
