@@ -10,16 +10,30 @@ const prisma = new PrismaClient();
 const indicatorsService = new TechnicalIndicatorsService();
 
 async function main() {
-  console.log('📊 重新计算技术指标...\n');
+  // Parse command line arguments
+  const args = process.argv.slice(2);
+  let markets: string[] | undefined;
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--markets' && i + 1 < args.length) {
+      markets = args[i + 1].split(',').map(m => m.trim().toUpperCase());
+    }
+  }
+
+  const marketFilter = markets && markets.length > 0 ? ` (${markets.join(', ')})` : '';
+  console.log(`📊 重新计算技术指标${marketFilter}...\n`);
 
   // 获取所有活跃股票
+  const whereClause: any = { admissionStatus: 'active' };
+  if (markets && markets.length > 0) {
+    whereClause.market = { in: markets };
+  }
+
   const stocks = await prisma.stock.findMany({
-    where: {
-      admissionStatus: 'active',
-    },
+    where: whereClause,
   });
 
-  console.log(`找到 ${stocks.length} 只活跃股票\n`);
+  console.log(`找到 ${stocks.length} 只活跃股票${marketFilter}\n`);
 
   for (let i = 0; i < stocks.length; i++) {
     const stock = stocks[i];
@@ -66,6 +80,7 @@ async function main() {
       const rsiResults = indicatorsService.calculateRSI(priceData, 14);
       const volumeResults = indicatorsService.calculateVolume(priceData, 52);
       const amountResults = indicatorsService.calculateAmount(priceData, 52);
+      const week52Markers = indicatorsService.calculate52WeekMarkers(priceData);
 
       // 5. 保存指标
       const dailyIndicatorRecords: Array<{
@@ -146,6 +161,25 @@ async function main() {
           }),
         });
       });
+
+      // 52 Week Markers (save as latest date)
+      if (dailyKlines.length > 0 && week52Markers) {
+        const latestDate = dailyKlines[dailyKlines.length - 1].date;
+        dailyIndicatorRecords.push({
+          stockCode: stock.stockCode,
+          date: new Date(latestDate),
+          period: 'daily',
+          indicatorType: 'week52_marker',
+          values: JSON.stringify({
+            high: week52Markers.high52Week,
+            low: week52Markers.low52Week,
+            high52Week: week52Markers.high52Week,
+            low52Week: week52Markers.low52Week,
+            high52WeekDate: week52Markers.high52WeekDate,
+            low52WeekDate: week52Markers.low52WeekDate,
+          }),
+        });
+      }
 
       await prisma.technicalIndicator.createMany({
         data: dailyIndicatorRecords,

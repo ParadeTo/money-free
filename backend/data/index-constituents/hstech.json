@@ -1,0 +1,28 @@
+{
+  "indexCode": "HSTECH",
+  "indexName": "恒生科技指数",
+  "updateDate": "2026-03-12",
+  "constituents": [
+    {"code": "00700", "name": "腾讯控股"},
+    {"code": "09988", "name": "阿里巴巴-SW"},
+    {"code": "03690", "name": "美团-W"},
+    {"code": "09618", "name": "京东集团-SW"},
+    {"code": "01810", "name": "小米集团-W"},
+    {"code": "09888", "name": "百度集团-SW"},
+    {"code": "09999", "name": "网易-S"},
+    {"code": "00992", "name": "联想集团"},
+    {"code": "01024", "name": "快手-W"},
+    {"code": "02015", "name": "理想汽车-W"},
+    {"code": "09868", "name": "小鹏汽车-W"},
+    {"code": "09961", "name": "携程集团-S"},
+    {"code": "06618", "name": "京东健康"},
+    {"code": "02382", "name": "舜宇光学科技"},
+    {"code": "01347", "name": "华虹半导体"},
+    {"code": "00285", "name": "比亚迪电子"},
+    {"code": "02269", "name": "药明生物"},
+    {"code": "01801", "name": "信达生物"},
+    {"code": "01833", "name": "平安好医生"},
+    {"code": "03888", "name": "金山软件"}
+  ],
+  "note": "Core HSTECH constituents. For production, maintain complete list via manual updates or API."
+}

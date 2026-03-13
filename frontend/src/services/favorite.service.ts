@@ -1,7 +1,12 @@
 import { api } from './api';
-import type { Favorite } from '../types';
 
-export interface FavoriteWithDetails extends Favorite {
+export interface FavoriteWithDetails {
+  id: number;
+  userId: string;
+  stockCode: string;
+  groupName?: string;
+  sortOrder: number;
+  createdAt: string;
   stock?: {
     stockName: string;
     latestPrice?: number;

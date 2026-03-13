@@ -1,6 +1,8 @@
 export interface VcpScanItem {
   stockCode: string;
   stockName: string;
+  market?: 'SH' | 'SZ' | 'HK' | 'US';
+  currency?: 'CNY' | 'HKD' | 'USD';
   latestPrice: number;
   priceChangePct: number;
   distFrom52WeekHigh: number;
@@ -52,6 +54,8 @@ export interface Contraction {
 export interface VcpAnalysis {
   stockCode: string;
   stockName: string;
+  market: 'SH' | 'SZ' | 'HK' | 'US';
+  currency: 'CNY' | 'HKD' | 'USD';
   scanDate: string;
   cached: boolean;
   isExpired: boolean;
@@ -181,6 +185,8 @@ export interface PullbackInfo {
 export interface EarlyStageStock {
   stockCode: string;
   stockName: string;
+  market?: 'SH' | 'SZ' | 'HK' | 'US';
+  currency?: 'CNY' | 'HKD' | 'USD';
   latestPrice: number;
   priceChangePct: number;
   distFrom52WeekHigh: number;

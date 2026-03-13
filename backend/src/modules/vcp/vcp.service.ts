@@ -31,27 +31,8 @@ export class VcpService {
       }
     }
 
-    const latestResult = await this.prisma.vcpScanResult.findFirst({
-      orderBy: { scanDate: 'desc' },
-      select: { scanDate: true },
-    });
-
-    if (!latestResult) {
-      return { stocks: [], totalCount: 0, scanDate: '' };
-    }
-
-    const scanDate = latestResult.scanDate;
-
-    const orderByMap: Record<string, any> = {
-      contractionCount: { contractionCount: sortOrder },
-      lastContractionPct: { lastContractionPct: sortOrder },
-      volumeDryingUp: { volumeDryingUp: sortOrder },
-      rsRating: { rsRating: sortOrder },
-      priceChangePct: { priceChangePct: sortOrder },
-    };
-
+    // 查询所有符合基本条件的扫描结果（不限制日期）
     const whereClause: any = {
-      scanDate,
       trendTemplatePass: true,
       contractionCount: { gte: 3 },
     };
@@ -61,11 +42,39 @@ export class VcpService {
       whereClause.inPullback = true;
     }
 
-    const results = await this.prisma.vcpScanResult.findMany({
+    // 获取所有符合条件的记录，按股票代码和扫描日期排序
+    const allResults = await this.prisma.vcpScanResult.findMany({
       where: whereClause,
-      orderBy: orderByMap[sortBy] || { lastContractionPct: 'asc' },
-      include: { stock: { select: { stockName: true } } },
+      orderBy: [{ stockCode: 'asc' }, { scanDate: 'desc' }],
+      include: { stock: { select: { stockName: true, market: true, currency: true } } },
     });
+
+    // 如果没有任何结果，直接返回空
+    if (allResults.length === 0) {
+      return { stocks: [], totalCount: 0, scanDate: '' };
+    }
+
+    // 为每只股票保留最新的扫描记录
+    const latestResultsMap = new Map<string, typeof allResults[0]>();
+    for (const result of allResults) {
+      if (!latestResultsMap.has(result.stockCode)) {
+        latestResultsMap.set(result.stockCode, result);
+      }
+    }
+
+    // 转换为数组并排序
+    const results = Array.from(latestResultsMap.values());
+    const orderByMap: Record<string, (a: any, b: any) => number> = {
+      contractionCount: (a, b) => sortOrder === 'asc' ? a.contractionCount - b.contractionCount : b.contractionCount - a.contractionCount,
+      lastContractionPct: (a, b) => sortOrder === 'asc' ? a.lastContractionPct - b.lastContractionPct : b.lastContractionPct - a.lastContractionPct,
+      volumeDryingUp: (a, b) => sortOrder === 'asc' ? (a.volumeDryingUp ? 1 : 0) - (b.volumeDryingUp ? 1 : 0) : (b.volumeDryingUp ? 1 : 0) - (a.volumeDryingUp ? 1 : 0),
+      rsRating: (a, b) => sortOrder === 'asc' ? a.rsRating - b.rsRating : b.rsRating - a.rsRating,
+      priceChangePct: (a, b) => sortOrder === 'asc' ? a.priceChangePct - b.priceChangePct : b.priceChangePct - a.priceChangePct,
+    };
+    
+    if (orderByMap[sortBy]) {
+      results.sort(orderByMap[sortBy]);
+    }
 
     // 如果设置了最大回调幅度，需要实时分析K线获取当前回调状态
     let stocks = [];
@@ -118,6 +127,8 @@ export class VcpService {
           stocks.push({
             stockCode: r.stockCode,
             stockName: r.stock.stockName,
+            market: r.stock.market,
+            currency: r.stock.currency,
             latestPrice: r.latestPrice,
             priceChangePct: r.priceChangePct,
             distFrom52WeekHigh: r.distFrom52WeekHigh,
@@ -137,6 +148,8 @@ export class VcpService {
       stocks = results.map((r: typeof results[number]) => ({
         stockCode: r.stockCode,
         stockName: r.stock.stockName,
+        market: r.stock.market,
+        currency: r.stock.currency,
         latestPrice: r.latestPrice,
         priceChangePct: r.priceChangePct,
         distFrom52WeekHigh: r.distFrom52WeekHigh,
@@ -151,10 +164,15 @@ export class VcpService {
       }));
     }
 
+    // 获取所有结果中最新的扫描日期
+    const latestScanDate = results.length > 0 
+      ? results.reduce((latest, r) => r.scanDate > latest ? r.scanDate : latest, results[0].scanDate)
+      : new Date();
+
     return {
       stocks,
       totalCount: stocks.length,
-      scanDate: scanDate.toISOString().split('T')[0],
+      scanDate: latestScanDate.toISOString().split('T')[0],
     };
   }
 
@@ -402,6 +420,8 @@ export class VcpService {
     const response: VcpAnalysisResponseDto = {
       stockCode: stock.stockCode,
       stockName: stock.stockName,
+      market: stock.market,
+      currency: stock.currency,
       scanDate: scanDate.toISOString().split('T')[0],
       cached,
       isExpired,

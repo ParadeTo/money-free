@@ -1,6 +1,7 @@
 import { Table, Tag, Empty, Typography, Tooltip } from 'antd';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import type { VcpScanItem, VcpScanQuery, EarlyStageStock, VcpStage } from '../../types/vcp';
+import { CURRENCY_SYMBOLS, MARKET_LABELS } from '../../types/stock';
 import styles from './VcpResultTable.module.css';
 
 const { Text } = Typography;
@@ -65,6 +66,23 @@ export function VcpResultTable({
       key: 'stockName',
       width: 100,
     },
+    {
+      title: 'Market',
+      dataIndex: 'market',
+      key: 'market',
+      width: 80,
+      align: 'center',
+      render: (market?: 'SH' | 'SZ' | 'HK' | 'US') => {
+        if (!market) return '-';
+        const colors: Record<string, string> = {
+          'SH': 'red',
+          'SZ': 'green',
+          'HK': 'blue',
+          'US': 'purple',
+        };
+        return <Tag color={colors[market]}>{MARKET_LABELS[market] || market}</Tag>;
+      },
+    },
     ...(showVcpStage ? [{
       title: 'VCP Stage',
       key: 'vcpStage',
@@ -88,7 +106,11 @@ export function VcpResultTable({
       key: 'latestPrice',
       width: 100,
       align: 'right',
-      render: (v: number) => v?.toFixed(2),
+      render: (v: number, record: VcpScanItem | EarlyStageStock) => {
+        const currency = record.currency || 'CNY';
+        const symbol = CURRENCY_SYMBOLS[currency];
+        return `${symbol}${v?.toFixed(2)}`;
+      },
     },
     {
       title: 'Change %',

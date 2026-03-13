@@ -1,149 +1,82 @@
 /**
- * StockHub - 类型定义
- * 
- * 基于 contracts/rest-api.md 的 TypeScript 接口定义
+ * 前端股票数据类型定义
+ * 支持A股、港股、美股
  */
 
-/**
- * 股票基本信息
- */
+export type MarketType = 'SH' | 'SZ' | 'HK' | 'US';
+export type CurrencyType = 'CNY' | 'HKD' | 'USD';
+export type IndexCode = 'HS300' | 'ZZ500' | 'HSI' | 'HSTECH' | 'SP500' | 'NDX100';
+
 export interface Stock {
-  stock_code: string;
-  stock_name: string;
-  market: "SH" | "SZ";
-  industry: string | null;
-  list_date: string;  // YYYY-MM-DD
-  market_cap: number;  // 亿元
-  avg_turnover: number;  // 万元
-  status: "active" | "inactive";
-  latest_price?: number;
-  price_change?: number;
-  price_change_percent?: number;
+  stockCode: string;
+  stockName: string;
+  market: MarketType;
+  currency: CurrencyType;
+  industry?: string;
+  listDate: string;
+  marketCap?: number;
+  avgTurnover?: number;
+  admissionStatus: 'active' | 'inactive';
+  indexCode?: IndexCode | null;
+  searchKeywords?: {
+    zh: string[];
+    en: string[];
+  };
+  createdAt: string;
+  updatedAt: string;
 }
 
-/**
- * K线数据
- */
 export interface KLineData {
-  date: string;  // YYYY-MM-DD
+  date: string;
   open: number;
   high: number;
   low: number;
   close: number;
   volume: number;
-  turnover: number;
+  amount: number;
+  source: 'tushare' | 'akshare' | 'yahoo_finance';
 }
 
-/**
- * K线数据响应
- */
-export interface KLineResponse {
-  stock_code: string;
-  period: "daily" | "weekly";
-  data: KLineData[];
-  count: number;
+export interface VcpScanResult {
+  id: number;
+  stockCode: string;
+  scanDate: string;
+  trendTemplatePass: boolean;
+  trendTemplateDetails: string;
+  contractionCount: number;
+  lastContractionPct: number;
+  contractions: string;
+  volumeDryingUp: boolean;
+  rsRating: number;
+  latestPrice: number;
+  priceChangePct: number;
+  distFrom52WeekHigh: number;
+  distFrom52WeekLow: number;
+  inPullback: boolean;
+  pullbackCount: number;
+  lastPullbackData?: string;
+  createdAt: string;
+  stock?: Stock;
 }
 
-/**
- * 技术指标数据点
- */
-export interface IndicatorData {
-  date: string;
-  value: number | null;
-}
+export const CURRENCY_SYMBOLS: Record<CurrencyType, string> = {
+  'CNY': '¥',
+  'HKD': 'HK$',
+  'USD': '$',
+};
 
-/**
- * 技术指标值集合（用于图表渲染）
- */
-export interface IndicatorValues {
-  MA50?: IndicatorData[];
-  MA150?: IndicatorData[];
-  MA200?: IndicatorData[];
-  MA10?: IndicatorData[];
-  MA30?: IndicatorData[];
-  MA40?: IndicatorData[];
-  KDJ_K?: IndicatorData[];
-  KDJ_D?: IndicatorData[];
-  KDJ_J?: IndicatorData[];
-  RSI?: IndicatorData[];
-  volume_ma52w?: IndicatorData[];
-  turnover_ma52w?: IndicatorData[];
-  high_52w?: IndicatorData[];
-  low_52w?: IndicatorData[];
-}
+export const MARKET_LABELS: Record<MarketType, string> = {
+  'SH': 'A股(沪)',
+  'SZ': 'A股(深)',
+  'HK': '港股',
+  'US': '美股',
+};
 
-/**
- * 技术指标响应
- */
-export interface IndicatorsResponse {
-  stock_code: string;
-  period: "daily" | "weekly";
-  indicators: {
-    [indicatorType: string]: IndicatorData[];
-  };
-  count: number;
-}
-
-/**
- * 52周高低点标记
- */
-export interface Week52Markers {
-  stock_code: string;
-  high_52w: {
-    date: string;
-    value: number;
-    label: string;
-  };
-  low_52w: {
-    date: string;
-    value: number;
-    label: string;
-  };
-  current_price: number;
-  current_date: string;
-}
-
-/**
- * 股票搜索响应
- */
-export interface StockSearchResponse {
-  results: Stock[];
-  total: number;
-}
-
-/**
- * 股票列表响应
- */
-export interface StockListResponse {
-  stocks: Stock[];
-  total: number;
-  page: number;
-  page_size: number;
-  total_pages: number;
-}
-
-/**
- * K线周期类型
- */
-export type Period = "daily" | "weekly";
-
-/**
- * 技术指标类型
- */
-export type IndicatorType = 
-  | "MA50" | "MA150" | "MA200" 
-  | "MA10" | "MA30" | "MA40"
-  | "KDJ_K" | "KDJ_D" | "KDJ_J"
-  | "RSI"
-  | "volume_ma52w" | "turnover_ma52w"
-  | "high_52w" | "low_52w";
-
-/**
- * 图表配置（用于前端状态管理）
- */
-export interface ChartConfig {
-  period: Period;
-  selectedIndicators: IndicatorType[];
-  showVolume: boolean;
-  showTurnover: boolean;
-}
+export const INDEX_LABELS: Record<IndexCode, string> = {
+  'HS300': '沪深300',
+  'ZZ500': '中证500',
+  'HSI': '恒生指数',
+  'HSTECH': '恒生科技',
+  'SP500': '标普500',
+  'NDX100': '纳斯达克100',
+};

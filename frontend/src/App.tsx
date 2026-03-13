@@ -9,9 +9,21 @@ import { ConfigProvider } from 'antd';
 import enUS from 'antd/locale/en_US';
 import { lazy, Suspense } from 'react';
 import { Spin } from 'antd';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { MainLayout } from './components/Layout/MainLayout';
 import { theme as customTheme } from './styles/theme';
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 const KLineChartPage = lazy(() => import('./pages/KLineChartPage').then(m => ({ default: m.KLineChartPage })));
 const FavoritePage = lazy(() => import('./pages/FavoritePage').then(m => ({ default: m.FavoritePage })));
@@ -34,10 +46,11 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <ConfigProvider locale={enUS} theme={customTheme}>
-        <BrowserRouter>
-          <Suspense fallback={loadingFallback}>
-            <Routes>
+      <QueryClientProvider client={queryClient}>
+        <ConfigProvider locale={enUS} theme={customTheme}>
+          <BrowserRouter>
+            <Suspense fallback={loadingFallback}>
+              <Routes>
               {/* Default route */}
               <Route path="/" element={<Navigate to="/chart" replace />} />
               
@@ -102,10 +115,11 @@ function App() {
               
               {/* Default redirect to home */}
               <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-      </ConfigProvider>
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </ConfigProvider>
+      </QueryClientProvider>
     </ErrorBoundary>
   );
 }

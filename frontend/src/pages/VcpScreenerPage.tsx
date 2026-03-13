@@ -9,6 +9,8 @@ import { VcpDetailPanel } from '../components/VcpDetailPanel';
 import { FavoriteButtonContainer } from '../components/FavoriteButton/FavoriteButtonContainer';
 import { VcpEarlyStageFilter } from '../components/VcpEarlyStageFilter';
 import { useVcpEarlyFilter } from '../hooks/useVcpEarlyFilter';
+import { MarketFilter, type MarketFilterValue } from '../components/MarketFilter';
+import { VcpStage } from '../types/vcp';
 import type { VcpScanItem, VcpScanQuery, VcpScanResponse, EarlyStageStock } from '../types/vcp';
 import styles from './VcpScreenerPage.module.css';
 
@@ -24,6 +26,7 @@ export function VcpScreenerPage() {
   const [maxPullbackPct, setMaxPullbackPct] = useState<number | undefined>(10);
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'standard' | 'early'>('standard');
+  const [selectedMarket, setSelectedMarket] = useState<MarketFilterValue>('all');
   const setFavorites = useFavoritesStore(s => s.setFavorites);
   
   // Early stage filter hook
@@ -50,34 +53,38 @@ export function VcpScreenerPage() {
     fetchData();
   }, [fetchData]);
 
+  // Reset expanded row when market filter changes
+  useEffect(() => {
+    setExpandedKey(null);
+  }, [selectedMarket]);
+
   const handleSortChange = (newSortBy: VcpScanQuery['sortBy'], newSortOrder: VcpScanQuery['sortOrder']) => {
     setSortBy(newSortBy);
     setSortOrder(newSortOrder);
   };
 
-  const handleExpand = (expanded: boolean, record: VcpScanItem) => {
+  const handleExpand = (expanded: boolean, record: VcpScanItem | EarlyStageStock) => {
     setExpandedKey(expanded ? record.stockCode : null);
   };
+
+  // Filter data by selected market
+  const filteredStocks = data?.stocks.filter(stock => {
+    if (selectedMarket === 'all') return true;
+    if (selectedMarket === 'A-SHARE') return stock.market === 'SH' || stock.market === 'SZ';
+    return stock.market === selectedMarket;
+  }) ?? [];
 
   const favoriteColumn = {
     title: 'Favorite',
     key: 'favorite',
     width: 60,
     align: 'center' as const,
-    render: (_: unknown, record: VcpScanItem) => (
+    render: (_: unknown, record: VcpScanItem | EarlyStageStock) => (
       <FavoriteButtonContainer stockCode={record.stockCode} stockName={record.stockName} />
     ),
   };
 
-  const earlyFavoriteColumn = {
-    title: 'Favorite',
-    key: 'favorite',
-    width: 60,
-    align: 'center' as const,
-    render: (_: unknown, record: EarlyStageStock) => (
-      <FavoriteButtonContainer stockCode={record.stockCode} stockName={record.stockName} />
-    ),
-  };
+  const earlyFavoriteColumn = favoriteColumn;
 
   return (
     <div className={styles.container}>
@@ -102,15 +109,20 @@ export function VcpScreenerPage() {
             children: (
               <>
                 <div style={{ marginBottom: 16 }}>
-                  <Space align="center" wrap>
-                    <Checkbox 
-                      checked={inPullbackOnly}
-                      onChange={(e) => setInPullbackOnly(e.target.checked)}
-                    >
-                      <span className={styles.checkboxLabel}>
-                        🎯 In Pullback Only
-                      </span>
-                    </Checkbox>
+                  <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                    <Space align="center" wrap>
+                      <Text strong>Market:</Text>
+                      <MarketFilter value={selectedMarket} onChange={setSelectedMarket} />
+                    </Space>
+                    <Space align="center" wrap>
+                      <Checkbox 
+                        checked={inPullbackOnly}
+                        onChange={(e) => setInPullbackOnly(e.target.checked)}
+                      >
+                        <span className={styles.checkboxLabel}>
+                          🎯 In Pullback Only
+                        </span>
+                      </Checkbox>
                     <Space align="center" size="small">
                       <Text>Max Pullback:</Text>
                       <InputNumber
@@ -130,15 +142,20 @@ export function VcpScreenerPage() {
                       </Checkbox>
                     </Space>
                     {data?.scanDate && (
-                      <Text type="secondary">Scan Date: {data.scanDate} | Total: {data.totalCount} stocks</Text>
+                      <Text type="secondary">
+                        Scan Date: {data.scanDate} | 
+                        {selectedMarket !== 'all' ? ` Filtered: ${filteredStocks.length} / ` : ' Total: '}
+                        {data.totalCount} stocks
+                      </Text>
                     )}
+                    </Space>
                   </Space>
                 </div>
 
                 {error && <Alert type="error" message={error} style={{ marginBottom: 16 }} closable />}
 
                 <VcpResultTable
-                  data={data?.stocks ?? []}
+                  data={filteredStocks}
                   loading={loading}
                   sortBy={sortBy}
                   sortOrder={sortOrder}
@@ -189,7 +206,7 @@ export function VcpScreenerPage() {
                       expandedRowKeys={expandedKey ? [expandedKey] : []}
                       onExpand={handleExpand}
                       actionColumn={earlyFavoriteColumn}
-                      highlightStage="contraction"
+                      highlightStage={VcpStage.CONTRACTION}
                       sortByStage={true}
                       showVcpStage={true}
                     />

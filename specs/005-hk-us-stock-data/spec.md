@@ -11,6 +11,10 @@
 
 - Q: How should the system handle changes in index composition over time? → A: Periodic re-import with manual triggering - Admin manually triggers re-fetch when needed, system adds new index members and keeps historical data for removed stocks (no automatic scheduled updates)
 - Q: Where should trading calendar data come from for each market? → A: Market data inference - System infers trading days from actual data returned by APIs, no separate trading calendar maintenance needed
+- Q: If the import process fails partway through, how should the system handle recovery? → A: Resume from checkpoint - Track import progress and skip already-imported stocks, continue from where it stopped
+- Q: How should stock names be displayed in the UI for HK and US stocks? → A: Original language only - Display stock names as provided by data source without translation (HK stocks in Chinese, US stocks in English)
+- Q: When should the system switch from AkShare to Yahoo Finance for a specific stock? → A: Smart hybrid - Try AkShare first for each stock, automatically fall back to Yahoo Finance on failure, and record which source successfully provided data
+- Q: What should happen when both data sources fail for a specific stock? → A: Skip and log - Skip the failed stock, log detailed error information, continue processing remaining stocks, generate comprehensive failure report at completion
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -97,11 +101,15 @@
 ### Edge Cases
 
 - **股票代码格式差异**: 港股代码格式为"00700.HK"（5位数字+.HK后缀），美股代码格式为"AAPL"（纯字母），系统需要正确识别和存储不同格式的股票代码
-- **数据源不可用**: 导入过程中，港股或美股数据源API返回错误（如超时、限流），系统记录失败的股票代码，并在导入完成后提供重试选项
-- **交易日历差异**: 港股、美股和A股有不同的休市日（节假日不同），系统在拉取K线数据时需要识别各市场的交易日，避免请求非交易日数据
+- **数据源不可用**: 导入过程中，AkShare返回错误（如超时、限流），系统自动切换到Yahoo Finance尝试获取该股票数据；如果两个数据源都失败，系统记录失败的股票代码和原因
+- **数据源混合使用**: 导入100只美股时，60只通过AkShare成功导入，40只AkShare失败后通过Yahoo Finance成功导入，系统在source字段正确记录每只股票的实际数据来源
+- **双数据源完全失败**: 导入某只股票时，AkShare和Yahoo Finance都返回错误（如股票代码变更、已退市），系统跳过该股票，在错误日志中记录详细信息（两个数据源的错误消息），继续处理下一只股票，最终在导入报告中列出所有失败股票
+- **交易日历差异**: 港股、美股和A股有不同的休市日（节假日不同），系统通过请求日期范围数据并根据数据源API实际返回的数据推断各市场的交易日，无需预先知道休市日
 - **重复导入**: 用户误操作运行两次导入脚本，系统检测到股票代码已存在，使用upsert逻辑更新基本信息而非创建重复记录
 - **部分导入失败**: 100只美股中有5只因为数据源问题导入失败，系统完成其他95只的导入，并生成失败报告，列出失败的股票代码和原因
+- **导入中断恢复**: 导入进行到第150只股票时网络中断或系统重启，重新运行导入脚本后，系统从检查点恢复，跳过已成功导入的150只股票，继续处理剩余股票
 - **港股美股混合搜索**: 用户在搜索框输入"Apple"，系统同时匹配美股"Apple Inc. (AAPL)"和可能的A股/港股中包含"Apple"的公司（如"苹果供应商"），按相关性排序显示结果
+- **跨语言搜索**: 用户输入中文"苹果"搜索美股，系统能够匹配到"Apple Inc."；用户输入英文"Tencent"搜索港股，系统能够匹配到"腾讯控股"
 - **货币单位显示**: 用户查看港股K线图时，价格轴显示"HKD"单位，美股显示"USD"单位，A股显示"CNY"或"¥"单位，避免混淆
 - **VCP分析参数差异**: 港股和美股的波动性、流动性可能与A股不同，系统在执行VCP分析时使用统一的判断标准（收缩幅度、持续时间等），但需要考虑是否需要根据市场特性调整参数
 - **核心股票定义**: 港股包含恒生指数成分股和恒生科技指数成分股（合计约110只，去重后），美股包含标普500成分股和纳斯达克100成分股（合计约550只，去重后）。系统优先导入这些市场的核心指数成分股。
@@ -113,15 +121,15 @@
 ### Functional Requirements
 
 - **FR-001**: 系统必须支持导入港股核心股票的基本信息（恒生指数和恒生科技指数成分股，约110只），包括股票代码、股票名称、上市日期、所属行业
-- **FR-002**: 系统必须支持导入美股核心股票的基本信息（标普500和纳斯达克100成分股，约550只），包括股票代码、股票名称（英文全称）、上市日期、所属行业
+- **FR-002**: 系统必须支持导入美股核心股票的基本信息（标普500和纳斯达克100成分股，约550只），包括股票代码、股票名称（保持英文原名）、上市日期、所属行业
 - **FR-003**: 系统必须支持港股股票代码格式（如"00700.HK"、"09988.HK"），并能正确识别和存储
 - **FR-004**: 系统必须支持美股股票代码格式（如"AAPL"、"GOOGL"、"TSLA"），并能正确识别和存储
 - **FR-005**: 系统必须为港股股票导入最近10年的历史K线数据，包括日期、开盘价、最高价、最低价、收盘价、成交量、成交额
 - **FR-006**: 系统必须为美股股票导入最近10年的历史K线数据，包括日期、开盘价、最高价、最低价、收盘价、成交量、成交额
 - **FR-007**: 系统必须在Stock数据表的market字段中支持新的市场类型："HK"（港股）和"US"（美股），现有的"SH"和"SZ"保持不变
 - **FR-008**: 系统必须记录每只港股和美股的货币单位（港股为HKD，美股为USD），以便在查询和展示时正确显示货币符号
-- **FR-009**: 系统必须在导入过程中处理数据源错误（如API超时、限流、数据缺失），记录失败的股票代码和原因，并继续处理剩余股票
-- **FR-010**: 系统必须在导入完成后生成统计报告，显示成功导入的股票数量、失败数量、总耗时
+- **FR-009**: 系统必须在导入过程中处理数据源错误（如API超时、限流、数据缺失），当两个数据源都失败时跳过该股票，记录详细错误信息（股票代码、尝试的数据源、错误原因、时间戳），并继续处理剩余股票
+- **FR-010**: 系统必须在导入完成后生成详细统计报告，显示成功导入的股票数量、失败数量、总耗时，以及失败股票的详细清单（包括股票代码、尝试的数据源、失败原因）
 - **FR-011**: 系统必须支持对港股和美股执行增量K线数据更新，只拉取最新缺失的交易日数据
 - **FR-012**: 系统必须在股票列表和搜索结果中区分不同市场的股票，通过市场标识（"HK"、"US"、"SH"、"SZ"）帮助用户识别
 - **FR-013**: 系统必须支持用户通过市场类型筛选股票列表（如只显示港股或只显示美股）
@@ -130,9 +138,13 @@
 - **FR-016**: 系统必须在查询和展示美股数据时，正确显示货币单位为"USD"或"美元"
 - **FR-017**: 系统必须为港股和美股提供与A股相同的功能支持，包括K线图查看、技术指标计算、收藏功能、绘图工具
 - **FR-018**: 系统必须通过请求日期范围内的数据并根据数据源API实际返回的数据来推断各市场的交易日，无需预先维护交易日历
-- **FR-019**: 系统必须实现多数据源策略，优先尝试使用AkShare获取港股和美股数据，如果AkShare不支持或获取失败，则自动切换到备选数据源（如Yahoo Finance）
-- **FR-020**: 系统必须在KLineData记录中标注数据来源（source字段），以便追踪数据质量和来源
+- **FR-019**: 系统必须为每只股票实现智能混合数据源策略，先尝试使用AkShare获取数据，如果失败则自动切换到Yahoo Finance获取该股票的数据
+- **FR-020**: 系统必须在KLineData记录中标注实际使用的数据来源（source字段为"akshare"或"yahoo_finance"），以便追踪每只股票的数据来源和质量
 - **FR-021**: 系统必须支持管理员手动触发指数成分股重新导入，当触发时系统重新获取最新的指数成分股列表，添加新成员并保留已移除股票的历史数据
+- **FR-022**: 系统必须在导入过程中记录进度检查点，包括已成功导入的股票代码列表和当前处理状态
+- **FR-023**: 系统必须支持从中断点恢复导入，重新运行导入脚本时自动跳过已成功导入的股票，继续处理剩余股票
+- **FR-024**: 系统必须按数据源提供的原始语言存储和显示股票名称，港股使用中文名称，美股使用英文名称，不进行翻译转换
+- **FR-025**: 系统必须支持用户使用中英文搜索股票，即使股票名称为英文，用户输入中文关键词（如"苹果"搜索"Apple"）时也能匹配到相关股票
 
 ### Key Entities
 

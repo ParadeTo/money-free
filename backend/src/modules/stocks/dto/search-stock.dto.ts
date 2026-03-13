@@ -8,10 +8,10 @@ export class SearchStockDto {
   @IsString()
   search?: string;
 
-  @ApiPropertyOptional({ description: '市场', enum: ['SH', 'SZ'], example: 'SH' })
+  @ApiPropertyOptional({ description: '市场', enum: ['SH', 'SZ', 'HK', 'US'], example: 'SH' })
   @IsOptional()
-  @IsIn(['SH', 'SZ'])
-  market?: 'SH' | 'SZ';
+  @IsIn(['SH', 'SZ', 'HK', 'US'])
+  market?: 'SH' | 'SZ' | 'HK' | 'US';
 
   @ApiPropertyOptional({ description: '准入状态', enum: ['active', 'inactive'], default: 'active' })
   @IsOptional()

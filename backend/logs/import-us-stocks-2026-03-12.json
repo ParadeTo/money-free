@@ -1,0 +1,15 @@
+{
+  "totalStocks": 49,
+  "successCount": 48,
+  "failedCount": 1,
+  "skippedCount": 0,
+  "startTime": "2026-03-12T13:06:47.376Z",
+  "errors": [
+    {
+      "stockCode": "BRK.B.US",
+      "stockName": "Berkshire Hathaway Inc. Class B",
+      "errors": []
+    }
+  ],
+  "endTime": "2026-03-12T13:09:08.539Z"
+}

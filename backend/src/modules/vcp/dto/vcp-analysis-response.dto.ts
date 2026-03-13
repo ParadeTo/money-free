@@ -149,6 +149,12 @@ export class VcpAnalysisResponseDto {
   @ApiProperty({ description: '股票名称', example: '德业股份' })
   stockName!: string;
 
+  @ApiProperty({ description: '市场', example: 'SH', enum: ['SH', 'SZ', 'HK', 'US'] })
+  market!: string;
+
+  @ApiProperty({ description: '货币', example: 'CNY', enum: ['CNY', 'HKD', 'USD'] })
+  currency!: string;
+
   @ApiProperty({ description: '扫描日期', example: '2026-03-11' })
   scanDate!: string;
 

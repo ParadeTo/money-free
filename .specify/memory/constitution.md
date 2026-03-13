@@ -1,17 +1,17 @@
 <!--
   Sync Impact Report
   =================
-  Version change: 1.0.0 → 1.1.0
-  Modified principles: I. Component-First (Frontend) - Added page design requirements
-  Added sections: Changelog
+  Version change: 1.1.0 → 1.2.0
+  Modified principles: I. Component-First (Frontend) - Added English-only requirement for frontend UI
+  Added sections: N/A
   Removed sections: N/A
   Templates requiring updates:
-    - .specify/templates/plan-template.md: ✅ updated (Constitution Check gates)
+    - .specify/templates/plan-template.md: ✅ no changes needed
     - .specify/templates/spec-template.md: ✅ no changes needed
     - .specify/templates/tasks-template.md: ✅ no changes needed
   Follow-up TODOs: 
-    - When implementing new pages, ensure frontend-design skill is consulted
-    - Update any existing page designs to follow frontend-design guidelines
+    - When implementing new pages, ensure all UI text is in English
+    - Review existing frontend pages for Chinese text and update to English
 -->
 
 # AI Drama Constitution
@@ -35,6 +35,10 @@ Every UI feature MUST start as a standalone, reusable component or module. Compo
   located at `~/.claude/skills/frontend-design`
 - This skill provides design patterns, component structure, and UX best practices
 - Ensures consistency across all pages and adherence to modern design standards
+- **All frontend UI text MUST be in English** (labels, buttons, messages, placeholders, etc.)
+  - Code comments and documentation can be in Chinese
+  - Backend logs and internal messages can be in Chinese
+  - Only user-facing frontend text must be English
 
 **Rationale**: Reusable components reduce duplication, improve consistency, and enable
 incremental delivery. Frontend complexity grows quickly without this discipline.
@@ -110,11 +114,16 @@ server logs. Structured data enables tooling and faster incident resolution.
 - All PRs and reviews MUST verify compliance with these principles.
 - Complexity beyond these rules MUST be justified in plan.md Complexity Tracking table.
 
-**Version**: 1.1.0 | **Ratified**: 2025-02-25 | **Last Amended**: 2025-02-25
+**Version**: 1.2.0 | **Ratified**: 2025-02-25 | **Last Amended**: 2026-03-13
 
 ---
 
 ## Changelog
+
+### v1.2.0 (2026-03-13)
+- Added English-only requirement for frontend UI text
+- Clarified that code comments, documentation, and backend logs can remain in Chinese
+- Only user-facing frontend text (labels, buttons, messages, placeholders) must be in English
 
 ### v1.1.0 (2025-02-25)
 - Added page design requirements to Component-First principle

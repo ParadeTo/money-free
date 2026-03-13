@@ -18,6 +18,12 @@ async function main() {
     // 获取股票基础信息
     const stock = await prisma.stock.findUnique({
       where: { stockCode },
+      select: {
+        stockCode: true,
+        stockName: true,
+        market: true,
+        currency: true,
+      },
     });
 
     if (!stock) {
@@ -25,8 +31,22 @@ async function main() {
       process.exit(1);
     }
 
+    // 货币符号映射
+    const currencySymbol = {
+      CNY: '¥',
+      HKD: 'HK$',
+      USD: '$',
+    }[stock.currency] || '';
+
+    const marketName = {
+      SH: 'A股(沪)',
+      SZ: 'A股(深)',
+      HK: '港股',
+      US: '美股',
+    }[stock.market] || stock.market;
+
     logger.log(`\n${'='.repeat(100)}`);
-    logger.log(`📈 VCP 形态分析 - ${stock.stockName} (${stockCode})`);
+    logger.log(`📈 VCP 形态分析 - ${stock.stockName} (${stockCode}) [${marketName}]`);
     logger.log(`${'='.repeat(100)}\n`);
 
     // 获取最新的VCP扫描结果
@@ -44,7 +64,7 @@ async function main() {
       logger.log(`  ✓ RS评分: ${vcpResult.rsRating}`);
       logger.log(`  ✓ 处于回调: ${vcpResult.inPullback ? '是' : '否'}`);
       logger.log(`  ✓ 回调次数: ${vcpResult.pullbackCount}`);
-      logger.log(`  ✓ 最新价: ${vcpResult.latestPrice.toFixed(2)}`);
+      logger.log(`  ✓ 最新价: ${currencySymbol}${vcpResult.latestPrice.toFixed(2)}`);
       logger.log(`  ✓ 涨跌幅: ${vcpResult.priceChangePct.toFixed(2)}%`);
       logger.log(`  ✓ 距52周高: ${vcpResult.distFrom52WeekHigh.toFixed(2)}%`);
       logger.log(`  ✓ 距52周低: ${vcpResult.distFrom52WeekLow.toFixed(2)}%\n`);
@@ -90,8 +110,8 @@ async function main() {
       analysis.contractions.forEach((contraction, i) => {
         logger.log(`  [收缩 ${i + 1}]`);
         logger.log(`    期间: ${contraction.swingHighDate} → ${contraction.swingLowDate}`);
-        logger.log(`    高点: ${contraction.swingHighPrice.toFixed(2)}`);
-        logger.log(`    低点: ${contraction.swingLowPrice.toFixed(2)}`);
+        logger.log(`    高点: ${currencySymbol}${contraction.swingHighPrice.toFixed(2)}`);
+        logger.log(`    低点: ${currencySymbol}${contraction.swingLowPrice.toFixed(2)}`);
         logger.log(`    幅度: ${contraction.depthPct.toFixed(2)}%`);
         logger.log(`    持续: ${contraction.durationDays} 天`);
         logger.log(`    平均成交量: ${(contraction.avgVolume / 100).toFixed(0)} 手\n`);
@@ -115,8 +135,8 @@ async function main() {
         
         logger.log(`  [回调 ${i + 1}] ${isActive ? '🔴 ' + status : status}`);
         logger.log(`    期间: ${pullback.highDate} → ${pullback.lowDate}`);
-        logger.log(`    高点: ${pullback.highPrice.toFixed(2)}`);
-        logger.log(`    低点: ${pullback.lowPrice.toFixed(2)}`);
+        logger.log(`    高点: ${currencySymbol}${pullback.highPrice.toFixed(2)}`);
+        logger.log(`    低点: ${currencySymbol}${pullback.lowPrice.toFixed(2)}`);
         logger.log(`    幅度: ${pullback.pullbackPct.toFixed(2)}%`);
         logger.log(`    持续: ${pullback.durationDays} 天`);
         logger.log(`    上升趋势中: ${pullback.isInUptrend ? '是' : '否'}`);
@@ -132,12 +152,12 @@ async function main() {
 
       logger.log(`${'─'.repeat(100)}`);
       logger.log(`🎯 最新回调分析:\n`);
-      logger.log(`  回调开始: ${lastPullback.highDate} @ ${lastPullback.highPrice.toFixed(2)}`);
-      logger.log(`  回调最低: ${lastPullback.lowDate} @ ${lastPullback.lowPrice.toFixed(2)}`);
+      logger.log(`  回调开始: ${lastPullback.highDate} @ ${currencySymbol}${lastPullback.highPrice.toFixed(2)}`);
+      logger.log(`  回调最低: ${lastPullback.lowDate} @ ${currencySymbol}${lastPullback.lowPrice.toFixed(2)}`);
       logger.log(`  回调幅度: ${lastPullback.pullbackPct.toFixed(2)}%`);
       logger.log(`  回调天数: ${lastPullback.durationDays} 天`);
       logger.log(`  距最低点: ${daysSinceLow} 天`);
-      logger.log(`  当前价格: ${lastBar.close.toFixed(2)}`);
+      logger.log(`  当前价格: ${currencySymbol}${lastBar.close.toFixed(2)}`);
       
       const recoveryPct = ((lastBar.close - lastPullback.lowPrice) / lastPullback.lowPrice * 100);
       logger.log(`  从最低点反弹: ${recoveryPct.toFixed(2)}%`);

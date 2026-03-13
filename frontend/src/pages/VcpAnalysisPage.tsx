@@ -12,7 +12,9 @@ import {
   formatPrice, 
   formatScanDate, 
   formatPullbackStatus,
+  formatPercentWithSign,
 } from '../utils/formatters';
+import { CURRENCY_SYMBOLS, MARKET_LABELS } from '../types/stock';
 import styles from './VcpAnalysisPage.module.css';
 
 const { Title, Text } = Typography;
@@ -61,7 +63,9 @@ export function VcpAnalysisPage() {
     );
   }
 
-  const { summary, hasVcp, isExpired, cached, scanDate } = analysis;
+  const { summary, hasVcp, isExpired, cached, scanDate, market, currency } = analysis;
+  const currencySymbol = CURRENCY_SYMBOLS[currency] || '';
+  const marketLabel = MARKET_LABELS[market] || market;
 
   return (
     <div className={styles.pageContainer}>
@@ -78,7 +82,8 @@ export function VcpAnalysisPage() {
             <Tag color={hasVcp ? 'success' : 'default'} icon={hasVcp ? <CheckCircleOutlined /> : <CloseCircleOutlined />}>
               VCP Pattern: {hasVcp ? 'Valid' : 'Invalid'}
             </Tag>
-            {cached && <Tag color="blue">Source: Cached</Tag>}
+            <Tag color="blue">{marketLabel}</Tag>
+            {cached && <Tag color="cyan">Source: Cached</Tag>}
           </Space>
         </div>
         <div className={styles.headerRight}>
@@ -101,9 +106,9 @@ export function VcpAnalysisPage() {
       <Card title="Summary" className={styles.summaryCard}>
         <Descriptions column={{ xs: 1, sm: 2, md: 3 }} bordered>
           <Descriptions.Item label="Latest Price">
-            ¥{formatPrice(summary.latestPrice)}
+            {currencySymbol}{formatPrice(summary.latestPrice)}
             <Text type={summary.priceChangePct >= 0 ? 'success' : 'danger'} className={styles.changeText}>
-              ({formatPercent(summary.priceChangePct, true)})
+              ({formatPercentWithSign(summary.priceChangePct)})
             </Text>
           </Descriptions.Item>
           <Descriptions.Item label="Contractions">
@@ -131,10 +136,10 @@ export function VcpAnalysisPage() {
             {summary.pullbackCount} times
           </Descriptions.Item>
           <Descriptions.Item label="From 52W High">
-            {formatPercent(summary.distFrom52WeekHigh, true)}
+            {formatPercentWithSign(summary.distFrom52WeekHigh)}
           </Descriptions.Item>
           <Descriptions.Item label="From 52W Low">
-            {formatPercent(summary.distFrom52WeekLow, true)}
+            {formatPercentWithSign(summary.distFrom52WeekLow)}
           </Descriptions.Item>
         </Descriptions>
       </Card>

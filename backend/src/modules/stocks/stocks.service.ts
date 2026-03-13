@@ -25,6 +25,7 @@ export class StocksService {
         { stockCode: { contains: search } },
         { stockName: { contains: search } },
         { stockCode: { startsWith: search } },
+        { searchKeywords: { contains: search } },
       ];
     }
 

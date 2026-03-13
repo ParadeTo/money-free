@@ -2,7 +2,7 @@
 
 generator client {
   provider      = "prisma-client-js"
-  binaryTargets = ["native", "darwin-arm64", "darwin"]
+  binaryTargets = ["native"]
 }
 
 datasource db {
@@ -17,13 +17,15 @@ datasource db {
 model Stock {
   stockCode       String   @id @map("stock_code")
   stockName       String   @map("stock_name")
-  market          String // 'SH' | 'SZ'
+  market          String // 'SH' | 'SZ' | 'HK' | 'US'
+  currency        String   @default("CNY") // 'CNY' | 'HKD' | 'USD'
+  searchKeywords  String?  @map("search_keywords") // JSON格式: {"zh": ["关键词"], "en": ["keyword"]}
   industry        String?
   listDate        DateTime @map("list_date")
   marketCap       Float?   @map("market_cap") // 市值(亿元)
   avgTurnover     Float?   @map("avg_turnover") // 日均成交额(万元)
   admissionStatus String   @default("active") @map("admission_status") // 'active' | 'inactive'
-  indexCode       String?  @map("index_code") // 'HS300' | 'ZZ500' | null
+  indexCode       String?  @map("index_code") // 'HS300' | 'ZZ500' | 'HSI' | 'HSTECH' | 'SP500' | 'NDX100' | null
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
@@ -37,6 +39,7 @@ model Stock {
   @@index([admissionStatus])
   @@index([market])
   @@index([indexCode])
+  @@index([market, admissionStatus])
   @@map("stocks")
 }
 
@@ -55,7 +58,7 @@ model KLineData {
   close     Float
   volume    Float // 成交量(手)
   amount    Float // 成交额(元)
-  source    String   @default("tushare") // 'tushare' | 'akshare'
+  source    String   @default("tushare") // 'tushare' | 'akshare' | 'yahoo_finance'
   createdAt DateTime @default(now()) @map("created_at")
 
   // 关系
@@ -269,4 +272,25 @@ model VcpScanResult {
   @@index([inPullback])
   @@index([trendTemplatePass, scanDate])
   @@map("vcp_scan_results")
+}
+
+// ============================================================================
+// 10. 导入检查点 (Import Checkpoint)
+// ============================================================================
+
+model ImportCheckpoint {
+  taskId         String    @id @map("task_id")
+  market         String // 'HK' | 'US'
+  importType     String    @map("import_type") // 'full' | 'incremental' | 'index_update'
+  totalStocks    Int       @map("total_stocks")
+  importedStocks Int       @default(0) @map("imported_stocks")
+  failedStocks   String?   @map("failed_stocks") // JSON数组: [{"stockCode": "0700.HK", "error": "API timeout"}]
+  status         String // 'running' | 'completed' | 'failed' | 'paused'
+  startTime      DateTime  @map("start_time")
+  lastUpdateTime DateTime  @map("last_update_time")
+  endTime        DateTime? @map("end_time")
+
+  @@index([market, status])
+  @@index([startTime])
+  @@map("import_checkpoints")
 }

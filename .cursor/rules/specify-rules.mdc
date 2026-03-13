@@ -77,7 +77,6 @@ npm run dev            # Start development server
 ## Recent Changes
 - 004-stock-vcp-analysis: Added TypeScript 5.x, Node.js 20.x (backend), Node.js 18+ (frontend)
 - 2026-03-11: Updated Node.js requirement to 20.x (CRITICAL)
-- 2026-03-11: Added VCP lastPullback display in frontend table
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

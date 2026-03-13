@@ -15,13 +15,19 @@ export class VcpScannerService {
     private readonly vcpAnalyzer: VcpAnalyzerService,
   ) { }
 
-  async scanAllStocks(scanDate?: Date): Promise<{ passed: number; skipped: number; failed: number; total: number }> {
+  async scanAllStocks(scanDate?: Date, markets?: string[]): Promise<{ passed: number; skipped: number; failed: number; total: number }> {
     const date = scanDate || new Date();
     const dateStr = date.toISOString().split('T')[0];
-    this.logger.log(`Starting VCP scan for ${dateStr}`);
+    const marketFilter = markets && markets.length > 0 ? ` (${markets.join(', ')})` : '';
+    this.logger.log(`Starting VCP scan for ${dateStr}${marketFilter}`);
+
+    const whereClause: any = { admissionStatus: 'active' };
+    if (markets && markets.length > 0) {
+      whereClause.market = { in: markets };
+    }
 
     const stocks = await this.prisma.stock.findMany({
-      where: { admissionStatus: 'active' },
+      where: whereClause,
       select: { stockCode: true, stockName: true },
     });
 
