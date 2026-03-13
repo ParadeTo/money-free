@@ -12,12 +12,12 @@ async function main() {
     const prisma = app.get(PrismaService);
     const vcpAnalyzer = app.get(VcpAnalyzerService);
 
-    // 从命令行参数获取股票代码，默认为德业股份
-    const stockCode = process.argv[2] || '605117';
+    // 从命令行参数获取股票代码或名称，默认为德业股份
+    const input = process.argv[2] || '605117';
 
-    // 获取股票基础信息
-    const stock = await prisma.stock.findUnique({
-      where: { stockCode },
+    // 尝试查找股票（支持代码或名称）
+    let stock = await prisma.stock.findUnique({
+      where: { stockCode: input },
       select: {
         stockCode: true,
         stockName: true,
@@ -26,8 +26,23 @@ async function main() {
       },
     });
 
+    // 如果通过代码找不到，尝试通过名称查找
     if (!stock) {
-      logger.error(`Stock ${stockCode} not found`);
+      stock = await prisma.stock.findFirst({
+        where: { 
+          stockName: { contains: input }
+        },
+        select: {
+          stockCode: true,
+          stockName: true,
+          market: true,
+          currency: true,
+        },
+      });
+    }
+
+    if (!stock) {
+      logger.error(`Stock "${input}" not found (searched by code and name)`);
       process.exit(1);
     }
 
@@ -46,12 +61,12 @@ async function main() {
     }[stock.market] || stock.market;
 
     logger.log(`\n${'='.repeat(100)}`);
-    logger.log(`📈 VCP 形态分析 - ${stock.stockName} (${stockCode}) [${marketName}]`);
+    logger.log(`📈 VCP 形态分析 - ${stock.stockName} (${stock.stockCode}) [${marketName}]`);
     logger.log(`${'='.repeat(100)}\n`);
 
     // 获取最新的VCP扫描结果
     const vcpResult = await prisma.vcpScanResult.findFirst({
-      where: { stockCode },
+      where: { stockCode: stock.stockCode },
       orderBy: { scanDate: 'desc' },
     });
 
@@ -72,7 +87,7 @@ async function main() {
 
     // 获取K线数据
     const klines = await prisma.kLineData.findMany({
-      where: { stockCode, period: 'daily' },
+      where: { stockCode: stock.stockCode, period: 'daily' },
       orderBy: { date: 'desc' },
       take: 300,
       select: { date: true, open: true, high: true, low: true, close: true, volume: true },
