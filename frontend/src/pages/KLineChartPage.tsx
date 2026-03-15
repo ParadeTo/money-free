@@ -1,26 +1,22 @@
-import { useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import { Spin, Alert } from 'antd';
-import { useState } from 'react';
 import { StockSearch } from '../components/StockSearch';
 import { KLineChart } from '../components/KLineChart';
 import { ChartToolbar } from '../components/ChartToolbar';
 import { ChartDataDisplay } from '../components/ChartDataDisplay';
 import { IndicatorValueDisplay } from '../components/IndicatorValueDisplay';
-import { VcpIndicator } from '../components/VcpIndicator';
-import { VcpGenerateButton } from '../components/VcpGenerateButton';
 import { useKLineData } from '../hooks/useKLineData';
 import { useIndicators } from '../hooks/useIndicators';
 import { useVcpDetail } from '../hooks/useVcpDetail';
 import { useChartStore } from '../store/chart.store';
+import { convertVcpDetailToAnalysis } from '../utils/vcpOverlayHelpers';
 import type { Stock, KLineData } from '../types';
 import styles from './KLineChartPage.module.css';
 
 export function KLineChartPage() {
   const { stockCode } = useParams<{ stockCode?: string }>();
-  const navigate = useNavigate();
   const [currentData, setCurrentData] = useState<KLineData | undefined>();
-  const [isGeneratingVcp, setIsGeneratingVcp] = useState(false);
 
   const {
     period,
@@ -71,19 +67,11 @@ export function KLineChartPage() {
     setCurrentData(data || (klineData.length > 0 ? klineData[klineData.length - 1] : undefined));
   };
 
-  const handleGenerateVcp = () => {
-    if (!stockCode) return;
-    
-    setIsGeneratingVcp(true);
-    
-    // Open VCP analysis page in new tab
-    window.open(`/vcp-analysis/${stockCode}`, '_blank');
-    
-    // Reset loading state after a short delay
-    setTimeout(() => {
-      setIsGeneratingVcp(false);
-    }, 500);
-  };
+  // Convert VcpDetailResponse to VcpAnalysis format for chart overlay
+  const vcpAnalysisData = useMemo(() => {
+    if (!vcpData) return null;
+    return convertVcpDetailToAnalysis(vcpData);
+  }, [vcpData]);
 
   // Set default display to latest data when data is loaded
   useEffect(() => {
@@ -145,18 +133,6 @@ export function KLineChartPage() {
             period={period}
             showMA={showMA}
           />
-          <div className={styles.vcpSection}>
-            <VcpIndicator
-              data={vcpData}
-              loading={vcpLoading}
-              error={vcpError}
-            />
-            <VcpGenerateButton
-              stockCode={stockCode}
-              onClick={handleGenerateVcp}
-              loading={isGeneratingVcp}
-            />
-          </div>
           <div className={styles.chartWrapper}>
             <KLineChart
               data={klineData}
@@ -167,6 +143,7 @@ export function KLineChartPage() {
               subChart2Indicator={subChart2Indicator}
               week52High={markers?.high52Week}
               week52Low={markers?.low52Week}
+              vcpData={vcpAnalysisData}
               onDataHover={handleDataHover}
             />
           </div>

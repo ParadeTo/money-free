@@ -1,0 +1,65 @@
+/**
+ * VCP Tooltip Styles
+ */
+
+.tooltip {
+  position: fixed;
+  z-index: 10000;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid #e5e7eb;
+  border-left: 3px solid #2563eb;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-size: 12px;
+  line-height: 1.5;
+  pointer-events: none;
+  min-width: 260px;
+  backdrop-filter: blur(8px);
+}
+
+.title {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: #374151;
+}
+
+.label {
+  font-weight: 500;
+  color: #6b7280;
+  min-width: 70px;
+}
+
+.value {
+  font-weight: 400;
+  color: #111827;
+  text-align: right;
+  flex: 1;
+}
+
+.divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 6px 0;
+}
+
+.additionalRow {
+  font-size: 11px;
+  color: #6b7280;
+  padding: 2px 0;
+}

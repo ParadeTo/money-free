@@ -223,3 +223,178 @@ export const DEFAULT_FILTER_CONDITIONS: FilterConditions = {
   contractionCountMin: 3,
   contractionCountMax: 4,
 };
+
+// ============================================================================
+// VCP Overlay Layer Types (for Chart Visualization)
+// ============================================================================
+
+/**
+ * Point coordinate (date + price)
+ */
+export interface VcpPoint {
+  /** Date (ISO string) */
+  date: string;
+  /** Price */
+  price: number;
+}
+
+/**
+ * VCP line visualization data (unified format for contractions and pullbacks)
+ */
+export interface VcpLineData {
+  /** Unique identifier */
+  id: string;
+  
+  /** Line type */
+  type: 'contraction' | 'pullback';
+  
+  /** Index number (C1, C2... or P1, P2...) */
+  index: number;
+  
+  /** Start point (high point) */
+  startPoint: VcpPoint;
+  
+  /** End point (low point) */
+  endPoint: VcpPoint;
+  
+  /** Depth percentage (positive number) */
+  depthPercent: number;
+  
+  /** Duration in days */
+  durationDays: number;
+  
+  /** Average volume */
+  avgVolume: number;
+  
+  /** Status (for pullback only) */
+  status?: 'active' | 'completed';
+  
+  /** Pullback specific: days since low */
+  daysSinceLow?: number;
+  
+  /** Pullback specific: is in uptrend */
+  isInUptrend?: boolean;
+}
+
+/**
+ * VCP line visual style
+ */
+export interface VcpLineStyle {
+  /** Line color (hex) */
+  color: string;
+  
+  /** Line width (pixels) */
+  lineWidth: number;
+  
+  /** Dash pattern [solid length, gap length] */
+  dashArray: [number, number];
+  
+  /** Opacity (0-1) */
+  opacity: number;
+}
+
+/**
+ * Predefined style constants
+ */
+export const VCP_LINE_STYLES: Record<string, VcpLineStyle> = {
+  contraction: {
+    color: '#2563eb',     // Deep cyan-blue
+    lineWidth: 2,
+    dashArray: [8, 4],    // 8px solid, 4px gap
+    opacity: 0.8,
+  },
+  pullbackCompleted: {
+    color: '#f59e0b',     // Amber-orange
+    lineWidth: 2,
+    dashArray: [5, 5],    // 5px solid, 5px gap
+    opacity: 0.7,
+  },
+  pullbackActive: {
+    color: '#fb923c',     // Bright orange
+    lineWidth: 2,
+    dashArray: [5, 5],
+    opacity: 0.9,
+  },
+};
+
+/**
+ * VCP marker point (swing high/low dots)
+ */
+export interface VcpMarkerData {
+  /** Unique identifier */
+  id: string;
+  
+  /** Marker type */
+  type: 'swing-high' | 'swing-low';
+  
+  /** Associated line ID */
+  lineId: string;
+  
+  /** Position */
+  point: VcpPoint;
+  
+  /** Marker color (inherited from line) */
+  color: string;
+  
+  /** Radius (pixels) */
+  radius: number;
+}
+
+/**
+ * VCP line label (displayed at midpoint)
+ */
+export interface VcpLabelData {
+  /** Unique identifier */
+  id: string;
+  
+  /** Associated line ID */
+  lineId: string;
+  
+  /** Display text (e.g., "C1: 7.5%") */
+  text: string;
+  
+  /** Label position (line midpoint) */
+  position: VcpPoint;
+  
+  /** Label color (inherited from line) */
+  color: string;
+  
+  /** Font size */
+  fontSize: number;
+  
+  /** Semi-transparent background */
+  backgroundColor: string;
+}
+
+/**
+ * VCP Tooltip content structure
+ */
+export interface VcpTooltipContent {
+  title: string;                  // "Contraction #1" or "Pullback #2"
+  depth: string;                  // "Depth: 7.43%"
+  duration: string;               // "Duration: 25 days"
+  avgVolume: string;              // "Avg Volume: 12.5M"
+  dateRange: string;              // "2024-01-15 → 2024-02-10"
+  priceRange: string;             // "¥45.20 → ¥41.85"
+  additionalInfo?: string[];      // Pullback specific information
+}
+
+/**
+ * VCP Tooltip data
+ */
+export interface VcpTooltipData {
+  /** Associated line ID */
+  lineId: string;
+  
+  /** Line type */
+  lineType: 'contraction' | 'pullback';
+  
+  /** Display content */
+  content: VcpTooltipContent;
+  
+  /** Tooltip position */
+  position: { x: number; y: number };
+  
+  /** Is visible */
+  visible: boolean;
+}

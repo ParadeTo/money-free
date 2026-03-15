@@ -11,6 +11,8 @@ Last updated: 2026-03-11
 ## Active Technologies
 - TypeScript 5.x, Node.js 20.x (backend), Node.js 18+ (frontend) (004-stock-vcp-analysis)
 - SQLite (已存在 VcpScanResult, KLineData, Stock 表) (004-stock-vcp-analysis)
+- TypeScript 5.2 (strict mode enabled) (006-vcp-kline-overlay)
+- N/A (使用现有 VCP API 数据，无新存储需求) (006-vcp-kline-overlay)
 
 ### Backend
 - **Node.js 20.x** (REQUIRED - see backend-environment.mdc)
@@ -75,6 +77,7 @@ npm run dev            # Start development server
 - Use NestJS decorators and dependency injection in backend
 
 ## Recent Changes
+- 006-vcp-kline-overlay: Added TypeScript 5.2 (strict mode enabled)
 - 004-stock-vcp-analysis: Added TypeScript 5.x, Node.js 20.x (backend), Node.js 18+ (frontend)
 - 2026-03-11: Updated Node.js requirement to 20.x (CRITICAL)
 

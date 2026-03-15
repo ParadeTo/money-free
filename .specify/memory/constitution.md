@@ -19,7 +19,7 @@
 ## Core Principles
 
 ### 使用中文
-*important* 使用中文！！！！
+*important*：全程都请使用中文！！！！
 
 ### I. Component-First (Frontend)
 
@@ -127,4 +127,4 @@ server logs. Structured data enables tooling and faster incident resolution.
 
 ### v1.1.0 (2025-02-25)
 - Added page design requirements to Component-First principle
-- Mandated use of `~/.claude/skills/frontend-design` for UI design work
+- 重要！！！！：Mandated use of `~/.claude/skills/frontend-design` for UI design work

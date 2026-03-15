@@ -1,0 +1,54 @@
+/**
+ * VCP Overlay Layer Styles
+ * T021: Minimal styles (most styling done via Canvas API)
+ */
+
+.vcpOverlayLayer {
+  /* This component renders via Canvas, so minimal CSS needed */
+  position: relative;
+  pointer-events: none; /* Allow chart interactions to pass through */
+}
+
+/* Tooltip styles (for future tooltip component) */
+.vcpTooltip {
+  position: absolute;
+  z-index: 1000;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  font-size: 12px;
+  line-height: 1.5;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.vcpTooltip__title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #1f2937;
+}
+
+.vcpTooltip__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: #6b7280;
+}
+
+.vcpTooltip__label {
+  font-weight: 500;
+}
+
+.vcpTooltip__value {
+  font-weight: 400;
+}
+
+.vcpTooltip__additional {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid #e5e7eb;
+  font-size: 11px;
+  color: #9ca3af;
+}

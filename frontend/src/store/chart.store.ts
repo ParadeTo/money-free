@@ -17,6 +17,8 @@ interface ChartState {
   subChart1Indicator: SubChartIndicator;
   subChart2Indicator: VolumeChartIndicator;
   activeTool: DrawingTool;
+  vcpOverlayVisible: boolean;
+  hoveredVcpLineId: string | null;
   
   // Actions
   setStockCode: (code: string) => void;
@@ -28,6 +30,8 @@ interface ChartState {
   setSubChart1Indicator: (indicator: SubChartIndicator) => void;
   setSubChart2Indicator: (indicator: VolumeChartIndicator) => void;
   setActiveTool: (tool: DrawingTool) => void;
+  toggleVcpOverlay: () => void;
+  setHoveredVcpLine: (lineId: string | null) => void;
   reset: () => void;
 }
 
@@ -40,6 +44,8 @@ const initialState = {
   subChart1Indicator: 'rsi' as SubChartIndicator,
   subChart2Indicator: 'volume' as VolumeChartIndicator,
   activeTool: 'none' as DrawingTool,
+  vcpOverlayVisible: true,
+  hoveredVcpLineId: null,
 };
 
 export const useChartStore = create<ChartState>()(
@@ -70,6 +76,11 @@ export const useChartStore = create<ChartState>()(
 
       setActiveTool: (tool) => set({ activeTool: tool }),
 
+      toggleVcpOverlay: () =>
+        set((state) => ({ vcpOverlayVisible: !state.vcpOverlayVisible })),
+
+      setHoveredVcpLine: (lineId) => set({ hoveredVcpLineId: lineId }),
+
       reset: () => set(initialState),
     }),
     {
@@ -81,6 +92,7 @@ export const useChartStore = create<ChartState>()(
         showMA: state.showMA,
         subChart1Indicator: state.subChart1Indicator,
         subChart2Indicator: state.subChart2Indicator,
+        vcpOverlayVisible: state.vcpOverlayVisible,
       }),
     }
   )

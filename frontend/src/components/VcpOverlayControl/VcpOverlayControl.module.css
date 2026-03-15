@@ -1,0 +1,47 @@
+/**
+ * VcpOverlayControl Styles
+ * T040
+ */
+
+.control {
+  position: absolute;
+  z-index: 100;
+  padding: 8px;
+}
+
+.control.top-right {
+  top: 0;
+  right: 0;
+}
+
+.control.top-left {
+  top: 0;
+  left: 0;
+}
+
+.control.bottom-right {
+  bottom: 0;
+  right: 0;
+}
+
+.control.bottom-left {
+  bottom: 0;
+  left: 0;
+}
+
+.toggleButton {
+  min-width: 80px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggleButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.toggleButton[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

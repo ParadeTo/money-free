@@ -1,4 +1,5 @@
 import { Radio, Space, Button, Segmented } from 'antd';
+import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 import { useChartStore } from '../../store/chart.store';
 import type { TimeRange, Period, SubChartIndicator, VolumeChartIndicator } from '../../store/chart.store';
 import styles from './ChartToolbar.module.css';
@@ -10,11 +11,13 @@ export function ChartToolbar() {
     showMA,
     subChart1Indicator,
     subChart2Indicator,
+    vcpOverlayVisible,
     setPeriod,
     setTimeRange,
     setShowMA,
     setSubChart1Indicator,
     setSubChart2Indicator,
+    toggleVcpOverlay,
   } = useChartStore();
 
   const timeRangeOptions = [
@@ -86,6 +89,15 @@ export function ChartToolbar() {
             onClick={() => setShowMA(!showMA)}
           >
             MA
+          </Button>
+          <Button
+            type={vcpOverlayVisible ? 'primary' : 'default'}
+            size="small"
+            icon={vcpOverlayVisible ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+            onClick={toggleVcpOverlay}
+            data-testid="vcp-overlay-toggle"
+          >
+            VCP
           </Button>
         </Space>
       </div>

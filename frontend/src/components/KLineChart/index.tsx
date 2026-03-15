@@ -8,7 +8,10 @@ import {
   Time 
 } from 'lightweight-charts';
 import type { KLineData, TechnicalIndicator } from '../../types';
+import type { VcpAnalysis } from '../../types/vcp';
 import type { Period, SubChartIndicator, VolumeChartIndicator } from '../../store/chart.store';
+import { VcpOverlayLayer } from './VcpOverlayLayer';
+import { useChartStore } from '../../store/chart.store';
 import styles from './KLineChart.module.css';
 
 interface KLineChartProps {
@@ -20,6 +23,7 @@ interface KLineChartProps {
   subChart2Indicator: VolumeChartIndicator;
   week52High?: number;
   week52Low?: number;
+  vcpData?: VcpAnalysis | null;
   onDataHover?: (data: KLineData | undefined) => void;
 }
 
@@ -37,9 +41,16 @@ export function KLineChart({
   subChart2Indicator,
   week52High,
   week52Low,
+  vcpData,
   onDataHover,
 }: KLineChartProps) {
+  const vcpOverlayVisible = useChartStore((state) => state.vcpOverlayVisible);
   const mainChartRef = useRef<HTMLDivElement>(null);
+  // Use a ref to hold the latest onDataHover to avoid chart recreation on every callback change
+  const onDataHoverRef = useRef(onDataHover);
+  useEffect(() => {
+    onDataHoverRef.current = onDataHover;
+  });
   const subChart1Ref = useRef<HTMLDivElement>(null);
   const subChart2Ref = useRef<HTMLDivElement>(null);
   
@@ -52,6 +63,7 @@ export function KLineChart({
   const subChart2SeriesRef = useRef<ISeriesApi<any> | null>(null);
   
   const [subChartValues, setSubChartValues] = useState<SubChartValues>({});
+  const [chartReady, setChartReady] = useState(false);
 
   useEffect(() => {
     if (!mainChartRef.current || data.length === 0) {
@@ -195,6 +207,7 @@ export function KLineChart({
 
     candlestickSeriesRef.current = candlestickSeries;
     candlestickSeries.setData(chartData);
+    setChartReady(true);
 
     // 设置合理的初始可见范围（最近 60 个交易日）
     const visibleLogicalRange = {
@@ -346,15 +359,15 @@ export function KLineChart({
       }
 
       // 触发数据悬停回调
-      if (onDataHover) {
+      if (onDataHoverRef.current) {
         if (!param.time) {
-          onDataHover(undefined);
+          onDataHoverRef.current(undefined);
         } else {
           const timeStr = param.time as string;
           const hoveredData = data.find(
             (item) => new Date(item.date).toISOString().split('T')[0] === timeStr
           );
-          onDataHover(hoveredData);
+          onDataHoverRef.current(hoveredData);
         }
       }
     });
@@ -373,6 +386,7 @@ export function KLineChart({
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      setChartReady(false);
       [mainChartInstanceRef, subChart1InstanceRef, subChart2InstanceRef].forEach(ref => {
         if (ref.current) {
           try {
@@ -385,7 +399,7 @@ export function KLineChart({
       });
       candlestickSeriesRef.current = null;
     };
-  }, [data, indicators, period, showMA, subChart1Indicator, subChart2Indicator, week52High, week52Low, onDataHover]);
+  }, [data, indicators, period, showMA, subChart1Indicator, subChart2Indicator, week52High, week52Low]);
 
   return (
     <div className={styles.container}>
@@ -419,6 +433,14 @@ export function KLineChart({
             </div>
           )}
         </div>
+      )}
+      {chartReady && mainChartInstanceRef.current && candlestickSeriesRef.current && vcpData && (
+        <VcpOverlayLayer
+          vcpData={vcpData}
+          chart={mainChartInstanceRef.current}
+          series={candlestickSeriesRef.current}
+          visible={vcpOverlayVisible}
+        />
       )}
     </div>
   );
