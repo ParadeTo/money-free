@@ -13,6 +13,8 @@ Last updated: 2026-03-11
 - SQLite (已存在 VcpScanResult, KLineData, Stock 表) (004-stock-vcp-analysis)
 - TypeScript 5.2 (strict mode enabled) (006-vcp-kline-overlay)
 - N/A (使用现有 VCP API 数据，无新存储需求) (006-vcp-kline-overlay)
+- TypeScript 5.x, Node.js 20.x (backend required) + NestJS, Prisma ORM, SQLite 3.40+, p-limit, date-fns (007-data-fetch-optimization)
+- SQLite (单文件数据库, WAL模式, 现有表: Stock, KLineData, TechnicalIndicator, UpdateLog, ImportCheckpoint) (007-data-fetch-optimization)
 
 ### Backend
 - **Node.js 20.x** (REQUIRED - see backend-environment.mdc)
@@ -77,9 +79,9 @@ npm run dev            # Start development server
 - Use NestJS decorators and dependency injection in backend
 
 ## Recent Changes
+- 007-data-fetch-optimization: Added TypeScript 5.x, Node.js 20.x (backend required) + NestJS, Prisma ORM, SQLite 3.40+, p-limit, date-fns
 - 006-vcp-kline-overlay: Added TypeScript 5.2 (strict mode enabled)
 - 004-stock-vcp-analysis: Added TypeScript 5.x, Node.js 20.x (backend), Node.js 18+ (frontend)
-- 2026-03-11: Updated Node.js requirement to 20.x (CRITICAL)
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

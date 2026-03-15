@@ -1,10 +1,11 @@
-import { Table, Tag, Empty, Typography, Tooltip } from 'antd';
+import { Table, Tag, Empty, Typography, Tooltip, Button } from 'antd';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import type { VcpScanItem, VcpScanQuery, EarlyStageStock, VcpStage } from '../../types/vcp';
 import { CURRENCY_SYMBOLS, MARKET_LABELS } from '../../types/stock';
+import { LineChartOutlined } from '@ant-design/icons';
 import styles from './VcpResultTable.module.css';
 
-const { Text } = Typography;
+const { Text, Link } = Typography;
 
 interface VcpResultTableProps {
   data: VcpScanItem[] | EarlyStageStock[];
@@ -52,19 +53,53 @@ export function VcpResultTable({
     }
   };
 
+  const handleViewChart = (stockCode: string) => {
+    window.open(`/chart/${stockCode}`, '_blank');
+  };
+
   const columns: ColumnsType<VcpScanItem | EarlyStageStock> = [
     {
       title: 'Stock Code',
       dataIndex: 'stockCode',
       key: 'stockCode',
       width: 110,
-      render: (code: string) => <Text strong>{code}</Text>,
+      render: (code: string) => (
+        <Link 
+          strong 
+          onClick={(e) => {
+            e.stopPropagation();
+            handleViewChart(code);
+          }}
+          style={{ cursor: 'pointer' }}
+        >
+          {code}
+        </Link>
+      ),
     },
     {
       title: 'Name',
       dataIndex: 'stockName',
       key: 'stockName',
       width: 100,
+    },
+    {
+      title: 'Chart',
+      key: 'viewChart',
+      width: 70,
+      align: 'center',
+      render: (_: unknown, record: VcpScanItem | EarlyStageStock) => (
+        <Tooltip title="View chart in new tab">
+          <Button
+            type="link"
+            icon={<LineChartOutlined />}
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleViewChart(record.stockCode);
+            }}
+          />
+        </Tooltip>
+      ),
     },
     {
       title: 'Market',

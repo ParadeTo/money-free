@@ -54,6 +54,11 @@
     "calc-indicators:hk": "ts-node src/scripts/recalculate-indicators.ts --markets HK",
     "calc-indicators:us": "ts-node src/scripts/recalculate-indicators.ts --markets US",
     "calc-indicators:hk-us": "ts-node src/scripts/recalculate-indicators.ts --markets HK,US",
+    "update:optimized": "ts-node src/scripts/optimized-incremental-update.ts",
+    "import:optimized": "ts-node src/scripts/full-import-optimized.ts",
+    "task:status": "ts-node src/scripts/task-status.ts",
+    "task:cleanup": "ts-node src/scripts/cleanup-old-logs.ts",
+    "perf:report": "ts-node src/scripts/performance-report.ts",
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
@@ -74,13 +79,16 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "commander": "^14.0.3",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
     "p-limit": "^3.1.0",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
-    "technicalindicators": "^3.1.0"
+    "technicalindicators": "^3.1.0",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
