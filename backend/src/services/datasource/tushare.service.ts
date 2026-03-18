@@ -37,7 +37,7 @@ export class TushareService {
 
   constructor(private configService: ConfigService) {
     this.token = this.configService.get<string>('TUSHARE_TOKEN') || '';
-    
+
     if (!this.token) {
       this.logger.warn('⚠️ TUSHARE_TOKEN not configured. Tushare service will not work.');
     }
@@ -50,9 +50,9 @@ export class TushareService {
       },
     });
 
-    // Free tier: 120 requests/min, set to 100/min for safety (20% buffer)
-    this.rateLimiter = new RateLimiter(100);
-    this.logger.log('🚦 Rate limiter initialized: 100 requests/minute');
+    // Account limit: 50 requests/min, set to 40/min for safety (20% buffer)
+    this.rateLimiter = new RateLimiter(40);
+    this.logger.log('🚦 Rate limiter initialized: 40 requests/minute');
   }
 
   /**
@@ -240,7 +240,7 @@ export class TushareService {
       const items = response.data.data.items || [];
       const fields = response.data.data.fields || [];
 
-      const klineData: TushareKLineData[]= items.map((item: any[]) => {
+      const klineData: TushareKLineData[] = items.map((item: any[]) => {
         const obj: any = {};
         fields.forEach((field: string, index: number) => {
           obj[field] = item[index];
@@ -343,13 +343,13 @@ export class TushareService {
   }): Promise<Array<{ con_code: string; trade_date: string; weight: number }>> {
     try {
       const requestParams: any = { index_code: params.index_code };
-      
+
       if (params.trade_date) {
         requestParams.trade_date = params.trade_date;
       } else {
         const today = new Date();
         let tryDate = new Date(today);
-        
+
         for (let i = 0; i < 10; i++) {
           const dateStr = tryDate.toISOString().split('T')[0].replace(/-/g, '');
           await this.rateLimiter.acquire();
@@ -375,10 +375,10 @@ export class TushareService {
               return obj;
             });
           }
-          
+
           tryDate.setDate(tryDate.getDate() - 1);
         }
-        
+
         return [];
       }
 

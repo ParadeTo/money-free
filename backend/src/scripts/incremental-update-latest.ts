@@ -28,7 +28,10 @@ const prisma = new PrismaClient();
 
 // 从命令行参数获取 limit 和 offset
 // 支持 --index-only 参数：只更新指数成分股（沪深300+中证500）
+// 支持 --markets 参数：只更新指定市场（例如：--markets SH,SZ）
 const indexOnly = process.argv.includes('--index-only');
+const marketsArg = process.argv.find(arg => arg.startsWith('--markets='));
+const markets = marketsArg ? marketsArg.split('=')[1].split(',') : null;
 const positionalArgs = process.argv.slice(2).filter(a => !a.startsWith('--'));
 const limit = parseInt(positionalArgs[0]) || 0; // 0表示全部
 const offset = parseInt(positionalArgs[1]) || 0;
@@ -58,15 +61,15 @@ async function processStockIncremental(
 
     const latestDate = new Date(latestRecord.date);
     const today = new Date();
-    
+
     // 比较日期（忽略时间部分）
     const latestDateStr = latestDate.toISOString().split('T')[0];
     const todayStr = today.toISOString().split('T')[0];
-    
+
     // 计算需要更新的日期范围
     const nextDay = new Date(latestDate);
     nextDay.setDate(nextDay.getDate() + 1);
-    
+
     const startDateStr = nextDay.toISOString().split('T')[0];
     const endDateStr = todayStr;
 
@@ -257,7 +260,7 @@ async function processStockIncremental(
 
     // ===== 5. 处理周线数据（增量）=====
     console.log(`📊 Checking weekly data...`);
-    
+
     const latestWeekly = await prisma.kLineData.findFirst({
       where: {
         stockCode: stock.stockCode,
@@ -269,9 +272,9 @@ async function processStockIncremental(
     if (latestWeekly) {
       const weeklyNextDay = new Date(latestWeekly.date);
       weeklyNextDay.setDate(weeklyNextDay.getDate() + 1);
-      
+
       const weeklyStartDateStr = weeklyNextDay.toISOString().split('T')[0];
-      
+
       if (weeklyNextDay < today) {
         const { data: newWeeklyData, source: weeklySource } = await dataSourceManager.getWeeklyKLine({
           stockCode: stock.stockCode,
@@ -382,7 +385,10 @@ async function processStockIncremental(
 }
 
 async function main() {
-  const mode = indexOnly ? '指数成分股(沪深300+中证500)' : 'ALL';
+  let mode = indexOnly ? '指数成分股(沪深300+中证500)' : 'ALL';
+  if (markets) {
+    mode = `Markets: ${markets.join(',')}`;
+  }
   console.log(`📊 Starting incremental update (mode: ${mode}, limit: ${limit || 'ALL'}, offset: ${offset})...\n`);
 
   const configService = new ConfigService();
@@ -394,20 +400,28 @@ async function main() {
 
   // 获取股票列表
   const totalStocks = await prisma.stock.count();
-  const where = indexOnly ? { indexCode: { not: null } } : {};
+  const where: any = indexOnly ? { indexCode: { not: null } } : {};
+  
+  // 添加市场过滤
+  if (markets && markets.length > 0) {
+    where.market = { in: markets };
+  }
+  
   const stocks = await prisma.stock.findMany({
-    where: where as any,
+    where: where,
     skip: offset,
     take: limit || undefined,
     orderBy: { stockCode: 'asc' },
   });
 
+  console.log(`Total stocks in DB: ${totalStocks}`);
   if (indexOnly) {
-    console.log(`Total stocks in DB: ${totalStocks}`);
     console.log(`Index members (HS300+ZZ500): ${stocks.length} stocks`);
     console.log(`Processing: ${stocks.length} stocks (index-only mode)\n`);
+  } else if (markets) {
+    console.log(`Markets ${markets.join(',')}: ${stocks.length} stocks`);
+    console.log(`Processing: ${stocks.length} stocks\n`);
   } else {
-    console.log(`Total stocks in DB: ${totalStocks}`);
     console.log(`Processing: ${offset + 1} to ${offset + stocks.length} (${stocks.length} stocks)\n`);
   }
 
@@ -423,8 +437,8 @@ async function main() {
   let completed = 0;
   const startTime = Date.now();
 
-  // 并发控制：同时处理 8 只股票
-  const CONCURRENCY = 8;
+  // 并发控制：同时处理 1 只股票（避免限流）
+  const CONCURRENCY = 1;
   const concurrencyLimit = pLimit(CONCURRENCY);
 
   console.log(`🚀 并行处理模式：${CONCURRENCY} 个并发任务\n`);
