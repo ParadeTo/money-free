@@ -43,7 +43,7 @@ export class TrendTemplateService {
     ];
 
     return {
-      allPass: checks.every(c => c.pass),
+      allPass: checks.every((c) => c.pass),
       checks,
     };
   }
@@ -126,9 +126,8 @@ export class TrendTemplateService {
   }
 
   private checkAbove25PctFrom52WkLow(input: TrendTemplateInput): TrendTemplateCheckResult {
-    const currentValue = input.low52Week > 0
-      ? ((input.currentPrice - input.low52Week) / input.low52Week) * 100
-      : 0;
+    const currentValue =
+      input.low52Week > 0 ? ((input.currentPrice - input.low52Week) / input.low52Week) * 100 : 0;
     const pass = currentValue >= 25;
     return {
       name: 'above25PctFrom52WkLow',
@@ -140,9 +139,8 @@ export class TrendTemplateService {
   }
 
   private checkWithin25PctOf52WkHigh(input: TrendTemplateInput): TrendTemplateCheckResult {
-    const currentValue = input.high52Week > 0
-      ? ((input.high52Week - input.currentPrice) / input.high52Week) * 100
-      : 0;
+    const currentValue =
+      input.high52Week > 0 ? ((input.high52Week - input.currentPrice) / input.high52Week) * 100 : 0;
     const pass = currentValue <= 25;
     return {
       name: 'within25PctOf52WkHigh',

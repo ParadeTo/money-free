@@ -74,12 +74,14 @@ async function main() {
       if (pullbacks.length > 0) {
         const lastPullback = pullbacks[pullbacks.length - 1];
         const lastBar = bars[bars.length - 1];
-        
+
         // 如果回调的最低点日期是最近几天（意味着回调可能还在进行中）
         const lastPullbackLowDate = new Date(lastPullback.lowDate);
         const lastBarDate = new Date(lastBar.date);
-        const daysDiff = Math.floor((lastBarDate.getTime() - lastPullbackLowDate.getTime()) / (1000 * 60 * 60 * 24));
-        
+        const daysDiff = Math.floor(
+          (lastBarDate.getTime() - lastPullbackLowDate.getTime()) / (1000 * 60 * 60 * 24),
+        );
+
         // 如果回调最低点在最近5天内，认为可能还在回调中
         if (daysDiff <= 5) {
           stocksInPullback.push({
@@ -117,7 +119,7 @@ async function main() {
         '回调起始价'.padStart(10),
         '当前状态'.padEnd(10),
         '距52周高%'.padStart(11),
-      ].join(' | ')
+      ].join(' | '),
     );
     console.log('-'.repeat(160));
 
@@ -125,7 +127,7 @@ async function main() {
     for (const stock of stocksInPullback) {
       const r = stock;
       const lastPullback = stock.lastPullback;
-      
+
       const pullbackDays = lastPullback.durationDays;
       const pullbackDepth = lastPullback.pullbackPct.toFixed(2);
       const pullbackStartPrice = lastPullback.highPrice.toFixed(2);
@@ -146,7 +148,7 @@ async function main() {
           pullbackStartPrice.padStart(10),
           status.padEnd(10),
           (r.distFrom52WeekHigh ?? 0).toFixed(2).padStart(11),
-        ].join(' | ')
+        ].join(' | '),
       );
     }
 
@@ -160,11 +162,14 @@ async function main() {
       const pb = stock.lastPullback;
       logger.log(`${stock.stockCode} ${stock.stock.stockName}:`);
       logger.log(`  回调期间: ${pb.highDate} → ${pb.lowDate} (${pb.durationDays}天)`);
-      logger.log(`  回调幅度: ${pb.pullbackPct.toFixed(2)}% (从 ${pb.highPrice.toFixed(2)} → ${pb.lowPrice.toFixed(2)})`);
-      logger.log(`  当前价格: ${stock.latestPrice.toFixed(2)} (${stock.daysSinceEnd === 0 ? '回调中' : `${stock.daysSinceEnd}天前最低点`})`);
+      logger.log(
+        `  回调幅度: ${pb.pullbackPct.toFixed(2)}% (从 ${pb.highPrice.toFixed(2)} → ${pb.lowPrice.toFixed(2)})`,
+      );
+      logger.log(
+        `  当前价格: ${stock.latestPrice.toFixed(2)} (${stock.daysSinceEnd === 0 ? '回调中' : `${stock.daysSinceEnd}天前最低点`})`,
+      );
       logger.log('');
     }
-
   } catch (error: any) {
     logger.error(`Failed to get VCP pullback results: ${error.message}`);
     logger.error(error.stack);

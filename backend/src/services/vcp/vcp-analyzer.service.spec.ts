@@ -29,11 +29,19 @@ describe('VcpAnalyzerService', () => {
       const bars: KLineBar[] = [];
       for (let i = 0; i < 25; i++) {
         const isPivot = i === 10;
-        bars.push(makeBar(`2024-01-${String(i + 1).padStart(2, '0')}`, isPivot ? 100 : 90, isPivot ? 99 : 89, isPivot ? 99.5 : 89.5, 1000));
+        bars.push(
+          makeBar(
+            `2024-01-${String(i + 1).padStart(2, '0')}`,
+            isPivot ? 100 : 90,
+            isPivot ? 99 : 89,
+            isPivot ? 99.5 : 89.5,
+            1000,
+          ),
+        );
       }
       const highs = service.findSwingHighs(bars);
       expect(highs.length).toBeGreaterThanOrEqual(1);
-      expect(highs.some(h => h.price === 100)).toBe(true);
+      expect(highs.some((h) => h.price === 100)).toBe(true);
     });
   });
 
@@ -42,35 +50,97 @@ describe('VcpAnalyzerService', () => {
       const bars: KLineBar[] = [];
       for (let i = 0; i < 25; i++) {
         const isPivot = i === 10;
-        bars.push(makeBar(`2024-01-${String(i + 1).padStart(2, '0')}`, isPivot ? 76 : 80, isPivot ? 75 : 80, isPivot ? 75.5 : 80, 1000));
+        bars.push(
+          makeBar(
+            `2024-01-${String(i + 1).padStart(2, '0')}`,
+            isPivot ? 76 : 80,
+            isPivot ? 75 : 80,
+            isPivot ? 75.5 : 80,
+            1000,
+          ),
+        );
       }
       const lows = service.findSwingLows(bars);
       expect(lows.length).toBeGreaterThanOrEqual(1);
-      expect(lows.some(l => l.price === 75)).toBe(true);
+      expect(lows.some((l) => l.price === 75)).toBe(true);
     });
   });
 
   describe('validateVCP', () => {
     it('returns true when contractions have decreasing depth', () => {
       const contractions = [
-        { index: 1, swingHighDate: '', swingHighPrice: 100, swingLowDate: '', swingLowPrice: 75, depthPct: 25, durationDays: 10, avgVolume: 1000 },
-        { index: 2, swingHighDate: '', swingHighPrice: 95, swingLowDate: '', swingLowPrice: 90, depthPct: 5.26, durationDays: 10, avgVolume: 800 },
+        {
+          index: 1,
+          swingHighDate: '',
+          swingHighPrice: 100,
+          swingLowDate: '',
+          swingLowPrice: 75,
+          depthPct: 25,
+          durationDays: 10,
+          avgVolume: 1000,
+        },
+        {
+          index: 2,
+          swingHighDate: '',
+          swingHighPrice: 95,
+          swingLowDate: '',
+          swingLowPrice: 90,
+          depthPct: 5.26,
+          durationDays: 10,
+          avgVolume: 800,
+        },
       ];
       expect(service.validateVCP(contractions)).toBe(true);
     });
 
     it('returns false when first > 35%', () => {
       const contractions = [
-        { index: 1, swingHighDate: '', swingHighPrice: 100, swingLowDate: '', swingLowPrice: 60, depthPct: 40, durationDays: 10, avgVolume: 1000 },
-        { index: 2, swingHighDate: '', swingHighPrice: 95, swingLowDate: '', swingLowPrice: 90, depthPct: 5, durationDays: 10, avgVolume: 800 },
+        {
+          index: 1,
+          swingHighDate: '',
+          swingHighPrice: 100,
+          swingLowDate: '',
+          swingLowPrice: 60,
+          depthPct: 40,
+          durationDays: 10,
+          avgVolume: 1000,
+        },
+        {
+          index: 2,
+          swingHighDate: '',
+          swingHighPrice: 95,
+          swingLowDate: '',
+          swingLowPrice: 90,
+          depthPct: 5,
+          durationDays: 10,
+          avgVolume: 800,
+        },
       ];
       expect(service.validateVCP(contractions)).toBe(false);
     });
 
     it('returns false when depths do not decrease', () => {
       const contractions = [
-        { index: 1, swingHighDate: '', swingHighPrice: 100, swingLowDate: '', swingLowPrice: 85, depthPct: 15, durationDays: 10, avgVolume: 1000 },
-        { index: 2, swingHighDate: '', swingHighPrice: 95, swingLowDate: '', swingLowPrice: 80, depthPct: 15.79, durationDays: 10, avgVolume: 800 },
+        {
+          index: 1,
+          swingHighDate: '',
+          swingHighPrice: 100,
+          swingLowDate: '',
+          swingLowPrice: 85,
+          depthPct: 15,
+          durationDays: 10,
+          avgVolume: 1000,
+        },
+        {
+          index: 2,
+          swingHighDate: '',
+          swingHighPrice: 95,
+          swingLowDate: '',
+          swingLowPrice: 80,
+          depthPct: 15.79,
+          durationDays: 10,
+          avgVolume: 800,
+        },
       ];
       expect(service.validateVCP(contractions)).toBe(false);
     });
@@ -79,16 +149,52 @@ describe('VcpAnalyzerService', () => {
   describe('detectVolumeDryingUp', () => {
     it('returns true when avg volumes decrease', () => {
       const contractions = [
-        { index: 1, swingHighDate: '', swingHighPrice: 100, swingLowDate: '', swingLowPrice: 85, depthPct: 15, durationDays: 10, avgVolume: 1000 },
-        { index: 2, swingHighDate: '', swingHighPrice: 95, swingLowDate: '', swingLowPrice: 90, depthPct: 5, durationDays: 10, avgVolume: 800 },
+        {
+          index: 1,
+          swingHighDate: '',
+          swingHighPrice: 100,
+          swingLowDate: '',
+          swingLowPrice: 85,
+          depthPct: 15,
+          durationDays: 10,
+          avgVolume: 1000,
+        },
+        {
+          index: 2,
+          swingHighDate: '',
+          swingHighPrice: 95,
+          swingLowDate: '',
+          swingLowPrice: 90,
+          depthPct: 5,
+          durationDays: 10,
+          avgVolume: 800,
+        },
       ];
       expect(service.detectVolumeDryingUp(contractions)).toBe(true);
     });
 
     it('returns false when volumes do not decrease', () => {
       const contractions = [
-        { index: 1, swingHighDate: '', swingHighPrice: 100, swingLowDate: '', swingLowPrice: 85, depthPct: 15, durationDays: 10, avgVolume: 800 },
-        { index: 2, swingHighDate: '', swingHighPrice: 95, swingLowDate: '', swingLowPrice: 90, depthPct: 5, durationDays: 10, avgVolume: 1000 },
+        {
+          index: 1,
+          swingHighDate: '',
+          swingHighPrice: 100,
+          swingLowDate: '',
+          swingLowPrice: 85,
+          depthPct: 15,
+          durationDays: 10,
+          avgVolume: 800,
+        },
+        {
+          index: 2,
+          swingHighDate: '',
+          swingHighPrice: 95,
+          swingLowDate: '',
+          swingLowPrice: 90,
+          depthPct: 5,
+          durationDays: 10,
+          avgVolume: 1000,
+        },
       ];
       expect(service.detectVolumeDryingUp(contractions)).toBe(false);
     });

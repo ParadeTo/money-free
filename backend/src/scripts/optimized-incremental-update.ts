@@ -1,6 +1,6 @@
 /**
  * 优化的增量更新脚本 - 将1300只股票更新时间从30-40分钟缩短到15分钟内
- * 
+ *
  * 核心优化:
  * 1. 并发控制 (A股8并发, 港股/美股3并发)
  * 2. 批量数据库写入 (100条/批次)
@@ -10,7 +10,7 @@
  * 6. 增量指标计算
  * 7. 任务互斥锁
  * 8. 实时进度显示
- * 
+ *
  * 使用:
  * npx ts-node src/scripts/optimized-incremental-update.ts
  * npx ts-node src/scripts/optimized-incremental-update.ts --markets SH,SZ
@@ -121,7 +121,10 @@ async function releaseTaskLock(taskId: string, stats: UpdateStats): Promise<void
         processedStocks: stats.total,
         successCount: stats.succeeded,
         failedCount: stats.failed,
-        errorDetails: stats.failed > 0 ? JSON.stringify({ message: `${stats.failed} stocks failed to update` }) : null,
+        errorDetails:
+          stats.failed > 0
+            ? JSON.stringify({ message: `${stats.failed} stocks failed to update` })
+            : null,
       },
     });
   }
@@ -130,7 +133,10 @@ async function releaseTaskLock(taskId: string, stats: UpdateStats): Promise<void
 /**
  * 智能跳过检查 - 查询股票最新日期,判断是否需要更新
  */
-async function shouldUpdateStock(stockCode: string, market: MarketType): Promise<{
+async function shouldUpdateStock(
+  stockCode: string,
+  market: MarketType,
+): Promise<{
   needsUpdate: boolean;
   latestDate?: Date;
   reason?: 'no_data' | 'outdated' | 'up_to_date';
@@ -338,15 +344,12 @@ async function main() {
     const { ConfigService } = await import('@nestjs/config');
     const { TushareService } = await import('../services/datasource/tushare.service');
     const { AkShareService } = await import('../services/datasource/akshare.service');
-    
+
     const configService = new ConfigService();
     const pythonBridge = new PythonBridgeService();
     const tushareService = new TushareService(configService);
     const akshareService = new AkShareService(pythonBridge);
-    const dataSourceManager = new DataSourceManagerService(
-      tushareService,
-      akshareService,
-    );
+    const dataSourceManager = new DataSourceManagerService(tushareService, akshareService);
 
     // 6. 执行并发更新
     const results = await concurrentFetcher.executeByMarket(
@@ -379,21 +382,21 @@ async function main() {
     const stats: UpdateStats = {
       total: stocks.length,
       completed: results.length,
-      succeeded: results.filter(r => r.success).length,
-      failed: results.filter(r => !r.success).length,
-      skipped: results.filter(r => r.success && r.newRecords === 0).length,
+      succeeded: results.filter((r) => r.success).length,
+      failed: results.filter((r) => !r.success).length,
+      skipped: results.filter((r) => r.success && r.newRecords === 0).length,
       totalNewRecords: results.reduce((sum, r) => sum + r.newRecords, 0),
       byMarket: {},
     };
 
     // 按市场统计
-    ['SH', 'SZ', 'HK', 'US'].forEach(market => {
-      const marketResults = results.filter(r => r.market === market);
+    ['SH', 'SZ', 'HK', 'US'].forEach((market) => {
+      const marketResults = results.filter((r) => r.market === market);
       stats.byMarket[market] = {
-        updated: marketResults.filter(r => r.success && r.newRecords > 0).length,
-        alreadyLatest: marketResults.filter(r => r.reason === 'already_latest').length,
-        noNewData: marketResults.filter(r => r.reason === 'no_new_data').length,
-        failed: marketResults.filter(r => !r.success).length,
+        updated: marketResults.filter((r) => r.success && r.newRecords > 0).length,
+        alreadyLatest: marketResults.filter((r) => r.reason === 'already_latest').length,
+        noNewData: marketResults.filter((r) => r.reason === 'no_new_data').length,
+        failed: marketResults.filter((r) => !r.success).length,
         newRecords: marketResults.reduce((sum, r) => sum + r.newRecords, 0),
       };
     });
@@ -405,7 +408,9 @@ async function main() {
     progressTracker.printFinalReport();
     console.log(`\n📊 市场统计:`);
     Object.entries(stats.byMarket).forEach(([market, data]) => {
-      console.log(`  ${market}: 更新${data.updated}只, 最新${data.alreadyLatest}只, 失败${data.failed}只, 新增${data.newRecords}条`);
+      console.log(
+        `  ${market}: 更新${data.updated}只, 最新${data.alreadyLatest}只, 失败${data.failed}只, 新增${data.newRecords}条`,
+      );
     });
     console.log(`\n✅ 任务完成!\n`);
 

@@ -51,17 +51,17 @@ export class ConcurrentFetcher {
 
     const tasks = stocks.map((stock) => {
       const limiter = this.getLimiter(stock.market);
-      
+
       return limiter(async () => {
         try {
           const result = await updateFn(stock);
           results.push(result);
-          
+
           completed++;
           if (onProgress) {
             onProgress(result, completed, total);
           }
-          
+
           return result;
         } catch (error: any) {
           const errorResult: StockUpdateResult = {
@@ -72,12 +72,12 @@ export class ConcurrentFetcher {
             error: error.message,
           };
           results.push(errorResult);
-          
+
           completed++;
           if (onProgress) {
             onProgress(errorResult, completed, total);
           }
-          
+
           return errorResult;
         }
       });
@@ -100,13 +100,13 @@ export class ConcurrentFetcher {
     onProgress?: (result: StockUpdateResult, completed: number, total: number) => void,
   ): Promise<StockUpdateResult[]> {
     // 按市场分组
-    const aStocks = stocks.filter(s => s.market === 'SH' || s.market === 'SZ');
-    const hkusStocks = stocks.filter(s => s.market === 'HK' || s.market === 'US');
+    const aStocks = stocks.filter((s) => s.market === 'SH' || s.market === 'SZ');
+    const hkusStocks = stocks.filter((s) => s.market === 'HK' || s.market === 'US');
 
     console.log(`📊 股票分布:`);
     console.log(`  A股 (SH/SZ): ${aStocks.length} 只`);
-    console.log(`  港股 (HK): ${stocks.filter(s => s.market === 'HK').length} 只`);
-    console.log(`  美股 (US): ${stocks.filter(s => s.market === 'US').length} 只\n`);
+    console.log(`  港股 (HK): ${stocks.filter((s) => s.market === 'HK').length} 只`);
+    console.log(`  美股 (US): ${stocks.filter((s) => s.market === 'US').length} 只\n`);
 
     const allResults: StockUpdateResult[] = [];
     let totalCompleted = 0;
@@ -115,7 +115,7 @@ export class ConcurrentFetcher {
     // 处理A股
     if (aStocks.length > 0) {
       console.log(`🚀 开始更新A股 (并发: ${this.config.aStock})\n`);
-      
+
       const aResults = await this.executeParallel(
         aStocks,
         updateFn,
@@ -126,14 +126,14 @@ export class ConcurrentFetcher {
           }
         },
       );
-      
+
       allResults.push(...aResults);
     }
 
     // 处理港股和美股
     if (hkusStocks.length > 0) {
       console.log(`\n🚀 开始更新港股/美股 (并发: ${this.config.hkus})\n`);
-      
+
       const hkusResults = await this.executeParallel(
         hkusStocks,
         updateFn,
@@ -144,7 +144,7 @@ export class ConcurrentFetcher {
           }
         },
       );
-      
+
       allResults.push(...hkusResults);
     }
 

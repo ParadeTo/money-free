@@ -10,7 +10,7 @@ export class ContractionDto {
   @ApiProperty({ description: '高点日期', example: '2025-12-01' })
   swingHighDate!: string;
 
-  @ApiProperty({ description: '高点价格', example: 48.50 })
+  @ApiProperty({ description: '高点价格', example: 48.5 })
   swingHighPrice!: number;
 
   @ApiProperty({ description: '低点日期', example: '2025-12-15' })
@@ -19,7 +19,7 @@ export class ContractionDto {
   @ApiProperty({ description: '低点价格', example: 31.53 })
   swingLowPrice!: number;
 
-  @ApiProperty({ description: '收缩幅度百分比', example: 35.00 })
+  @ApiProperty({ description: '收缩幅度百分比', example: 35.0 })
   depthPct!: number;
 
   @ApiProperty({ description: '持续天数', example: 15 })
@@ -39,7 +39,7 @@ export class PullbackDto {
   @ApiProperty({ description: '高点日期', example: '2026-01-15' })
   highDate!: string;
 
-  @ApiProperty({ description: '高点价格', example: 47.80 })
+  @ApiProperty({ description: '高点价格', example: 47.8 })
   highPrice!: number;
 
   @ApiProperty({ description: '低点日期', example: '2026-01-20' })
@@ -71,13 +71,13 @@ export class KLineDto {
   @ApiProperty({ description: '日期', example: '2026-03-11' })
   date!: string;
 
-  @ApiProperty({ description: '开盘价', example: 44.50 })
+  @ApiProperty({ description: '开盘价', example: 44.5 })
   open!: number;
 
-  @ApiProperty({ description: '最高价', example: 45.20 })
+  @ApiProperty({ description: '最高价', example: 45.2 })
   high!: number;
 
-  @ApiProperty({ description: '最低价', example: 44.10 })
+  @ApiProperty({ description: '最低价', example: 44.1 })
   low!: number;
 
   @ApiProperty({ description: '收盘价', example: 44.85 })
@@ -100,7 +100,11 @@ export class TrendTemplateCheckDto {
   @ApiProperty({ description: '是否通过', example: true })
   pass!: boolean;
 
-  @ApiProperty({ description: '检查项说明', required: false, example: '当前价格 45.67 > MA200 38.20' })
+  @ApiProperty({
+    description: '检查项说明',
+    required: false,
+    example: '当前价格 45.67 > MA200 38.20',
+  })
   description?: string;
 }
 
@@ -111,7 +115,7 @@ export class VcpSummaryDto {
   @ApiProperty({ description: '收缩次数', example: 3 })
   contractionCount!: number;
 
-  @ApiProperty({ description: '最后收缩幅度百分比', example: 12.40 })
+  @ApiProperty({ description: '最后收缩幅度百分比', example: 12.4 })
   lastContractionPct!: number;
 
   @ApiProperty({ description: '成交量是否萎缩', example: true })

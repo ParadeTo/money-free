@@ -19,20 +19,44 @@ async function main() {
     .name('show-vcp-early-stage')
     .description('显示早期启动阶段的VCP股票')
     .version('1.0.0')
-    .option('--low-threshold <number>', '距52周低点阈值（%），范围20-60', String(DEFAULT_FILTER_CONDITIONS.distFrom52WeekLow))
-    .option('--high-threshold <number>', '距52周高点阈值（%），范围10-50', String(DEFAULT_FILTER_CONDITIONS.distFrom52WeekHigh))
-    .option('--min-contraction <number>', '最小收缩次数，范围2-8', String(DEFAULT_FILTER_CONDITIONS.contractionCountMin))
-    .option('--max-contraction <number>', '最大收缩次数，范围2-8', String(DEFAULT_FILTER_CONDITIONS.contractionCountMax))
+    .option(
+      '--low-threshold <number>',
+      '距52周低点阈值（%），范围20-60',
+      String(DEFAULT_FILTER_CONDITIONS.distFrom52WeekLow),
+    )
+    .option(
+      '--high-threshold <number>',
+      '距52周高点阈值（%），范围10-50',
+      String(DEFAULT_FILTER_CONDITIONS.distFrom52WeekHigh),
+    )
+    .option(
+      '--min-contraction <number>',
+      '最小收缩次数，范围2-8',
+      String(DEFAULT_FILTER_CONDITIONS.contractionCountMin),
+    )
+    .option(
+      '--max-contraction <number>',
+      '最大收缩次数，范围2-8',
+      String(DEFAULT_FILTER_CONDITIONS.contractionCountMax),
+    )
     .option('--verbose', '显示详细日志')
     .parse(process.argv);
 
   const options: CliOptions = program.opts();
 
   const conditions: FilterConditions = {
-    distFrom52WeekLow: options.lowThreshold ? parseFloat(options.lowThreshold) : DEFAULT_FILTER_CONDITIONS.distFrom52WeekLow,
-    distFrom52WeekHigh: options.highThreshold ? parseFloat(options.highThreshold) : DEFAULT_FILTER_CONDITIONS.distFrom52WeekHigh,
-    contractionCountMin: options.minContraction ? parseInt(options.minContraction) : DEFAULT_FILTER_CONDITIONS.contractionCountMin,
-    contractionCountMax: options.maxContraction ? parseInt(options.maxContraction) : DEFAULT_FILTER_CONDITIONS.contractionCountMax,
+    distFrom52WeekLow: options.lowThreshold
+      ? parseFloat(options.lowThreshold)
+      : DEFAULT_FILTER_CONDITIONS.distFrom52WeekLow,
+    distFrom52WeekHigh: options.highThreshold
+      ? parseFloat(options.highThreshold)
+      : DEFAULT_FILTER_CONDITIONS.distFrom52WeekHigh,
+    contractionCountMin: options.minContraction
+      ? parseInt(options.minContraction)
+      : DEFAULT_FILTER_CONDITIONS.contractionCountMin,
+    contractionCountMax: options.maxContraction
+      ? parseInt(options.maxContraction)
+      : DEFAULT_FILTER_CONDITIONS.contractionCountMax,
   };
 
   if (options.verbose) {
@@ -51,11 +75,14 @@ async function main() {
     console.log('\n='.repeat(100));
     console.log(`VCP 早期启动阶段股票筛选结果 (共 ${result.total} 只)`);
     console.log('='.repeat(100));
-    console.log(`筛选条件: 距52周低≤${conditions.distFrom52WeekLow}% | 距52周高≤${conditions.distFrom52WeekHigh}% (接近高点) | 收缩${conditions.contractionCountMin}-${conditions.contractionCountMax}次`);
+    console.log(
+      `筛选条件: 距52周低≤${conditions.distFrom52WeekLow}% | 距52周高≤${conditions.distFrom52WeekHigh}% (接近高点) | 收缩${conditions.contractionCountMin}-${conditions.contractionCountMax}次`,
+    );
     console.log('='.repeat(100));
 
     if (result.tip) {
-      const tipSymbol = result.tip.type === 'error' ? '❌' : result.tip.type === 'warning' ? '⚠️' : 'ℹ️';
+      const tipSymbol =
+        result.tip.type === 'error' ? '❌' : result.tip.type === 'warning' ? '⚠️' : 'ℹ️';
       console.log(`\n${tipSymbol} ${result.tip.message}`);
       if (result.tip.suggestedActions.length > 0) {
         console.log('   建议操作:');
@@ -73,9 +100,9 @@ async function main() {
     }
 
     const stageGroups = {
-      contraction: result.stocks.filter(s => s.vcpStage === 'contraction'),
-      in_pullback: result.stocks.filter(s => s.vcpStage === 'in_pullback'),
-      pullback_ended: result.stocks.filter(s => s.vcpStage === 'pullback_ended'),
+      contraction: result.stocks.filter((s) => s.vcpStage === 'contraction'),
+      in_pullback: result.stocks.filter((s) => s.vcpStage === 'in_pullback'),
+      pullback_ended: result.stocks.filter((s) => s.vcpStage === 'pullback_ended'),
     };
 
     if (stageGroups.contraction.length > 0) {
@@ -97,7 +124,6 @@ async function main() {
     }
 
     console.log('\n' + '='.repeat(100) + '\n');
-
   } catch (error: any) {
     console.error(`\n错误: ${error.message}\n`);
     if (options.verbose) {
@@ -149,7 +175,9 @@ function printStockTable(stocks: any[], highlight: boolean) {
 
     if (stock.pullbackInfo) {
       const pb = stock.pullbackInfo;
-      console.log(`      └─ 回调: ${pb.pullbackPct.toFixed(2)}% (${pb.durationDays}天) | 低点: ${pb.lowDate} (${pb.daysSinceLow}天前) | 反弹: ${pb.recoveryPct.toFixed(2)}%`);
+      console.log(
+        `      └─ 回调: ${pb.pullbackPct.toFixed(2)}% (${pb.durationDays}天) | 低点: ${pb.lowDate} (${pb.daysSinceLow}天前) | 反弹: ${pb.recoveryPct.toFixed(2)}%`,
+      );
     }
   });
 }

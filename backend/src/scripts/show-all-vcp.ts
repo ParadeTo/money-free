@@ -107,7 +107,9 @@ async function main() {
         const lastPullback = pullbacks[pullbacks.length - 1];
         const lastPullbackLowDate = new Date(lastPullback.lowDate);
         const lastBarDate = new Date(lastBar.date);
-        const daysSinceLow = Math.floor((lastBarDate.getTime() - lastPullbackLowDate.getTime()) / (1000 * 60 * 60 * 24));
+        const daysSinceLow = Math.floor(
+          (lastBarDate.getTime() - lastPullbackLowDate.getTime()) / (1000 * 60 * 60 * 24),
+        );
 
         // 计算从回调低点到当前的反弹幅度
         const recoveryPct = ((lastBar.close - lastPullback.lowPrice) / lastPullback.lowPrice) * 100;
@@ -161,13 +163,15 @@ async function main() {
     }
 
     // 分类统计
-    const inContraction = allVcpStocks.filter(s => s.status === 'contraction');
-    const inPullback = allVcpStocks.filter(s => s.status === 'in_pullback');
-    const pullbackEnded = allVcpStocks.filter(s => s.status === 'pullback_ended');
+    const inContraction = allVcpStocks.filter((s) => s.status === 'contraction');
+    const inPullback = allVcpStocks.filter((s) => s.status === 'in_pullback');
+    const pullbackEnded = allVcpStocks.filter((s) => s.status === 'pullback_ended');
 
     logger.log(`${'='.repeat(180)}`);
     logger.log(`VCP 选股全览（共 ${allVcpStocks.length} 只）`);
-    logger.log(`  📊 收缩中: ${inContraction.length} 只 | ⚡ 回调中: ${inPullback.length} 只 | ✅ 回调结束: ${pullbackEnded.length} 只`);
+    logger.log(
+      `  📊 收缩中: ${inContraction.length} 只 | ⚡ 回调中: ${inPullback.length} 只 | ✅ 回调结束: ${pullbackEnded.length} 只`,
+    );
     logger.log(`${'='.repeat(180)}\n`);
 
     // 输出回调中的股票
@@ -190,7 +194,7 @@ async function main() {
           '距52周高%'.padStart(10),
           '距52周低%'.padStart(10),
           '状态'.padEnd(12),
-        ].join(' | ')
+        ].join(' | '),
       );
       console.log('-'.repeat(180));
 
@@ -212,7 +216,7 @@ async function main() {
             stock.distFrom52WeekHigh.toFixed(2).padStart(10),
             stock.distFrom52WeekLow.toFixed(2).padStart(10),
             stock.statusText.padEnd(12),
-          ].join(' | ')
+          ].join(' | '),
         );
       }
       console.log('');
@@ -238,7 +242,7 @@ async function main() {
           '距52周高%'.padStart(10),
           '距52周低%'.padStart(10),
           '状态'.padEnd(15),
-        ].join(' | ')
+        ].join(' | '),
       );
       console.log('-'.repeat(180));
 
@@ -260,7 +264,7 @@ async function main() {
             stock.distFrom52WeekHigh.toFixed(2).padStart(10),
             stock.distFrom52WeekLow.toFixed(2).padStart(10),
             stock.statusText.padEnd(15),
-          ].join(' | ')
+          ].join(' | '),
         );
       }
       console.log('');
@@ -284,7 +288,7 @@ async function main() {
           '距52周高%'.padStart(10),
           '距52周低%'.padStart(10),
           '状态'.padEnd(10),
-        ].join(' | ')
+        ].join(' | '),
       );
       console.log('-'.repeat(160));
 
@@ -302,7 +306,7 @@ async function main() {
             stock.distFrom52WeekHigh.toFixed(2).padStart(10),
             stock.distFrom52WeekLow.toFixed(2).padStart(10),
             stock.statusText.padEnd(10),
-          ].join(' | ')
+          ].join(' | '),
         );
       }
       console.log('');
@@ -315,7 +319,6 @@ async function main() {
     logger.log('  📊 收缩中: 还未进入回调或上次回调已经很久，当前处于收缩整理中');
     logger.log('  💡 操作建议: 回调中/刚结束的股票更接近买点，收缩中的股票需等待回调');
     logger.log(`${'='.repeat(180)}\n`);
-
   } catch (error: any) {
     logger.error(`Failed to get VCP results: ${error.message}`);
     logger.error(error.stack);

@@ -33,7 +33,7 @@ export class ProgressTracker {
     if (result.success) {
       this.metrics.succeeded++;
       this.successfulStocks.push(result.stockCode);
-      
+
       if (result.reason === 'already_latest' || result.reason === 'no_new_data') {
         this.metrics.skipped++;
         this.skippedStocks.push(result.stockCode);
@@ -120,13 +120,15 @@ export class ProgressTracker {
     const remaining = this.getEstimatedRemaining();
 
     console.log(`\n📊 进度: ${this.metrics.completed}/${this.metrics.total} (${percent}%)`);
-    console.log(`✅ 成功: ${this.metrics.succeeded} | ❌ 失败: ${this.metrics.failed} | ⏭️  跳过: ${this.metrics.skipped}`);
+    console.log(
+      `✅ 成功: ${this.metrics.succeeded} | ❌ 失败: ${this.metrics.failed} | ⏭️  跳过: ${this.metrics.skipped}`,
+    );
     console.log(`⏱️  已用时: ${this.formatTime(elapsed)}`);
-    
+
     if (remaining !== null) {
       console.log(`⏳ 预计剩余: ${this.formatTime(remaining)}`);
     }
-    
+
     if (this.metrics.rate) {
       console.log(`⚡ 速度: ${this.metrics.rate.toFixed(1)} 只/分钟`);
     }
@@ -147,14 +149,14 @@ export class ProgressTracker {
     console.log(`❌ 失败: ${this.metrics.failed} 只`);
     console.log(`⏭️  跳过: ${this.metrics.skipped} 只`);
     console.log(`⏱️  总用时: ${this.formatTime(elapsed)}`);
-    
+
     if (this.metrics.rate) {
       console.log(`⚡ 平均速度: ${this.metrics.rate.toFixed(1)} 只/分钟`);
     }
 
     if (this.failedStocks.length > 0) {
       console.log(`\n❌ 失败的股票:`);
-      this.failedStocks.slice(0, 10).forEach(code => console.log(`  - ${code}`));
+      this.failedStocks.slice(0, 10).forEach((code) => console.log(`  - ${code}`));
       if (this.failedStocks.length > 10) {
         console.log(`  ... 及其他 ${this.failedStocks.length - 10} 只股票`);
       }

@@ -59,7 +59,8 @@ export class TechnicalIndicatorsService {
     period: 'daily' | 'weekly',
   ): MAResult[] {
     const closePrices = data.map((d) => d.close);
-    const targetPeriods = period === 'daily' ? periods.daily || [50, 150, 200] : periods.weekly || [10, 30, 40];
+    const targetPeriods =
+      period === 'daily' ? periods.daily || [50, 150, 200] : periods.weekly || [10, 30, 40];
 
     const results: MAResult[] = [];
 
@@ -72,7 +73,7 @@ export class TechnicalIndicatorsService {
     // 合并结果
     data.forEach((item, index) => {
       const result: MAResult = { date: item.date };
-      
+
       targetPeriods.forEach((p) => {
         const maArray = maValues[p];
         const offset = closePrices.length - maArray.length;

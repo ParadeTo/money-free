@@ -1,12 +1,12 @@
 /**
  * 港股和美股增量更新脚本
- * 
+ *
  * 功能:
  * 1. 查询每只股票的最新K线数据日期
  * 2. 只获取从最新日期到今天的新数据
  * 3. 增量插入新数据（upsert）
  * 4. 支持断点续传
- * 
+ *
  * 使用:
  * npx ts-node src/scripts/incremental-update-hk-us.ts --markets HK,US
  * npx ts-node src/scripts/incremental-update-hk-us.ts --markets HK --limit 10
@@ -171,7 +171,7 @@ async function main() {
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--markets' && i + 1 < args.length) {
-      markets = args[i + 1].split(',').map(m => m.trim().toUpperCase()) as MarketType[];
+      markets = args[i + 1].split(',').map((m) => m.trim().toUpperCase()) as MarketType[];
     } else if (args[i] === '--limit' && i + 1 < args.length) {
       limit = parseInt(args[i + 1], 10);
     } else if (args[i] === '--resume' && i + 1 < args.length) {
@@ -229,7 +229,9 @@ async function main() {
     if (!checkpoint) {
       throw new Error(`Checkpoint ${resumeTaskId} not found`);
     }
-    logger.log(`🔄 Resuming from checkpoint (${checkpoint.importedStocks}/${checkpoint.totalStocks} completed)`);
+    logger.log(
+      `🔄 Resuming from checkpoint (${checkpoint.importedStocks}/${checkpoint.totalStocks} completed)`,
+    );
     await checkpointTracker.resumeCheckpoint(resumeTaskId);
   } else {
     // 使用第一个市场作为checkpoint的market（因为只支持单市场）
@@ -305,13 +307,13 @@ async function main() {
 
         logger.log(
           `\n📊 Progress: ${completed}/${stocks.length} (${progress}%) | ` +
-          `Updated: ${stats.updated} | Latest: ${stats.alreadyLatest} | ` +
-          `NoData: ${stats.noNewData} | Failed: ${stats.failed} | ` +
-          `Elapsed: ${elapsed}s | Rate: ${rate.toFixed(1)}/min | ` +
-          `ETA: ${remaining}min`
+            `Updated: ${stats.updated} | Latest: ${stats.alreadyLatest} | ` +
+            `NoData: ${stats.noNewData} | Failed: ${stats.failed} | ` +
+            `Elapsed: ${elapsed}s | Rate: ${rate.toFixed(1)}/min | ` +
+            `ETA: ${remaining}min`,
         );
       }
-    })
+    }),
   );
 
   await Promise.all(tasks);

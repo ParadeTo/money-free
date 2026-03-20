@@ -105,10 +105,7 @@ export class ImportManager {
           });
         }
 
-        this.logger.error(
-          `Both adapters failed for index ${indexCode}`,
-          errors,
-        );
+        this.logger.error(`Both adapters failed for index ${indexCode}`, errors);
 
         return {
           data: null,
@@ -211,13 +208,7 @@ export class ImportManager {
       );
 
       const data = await fetchWithRetry(
-        () =>
-          this.config.primaryAdapter.fetchKlineData(
-            symbol,
-            market,
-            startDate,
-            endDate,
-          ),
+        () => this.config.primaryAdapter.fetchKlineData(symbol, market, startDate, endDate),
         {
           maxAttempts: this.config.retryAttempts || 3,
         },
@@ -252,13 +243,7 @@ export class ImportManager {
 
       try {
         const data = await fetchWithRetry(
-          () =>
-            this.config.backupAdapter.fetchKlineData(
-              symbol,
-              market,
-              startDate,
-              endDate,
-            ),
+          () => this.config.backupAdapter.fetchKlineData(symbol, market, startDate, endDate),
           {
             maxAttempts: this.config.retryAttempts || 3,
           },
@@ -278,10 +263,7 @@ export class ImportManager {
           });
         }
 
-        this.logger.error(
-          `Both adapters failed for stock ${symbol} K-line`,
-          errors,
-        );
+        this.logger.error(`Both adapters failed for stock ${symbol} K-line`, errors);
 
         return {
           data: null,

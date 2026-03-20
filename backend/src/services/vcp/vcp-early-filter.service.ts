@@ -35,18 +35,18 @@ export class VcpEarlyFilterService {
     }
 
     const baseResults = await this.queryVcpStocks(scanDate, conditions);
-    
+
     this.logger.log({
       action: 'filter_early_stage_query_complete',
       baseResultsCount: baseResults.length,
     });
 
     const stocks: EarlyStageStock[] = [];
-    
+
     for (const result of baseResults) {
       try {
         const stage = await this.calculateVcpStage(result.stockCode);
-        
+
         stocks.push({
           stockCode: result.stockCode,
           stockName: result.stock.stockName,
@@ -89,28 +89,45 @@ export class VcpEarlyFilterService {
   }
 
   private validateConditions(conditions: FilterConditions): void {
-    const { distFrom52WeekLow, distFrom52WeekHigh, contractionCountMin, contractionCountMax } = conditions;
+    const { distFrom52WeekLow, distFrom52WeekHigh, contractionCountMin, contractionCountMax } =
+      conditions;
 
     const errors: string[] = [];
 
-    if (distFrom52WeekLow < VALIDATION_RULES.distFrom52WeekLow.min || 
-        distFrom52WeekLow > VALIDATION_RULES.distFrom52WeekLow.max) {
-      errors.push(`distFrom52WeekLow必须在${VALIDATION_RULES.distFrom52WeekLow.min}-${VALIDATION_RULES.distFrom52WeekLow.max}之间`);
+    if (
+      distFrom52WeekLow < VALIDATION_RULES.distFrom52WeekLow.min ||
+      distFrom52WeekLow > VALIDATION_RULES.distFrom52WeekLow.max
+    ) {
+      errors.push(
+        `distFrom52WeekLow必须在${VALIDATION_RULES.distFrom52WeekLow.min}-${VALIDATION_RULES.distFrom52WeekLow.max}之间`,
+      );
     }
 
-    if (distFrom52WeekHigh < VALIDATION_RULES.distFrom52WeekHigh.min || 
-        distFrom52WeekHigh > VALIDATION_RULES.distFrom52WeekHigh.max) {
-      errors.push(`distFrom52WeekHigh必须在${VALIDATION_RULES.distFrom52WeekHigh.min}-${VALIDATION_RULES.distFrom52WeekHigh.max}之间`);
+    if (
+      distFrom52WeekHigh < VALIDATION_RULES.distFrom52WeekHigh.min ||
+      distFrom52WeekHigh > VALIDATION_RULES.distFrom52WeekHigh.max
+    ) {
+      errors.push(
+        `distFrom52WeekHigh必须在${VALIDATION_RULES.distFrom52WeekHigh.min}-${VALIDATION_RULES.distFrom52WeekHigh.max}之间`,
+      );
     }
 
-    if (contractionCountMin < VALIDATION_RULES.contractionCountMin.min || 
-        contractionCountMin > VALIDATION_RULES.contractionCountMin.max) {
-      errors.push(`contractionCountMin必须在${VALIDATION_RULES.contractionCountMin.min}-${VALIDATION_RULES.contractionCountMin.max}之间`);
+    if (
+      contractionCountMin < VALIDATION_RULES.contractionCountMin.min ||
+      contractionCountMin > VALIDATION_RULES.contractionCountMin.max
+    ) {
+      errors.push(
+        `contractionCountMin必须在${VALIDATION_RULES.contractionCountMin.min}-${VALIDATION_RULES.contractionCountMin.max}之间`,
+      );
     }
 
-    if (contractionCountMax < VALIDATION_RULES.contractionCountMax.min || 
-        contractionCountMax > VALIDATION_RULES.contractionCountMax.max) {
-      errors.push(`contractionCountMax必须在${VALIDATION_RULES.contractionCountMax.min}-${VALIDATION_RULES.contractionCountMax.max}之间`);
+    if (
+      contractionCountMax < VALIDATION_RULES.contractionCountMax.min ||
+      contractionCountMax > VALIDATION_RULES.contractionCountMax.max
+    ) {
+      errors.push(
+        `contractionCountMax必须在${VALIDATION_RULES.contractionCountMax.min}-${VALIDATION_RULES.contractionCountMax.max}之间`,
+      );
     }
 
     if (contractionCountMin > contractionCountMax) {
@@ -167,14 +184,23 @@ export class VcpEarlyFilterService {
     }
 
     const sortedKlines = klines.reverse();
-    const bars: KLineBar[] = sortedKlines.map((k: { date: Date; open: number; high: number; low: number; close: number; volume: number }) => ({
-      date: k.date.toISOString().split('T')[0],
-      open: k.open,
-      high: k.high,
-      low: k.low,
-      close: k.close,
-      volume: k.volume,
-    }));
+    const bars: KLineBar[] = sortedKlines.map(
+      (k: {
+        date: Date;
+        open: number;
+        high: number;
+        low: number;
+        close: number;
+        volume: number;
+      }) => ({
+        date: k.date.toISOString().split('T')[0],
+        open: k.open,
+        high: k.high,
+        low: k.low,
+        close: k.close,
+        volume: k.volume,
+      }),
+    );
 
     const analysis = this.vcpAnalyzer.analyze(bars);
 
@@ -186,7 +212,9 @@ export class VcpEarlyFilterService {
     const latestBar = bars[bars.length - 1];
     const latestDate = new Date(latestBar.date);
     const lowDate = new Date(lastPullback.lowDate);
-    const daysSinceLow = Math.floor((latestDate.getTime() - lowDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysSinceLow = Math.floor(
+      (latestDate.getTime() - lowDate.getTime()) / (1000 * 60 * 60 * 24),
+    );
 
     const pullbackInfo: PullbackInfo = {
       durationDays: lastPullback.durationDays,
@@ -196,9 +224,12 @@ export class VcpEarlyFilterService {
       highDate: lastPullback.highDate,
       lowDate: lastPullback.lowDate,
       daysSinceLow,
-      recoveryPct: lastPullback.lowPrice > 0 
-        ? Math.round(((latestBar.close - lastPullback.lowPrice) / lastPullback.lowPrice) * 10000) / 100
-        : 0,
+      recoveryPct:
+        lastPullback.lowPrice > 0
+          ? Math.round(
+              ((latestBar.close - lastPullback.lowPrice) / lastPullback.lowPrice) * 10000,
+            ) / 100
+          : 0,
     };
 
     if (daysSinceLow === 0) {
@@ -253,12 +284,21 @@ export class VcpEarlyFilterService {
     return undefined;
   }
 
-  private generateQuickActions(conditions: FilterConditions, tipType: 'error' | 'warning' | 'info'): QuickAction[] {
+  private generateQuickActions(
+    conditions: FilterConditions,
+    tipType: 'error' | 'warning' | 'info',
+  ): QuickAction[] {
     const actions: QuickAction[] = [];
 
     if (tipType === 'error' || tipType === 'warning') {
-      const widen5 = Math.min(VALIDATION_RULES.distFrom52WeekLow.max, conditions.distFrom52WeekLow + 5);
-      const widen10 = Math.min(VALIDATION_RULES.distFrom52WeekLow.max, conditions.distFrom52WeekLow + 10);
+      const widen5 = Math.min(
+        VALIDATION_RULES.distFrom52WeekLow.max,
+        conditions.distFrom52WeekLow + 5,
+      );
+      const widen10 = Math.min(
+        VALIDATION_RULES.distFrom52WeekLow.max,
+        conditions.distFrom52WeekLow + 10,
+      );
 
       if (widen5 > conditions.distFrom52WeekLow) {
         actions.push({
@@ -286,8 +326,14 @@ export class VcpEarlyFilterService {
         });
       }
     } else if (tipType === 'info') {
-      const tighten5 = Math.max(VALIDATION_RULES.distFrom52WeekLow.min, conditions.distFrom52WeekLow - 5);
-      const tighten10 = Math.max(VALIDATION_RULES.distFrom52WeekLow.min, conditions.distFrom52WeekLow - 10);
+      const tighten5 = Math.max(
+        VALIDATION_RULES.distFrom52WeekLow.min,
+        conditions.distFrom52WeekLow - 5,
+      );
+      const tighten10 = Math.max(
+        VALIDATION_RULES.distFrom52WeekLow.min,
+        conditions.distFrom52WeekLow - 10,
+      );
 
       if (tighten5 < conditions.distFrom52WeekLow) {
         actions.push({

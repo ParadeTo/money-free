@@ -2,7 +2,7 @@
 
 generator client {
   provider      = "prisma-client-js"
-  binaryTargets = ["native"]
+  binaryTargets = ["native", "darwin-arm64"]
 }
 
 datasource db {
@@ -30,11 +30,12 @@ model Stock {
   updatedAt       DateTime @updatedAt @map("updated_at")
 
   // 关系
-  klines         KLineData[]
-  indicators     TechnicalIndicator[]
-  favorites      Favorite[]
-  drawings       Drawing[]
-  vcpScanResults VcpScanResult[]
+  klines              KLineData[]
+  indicators          TechnicalIndicator[]
+  favorites           Favorite[]
+  drawings            Drawing[]
+  vcpScanResults      VcpScanResult[]
+  volumeSurgeScanResults ScanResult[]
 
   @@index([admissionStatus])
   @@index([market])
@@ -293,4 +294,67 @@ model ImportCheckpoint {
   @@index([market, status])
   @@index([startTime])
   @@map("import_checkpoints")
+}
+
+// ============================================================================
+// 11. 成交量激增扫描
+// ============================================================================
+
+model VolumeSurgeScan {
+  id            String     @id @default(uuid())
+  scanDate      DateTime   @map("scan_date")
+  scanMode      String     @map("scan_mode") // 'AUTO' | 'MANUAL'
+  referenceDate DateTime?  @map("reference_date")
+  status        String // 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
+  totalStocks   Int        @map("total_stocks")
+  matchedStocks Int        @map("matched_stocks")
+  durationMs    Int?       @map("duration_ms")
+  errorMessage  String?    @map("error_message")
+  createdBy     String?    @map("created_by") // 'web' | 'cli'
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  results ScanResult[]
+
+  @@index([scanDate(sort: Desc)])
+  @@index([status])
+  @@map("volume_surge_scans")
+}
+
+model ScanResult {
+  id                   String   @id @default(uuid())
+  scanId               String   @map("scan_id")
+  stockCode            String   @map("stock_code")
+  
+  contractionStartDate DateTime @map("contraction_start_date")
+  contractionEndDate   DateTime @map("contraction_end_date")
+  contractionAvgVolume Float    @map("contraction_avg_volume")
+  expansionStartDate   DateTime @map("expansion_start_date")
+  expansionDays        Int      @map("expansion_days")
+  expansionMultiplier  Float    @map("expansion_multiplier")
+  
+  upDayAvgVolume       Float    @map("up_day_avg_volume")
+  downDayAvgVolume     Float    @map("down_day_avg_volume")
+  volumeSupportRatio   Float    @map("volume_support_ratio")
+  
+  ma50Value            Float    @map("ma50_value")
+  ma150Value           Float    @map("ma150_value")
+  ma50Slope            Float    @map("ma50_slope")
+  ma50TrendingUp       Boolean  @map("ma50_trending_up")
+  ma50BelowMa150       Boolean  @map("ma50_below_ma150")
+  
+  meetsVolumeCriteria  Boolean  @map("meets_volume_criteria")
+  meetsMaCriteria      Boolean  @map("meets_ma_criteria")
+  meetsSupportCriteria Boolean  @map("meets_support_criteria")
+  meetsAllCriteria     Boolean  @map("meets_all_criteria")
+  
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  scan  VolumeSurgeScan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  stock Stock           @relation(fields: [stockCode], references: [stockCode], onDelete: Cascade)
+
+  @@unique([scanId, stockCode])
+  @@index([meetsAllCriteria, volumeSupportRatio(sort: Desc)])
+  @@index([stockCode])
+  @@map("scan_results")
 }

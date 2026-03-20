@@ -3,7 +3,7 @@ import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 /**
  * 当前用户装饰器
  * 从 JWT token 中提取用户信息
- * 
+ *
  * @example
  * ```typescript
  * @Get('me')

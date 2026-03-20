@@ -1,15 +1,15 @@
 /**
  * 真正的增量更新脚本 - 只获取最新数据
- * 
+ *
  * 功能:
  * 1. 查询每只股票的最新数据日期
  * 2. 只获取从最新日期到今天的新数据
  * 3. 增量插入新数据（不删除旧数据）
  * 4. 重新计算技术指标（基于完整历史数据）
- * 
+ *
  * 使用:
  * npx ts-node src/scripts/incremental-update-latest.ts [limit] [offset]
- * 
+ *
  * 例子:
  * npx ts-node src/scripts/incremental-update-latest.ts 100 0   # 更新前100只
  * npx ts-node src/scripts/incremental-update-latest.ts        # 更新所有股票
@@ -20,7 +20,10 @@ import { ConfigService } from '@nestjs/config';
 import { TushareService } from '../services/datasource/tushare.service';
 import { AkShareService } from '../services/datasource/akshare.service';
 import { DataSourceManagerService } from '../services/datasource/datasource-manager.service';
-import { TechnicalIndicatorsService, PriceData } from '../services/indicators/technical-indicators.service';
+import {
+  TechnicalIndicatorsService,
+  PriceData,
+} from '../services/indicators/technical-indicators.service';
 import { PythonBridgeService } from '../services/python-bridge/python-bridge.service';
 import pLimit from 'p-limit';
 
@@ -30,9 +33,9 @@ const prisma = new PrismaClient();
 // 支持 --index-only 参数：只更新指数成分股（沪深300+中证500）
 // 支持 --markets 参数：只更新指定市场（例如：--markets SH,SZ）
 const indexOnly = process.argv.includes('--index-only');
-const marketsArg = process.argv.find(arg => arg.startsWith('--markets='));
+const marketsArg = process.argv.find((arg) => arg.startsWith('--markets='));
 const markets = marketsArg ? marketsArg.split('=')[1].split(',') : null;
-const positionalArgs = process.argv.slice(2).filter(a => !a.startsWith('--'));
+const positionalArgs = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const limit = parseInt(positionalArgs[0]) || 0; // 0表示全部
 const offset = parseInt(positionalArgs[1]) || 0;
 
@@ -151,7 +154,7 @@ async function processStockIncremental(
       orderBy: { date: 'asc' },
     });
 
-    const priceData: PriceData[] = allDailyData.map((item: typeof allDailyData[number]) => ({
+    const priceData: PriceData[] = allDailyData.map((item: (typeof allDailyData)[number]) => ({
       date: item.date,
       open: item.open,
       high: item.high,
@@ -276,11 +279,12 @@ async function processStockIncremental(
       const weeklyStartDateStr = weeklyNextDay.toISOString().split('T')[0];
 
       if (weeklyNextDay < today) {
-        const { data: newWeeklyData, source: weeklySource } = await dataSourceManager.getWeeklyKLine({
-          stockCode: stock.stockCode,
-          startDate: weeklyStartDateStr,
-          endDate: endDateStr,
-        });
+        const { data: newWeeklyData, source: weeklySource } =
+          await dataSourceManager.getWeeklyKLine({
+            stockCode: stock.stockCode,
+            startDate: weeklyStartDateStr,
+            endDate: endDateStr,
+          });
 
         if (newWeeklyData.length > 0) {
           let weeklyInserted = 0;
@@ -332,17 +336,23 @@ async function processStockIncremental(
             orderBy: { date: 'asc' },
           });
 
-          const weeklyPriceData: PriceData[] = allWeeklyData.map((item: typeof allWeeklyData[number]) => ({
-            date: item.date,
-            open: item.open,
-            high: item.high,
-            low: item.low,
-            close: item.close,
-            volume: item.volume,
-            amount: item.amount,
-          }));
+          const weeklyPriceData: PriceData[] = allWeeklyData.map(
+            (item: (typeof allWeeklyData)[number]) => ({
+              date: item.date,
+              open: item.open,
+              high: item.high,
+              low: item.low,
+              close: item.close,
+              volume: item.volume,
+              amount: item.amount,
+            }),
+          );
 
-          const weeklyMaResults = indicatorsService.calculateMA(weeklyPriceData, { weekly: [10, 30, 40] }, 'weekly');
+          const weeklyMaResults = indicatorsService.calculateMA(
+            weeklyPriceData,
+            { weekly: [10, 30, 40] },
+            'weekly',
+          );
 
           await prisma.technicalIndicator.deleteMany({
             where: {
@@ -377,7 +387,6 @@ async function processStockIncremental(
 
     console.log(`✅ Successfully updated ${stock.stockCode} (+${insertedCount} records)`);
     return { success: true, newRecords: insertedCount };
-
   } catch (error: any) {
     console.error(`❌ Error: ${error.message}`);
     return { success: false, reason: 'error', error: error.message };
@@ -389,7 +398,9 @@ async function main() {
   if (markets) {
     mode = `Markets: ${markets.join(',')}`;
   }
-  console.log(`📊 Starting incremental update (mode: ${mode}, limit: ${limit || 'ALL'}, offset: ${offset})...\n`);
+  console.log(
+    `📊 Starting incremental update (mode: ${mode}, limit: ${limit || 'ALL'}, offset: ${offset})...\n`,
+  );
 
   const configService = new ConfigService();
   const pythonBridgeService = new PythonBridgeService();
@@ -401,12 +412,12 @@ async function main() {
   // 获取股票列表
   const totalStocks = await prisma.stock.count();
   const where: any = indexOnly ? { indexCode: { not: null } } : {};
-  
+
   // 添加市场过滤
   if (markets && markets.length > 0) {
     where.market = { in: markets };
   }
-  
+
   const stocks = await prisma.stock.findMany({
     where: where,
     skip: offset,
@@ -422,11 +433,13 @@ async function main() {
     console.log(`Markets ${markets.join(',')}: ${stocks.length} stocks`);
     console.log(`Processing: ${stocks.length} stocks\n`);
   } else {
-    console.log(`Processing: ${offset + 1} to ${offset + stocks.length} (${stocks.length} stocks)\n`);
+    console.log(
+      `Processing: ${offset + 1} to ${offset + stocks.length} (${stocks.length} stocks)\n`,
+    );
   }
 
   // 统计
-  let stats = {
+  const stats = {
     success: 0,
     alreadyUpdated: 0,
     noNewData: 0,
@@ -469,15 +482,15 @@ async function main() {
       if (completed % 10 === 0 || completed === stocks.length) {
         console.log(
           `\n📊 Progress: ${completed}/${stocks.length} (${progress}%) | ` +
-          `Updated: ${stats.success} | Already: ${stats.alreadyUpdated} | ` +
-          `NoData: ${stats.noNewData} | Failed: ${stats.failed} | ` +
-          `Elapsed: ${elapsed}s | Rate: ${rate.toFixed(1)}/min | ` +
-          `ETA: ${remaining}min`
+            `Updated: ${stats.success} | Already: ${stats.alreadyUpdated} | ` +
+            `NoData: ${stats.noNewData} | Failed: ${stats.failed} | ` +
+            `Elapsed: ${elapsed}s | Rate: ${rate.toFixed(1)}/min | ` +
+            `ETA: ${remaining}min`,
         );
       }
 
       return result;
-    })
+    }),
   );
 
   await Promise.all(tasks);
@@ -496,8 +509,7 @@ async function main() {
   await prisma.$disconnect();
 }
 
-main()
-  .catch((error) => {
-    console.error('Fatal error:', error);
-    process.exit(1);
-  });
+main().catch((error) => {
+  console.error('Fatal error:', error);
+  process.exit(1);
+});

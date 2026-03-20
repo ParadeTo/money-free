@@ -41,9 +41,7 @@ export class IndexCompositionService {
     const stats: Record<string, number> = {};
 
     for (const index of HK_INDICES) {
-      const result = await this.importManager.fetchIndexConstituentsWithFallback(
-        index.code,
-      );
+      const result = await this.importManager.fetchIndexConstituentsWithFallback(index.code);
 
       if (result.data) {
         stats[index.code] = result.data.length;
@@ -92,9 +90,7 @@ export class IndexCompositionService {
     const stats: Record<string, number> = {};
 
     for (const index of US_INDICES) {
-      const result = await this.importManager.fetchIndexConstituentsWithFallback(
-        index.code,
-      );
+      const result = await this.importManager.fetchIndexConstituentsWithFallback(index.code);
 
       if (result.data) {
         stats[index.code] = result.data.length;

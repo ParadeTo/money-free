@@ -17,7 +17,7 @@ async function main() {
 
     for (let i = 0; i < args.length; i++) {
       if (args[i] === '--markets' && i + 1 < args.length) {
-        markets = args[i + 1].split(',').map(m => m.trim().toUpperCase());
+        markets = args[i + 1].split(',').map((m) => m.trim().toUpperCase());
         logger.log(`Filtering by markets: ${markets.join(', ')}`);
       }
     }
@@ -26,11 +26,13 @@ async function main() {
     const result = await scanner.scanAllStocks(undefined, markets);
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
-    logger.log(JSON.stringify({
-      event: 'vcp_scan_complete',
-      ...result,
-      elapsedSeconds: elapsed,
-    }));
+    logger.log(
+      JSON.stringify({
+        event: 'vcp_scan_complete',
+        ...result,
+        elapsedSeconds: elapsed,
+      }),
+    );
   } catch (error: any) {
     logger.error(`VCP calculation failed: ${error.message}`);
     process.exit(1);

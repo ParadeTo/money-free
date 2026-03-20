@@ -8,7 +8,7 @@ import * as path from 'path';
 
 const prisma = new PrismaClient();
 
-function fetchStockList(): Promise<Array<{code: string, name: string, market: string}>> {
+function fetchStockList(): Promise<Array<{ code: string; name: string; market: string }>> {
   const bridgeDir = path.join(process.cwd(), '..', 'bridge');
   const pythonPath = path.join(bridgeDir, 'venv', 'bin', 'python');
   const scriptPath = path.join(bridgeDir, 'fetch_stock_list.py');
@@ -18,8 +18,12 @@ function fetchStockList(): Promise<Array<{code: string, name: string, market: st
     let stdout = '';
     let stderr = '';
 
-    proc.stdout.on('data', (chunk) => { stdout += chunk.toString(); });
-    proc.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
+    proc.stdout.on('data', (chunk) => {
+      stdout += chunk.toString();
+    });
+    proc.stderr.on('data', (chunk) => {
+      stderr += chunk.toString();
+    });
 
     proc.stdin.write(JSON.stringify({}));
     proc.stdin.end();
@@ -56,14 +60,14 @@ async function main() {
   console.log(`✅ 获取 ${allStocks.length} 只股票\n`);
 
   console.log('🔍 应用过滤条件...');
-  
-  const filteredStocks = allStocks.filter(s => {
+
+  const filteredStocks = allStocks.filter((s) => {
     // 排除ST股票
     if (s.name.includes('ST') || s.name.includes('*ST')) return false;
-    
+
     // 排除科创板（688开头）和北交所（8开头）
     if (s.code.startsWith('688') || s.code.startsWith('8')) return false;
-    
+
     return true;
   });
 
@@ -71,7 +75,7 @@ async function main() {
 
   console.log('💾 保存到数据库...\n');
 
-  let stats = { added: 0, updated: 0, skipped: 0 };
+  const stats = { added: 0, updated: 0, skipped: 0 };
 
   for (let i = 0; i < filteredStocks.length; i++) {
     const s = filteredStocks[i];

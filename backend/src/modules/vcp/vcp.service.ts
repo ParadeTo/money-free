@@ -1,10 +1,20 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { GetVcpScanDto } from './dto/get-vcp-scan.dto';
-import { VcpAnalyzerService, KLineBar, PullbackResult } from '../../services/vcp/vcp-analyzer.service';
+import {
+  VcpAnalyzerService,
+  KLineBar,
+  PullbackResult,
+} from '../../services/vcp/vcp-analyzer.service';
 import { VcpEarlyFilterService } from '../../services/vcp/vcp-early-filter.service';
 import { FilterConditions, FilterResult } from '../../types/vcp-early-stage';
-import { VcpAnalysisResponseDto, ContractionDto, PullbackDto, KLineDto, TrendTemplateCheckDto } from './dto/vcp-analysis-response.dto';
+import {
+  VcpAnalysisResponseDto,
+  ContractionDto,
+  PullbackDto,
+  KLineDto,
+  TrendTemplateCheckDto,
+} from './dto/vcp-analysis-response.dto';
 
 @Injectable()
 export class VcpService {
@@ -14,7 +24,7 @@ export class VcpService {
     private readonly prisma: PrismaService,
     private readonly vcpAnalyzer: VcpAnalyzerService,
     private readonly vcpEarlyFilter: VcpEarlyFilterService,
-  ) { }
+  ) {}
 
   async getLatestScanResults(dto: GetVcpScanDto) {
     const sortBy = dto.sortBy || 'lastContractionPct';
@@ -55,7 +65,7 @@ export class VcpService {
     }
 
     // 为每只股票保留最新的扫描记录
-    const latestResultsMap = new Map<string, typeof allResults[0]>();
+    const latestResultsMap = new Map<string, (typeof allResults)[0]>();
     for (const result of allResults) {
       if (!latestResultsMap.has(result.stockCode)) {
         latestResultsMap.set(result.stockCode, result);
@@ -65,13 +75,25 @@ export class VcpService {
     // 转换为数组并排序
     const results = Array.from(latestResultsMap.values());
     const orderByMap: Record<string, (a: any, b: any) => number> = {
-      contractionCount: (a, b) => sortOrder === 'asc' ? a.contractionCount - b.contractionCount : b.contractionCount - a.contractionCount,
-      lastContractionPct: (a, b) => sortOrder === 'asc' ? a.lastContractionPct - b.lastContractionPct : b.lastContractionPct - a.lastContractionPct,
-      volumeDryingUp: (a, b) => sortOrder === 'asc' ? (a.volumeDryingUp ? 1 : 0) - (b.volumeDryingUp ? 1 : 0) : (b.volumeDryingUp ? 1 : 0) - (a.volumeDryingUp ? 1 : 0),
-      rsRating: (a, b) => sortOrder === 'asc' ? a.rsRating - b.rsRating : b.rsRating - a.rsRating,
-      priceChangePct: (a, b) => sortOrder === 'asc' ? a.priceChangePct - b.priceChangePct : b.priceChangePct - a.priceChangePct,
+      contractionCount: (a, b) =>
+        sortOrder === 'asc'
+          ? a.contractionCount - b.contractionCount
+          : b.contractionCount - a.contractionCount,
+      lastContractionPct: (a, b) =>
+        sortOrder === 'asc'
+          ? a.lastContractionPct - b.lastContractionPct
+          : b.lastContractionPct - a.lastContractionPct,
+      volumeDryingUp: (a, b) =>
+        sortOrder === 'asc'
+          ? (a.volumeDryingUp ? 1 : 0) - (b.volumeDryingUp ? 1 : 0)
+          : (b.volumeDryingUp ? 1 : 0) - (a.volumeDryingUp ? 1 : 0),
+      rsRating: (a, b) => (sortOrder === 'asc' ? a.rsRating - b.rsRating : b.rsRating - a.rsRating),
+      priceChangePct: (a, b) =>
+        sortOrder === 'asc'
+          ? a.priceChangePct - b.priceChangePct
+          : b.priceChangePct - a.priceChangePct,
     };
-    
+
     if (orderByMap[sortBy]) {
       results.sort(orderByMap[sortBy]);
     }
@@ -109,11 +131,14 @@ export class VcpService {
           const lastPullback = pullbacks[pullbacks.length - 1];
           const lastPullbackLowDate = new Date(lastPullback.lowDate);
           const lastBarDate = new Date(lastBar.date);
-          const daysSinceLow = Math.floor((lastBarDate.getTime() - lastPullbackLowDate.getTime()) / (1000 * 60 * 60 * 24));
+          const daysSinceLow = Math.floor(
+            (lastBarDate.getTime() - lastPullbackLowDate.getTime()) / (1000 * 60 * 60 * 24),
+          );
 
           // 只关注最近20天内的回调
           if (daysSinceLow <= 20) {
-            const recoveryPct = ((lastBar.close - lastPullback.lowPrice) / lastPullback.lowPrice) * 100;
+            const recoveryPct =
+              ((lastBar.close - lastPullback.lowPrice) / lastPullback.lowPrice) * 100;
             currentPullback = {
               ...lastPullback,
               daysSinceLow,
@@ -145,7 +170,7 @@ export class VcpService {
       }
     } else {
       // 不过滤，直接映射
-      stocks = results.map((r: typeof results[number]) => ({
+      stocks = results.map((r: (typeof results)[number]) => ({
         stockCode: r.stockCode,
         stockName: r.stock.stockName,
         market: r.stock.market,
@@ -165,9 +190,13 @@ export class VcpService {
     }
 
     // 获取所有结果中最新的扫描日期
-    const latestScanDate = results.length > 0 
-      ? results.reduce((latest, r) => r.scanDate > latest ? r.scanDate : latest, results[0].scanDate)
-      : new Date();
+    const latestScanDate =
+      results.length > 0
+        ? results.reduce(
+            (latest, r) => (r.scanDate > latest ? r.scanDate : latest),
+            results[0].scanDate,
+          )
+        : new Date();
 
     return {
       stocks,
@@ -234,17 +263,14 @@ export class VcpService {
 
   /**
    * Generate VCP analysis for a single stock (T024 [US1])
-   * 
+   *
    * @param stockCode Stock code (e.g., "605117")
    * @param forceRefresh Force real-time analysis (ignore cache)
    * @returns Complete VCP analysis result
    * @throws NotFoundException if stock not found
    * @throws BadRequestException if K-line data insufficient
    */
-  async generateAnalysis(
-    stockCode: string,
-    forceRefresh = false,
-  ): Promise<VcpAnalysisResponseDto> {
+  async generateAnalysis(stockCode: string, forceRefresh = false): Promise<VcpAnalysisResponseDto> {
     const startTime = Date.now();
 
     // 1. Get stock information
@@ -286,7 +312,9 @@ export class VcpService {
           },
           contractions: JSON.parse(cachedResult.contractions),
           trendTemplate: JSON.parse(cachedResult.trendTemplateDetails),
-          lastPullbackData: cachedResult.lastPullbackData ? JSON.parse(cachedResult.lastPullbackData) : null,
+          lastPullbackData: cachedResult.lastPullbackData
+            ? JSON.parse(cachedResult.lastPullbackData)
+            : null,
         };
       }
     }
@@ -302,7 +330,7 @@ export class VcpService {
 
       if (klines.length < 30) {
         throw new BadRequestException(
-          `Insufficient K-line data for ${stockCode} (< 30 days, found: ${klines.length})`
+          `Insufficient K-line data for ${stockCode} (< 30 days, found: ${klines.length})`,
         );
       }
 
@@ -325,13 +353,13 @@ export class VcpService {
         orderBy: { scanDate: 'desc' },
       });
 
-      const trendTemplateDetails = latestScan 
+      const trendTemplateDetails = latestScan
         ? JSON.parse(latestScan.trendTemplateDetails)
         : { pass: false, checks: [] };
 
       const latestBar = bars[bars.length - 1];
       const prevBar = bars[bars.length - 2];
-      const priceChangePct = prevBar 
+      const priceChangePct = prevBar
         ? ((latestBar.close - prevBar.close) / prevBar.close) * 100
         : 0;
 
@@ -357,21 +385,23 @@ export class VcpService {
     }
 
     // 4. Calculate if expired (>7 days)
-    const daysSinceScan = Math.floor(
-      (Date.now() - scanDate.getTime()) / (1000 * 60 * 60 * 24)
-    );
+    const daysSinceScan = Math.floor((Date.now() - scanDate.getTime()) / (1000 * 60 * 60 * 24));
     const isExpired = daysSinceScan > 7;
 
     // 5. Get pullbacks with daysSinceLow calculation
     let pullbacks: PullbackDto[] = [];
     if (analysisData.lastPullbackData || analysisData.pullbacks) {
-      const rawPullbacks = analysisData.pullbacks || (analysisData.lastPullbackData ? [analysisData.lastPullbackData] : []);
+      const rawPullbacks =
+        analysisData.pullbacks ||
+        (analysisData.lastPullbackData ? [analysisData.lastPullbackData] : []);
       const now = new Date();
-      
+
       pullbacks = rawPullbacks.map((p: any, index: number) => {
         const lowDate = new Date(p.lowDate);
-        const daysSinceLow = Math.floor((now.getTime() - lowDate.getTime()) / (1000 * 60 * 60 * 24));
-        
+        const daysSinceLow = Math.floor(
+          (now.getTime() - lowDate.getTime()) / (1000 * 60 * 60 * 24),
+        );
+
         return {
           index: index + 1,
           highDate: p.highDate,
@@ -392,7 +422,7 @@ export class VcpService {
     const klines: KLineDto[] = recentKLines.map((k: KLineBar, i: number) => {
       const prevClose = i > 0 ? recentKLines[i - 1].close : k.open;
       const changePct = ((k.close - prevClose) / prevClose) * 100;
-      
+
       return {
         date: k.date,
         open: k.open,

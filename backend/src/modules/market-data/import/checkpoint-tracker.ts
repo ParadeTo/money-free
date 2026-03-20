@@ -57,10 +57,7 @@ export class CheckpointTracker {
     return checkpoint ? this.toCheckpointData(checkpoint) : null;
   }
 
-  async updateProgress(
-    taskId: string,
-    importedStocks: number,
-  ): Promise<void> {
+  async updateProgress(taskId: string, importedStocks: number): Promise<void> {
     await this.prisma.importCheckpoint.update({
       where: { taskId },
       data: {
@@ -70,11 +67,7 @@ export class CheckpointTracker {
     });
   }
 
-  async recordFailure(
-    taskId: string,
-    stockCode: string,
-    error: string,
-  ): Promise<void> {
+  async recordFailure(taskId: string, stockCode: string, error: string): Promise<void> {
     const checkpoint = await this.prisma.importCheckpoint.findUnique({
       where: { taskId },
     });

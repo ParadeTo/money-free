@@ -58,7 +58,7 @@ export class IndicatorsService {
     });
 
     // 将 values 字段从 JSON 字符串解析为对象
-    const parsedData = data.map((item: typeof data[number]) => ({
+    const parsedData = data.map((item: (typeof data)[number]) => ({
       ...item,
       values: JSON.parse(item.values),
     }));

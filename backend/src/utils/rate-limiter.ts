@@ -1,6 +1,6 @@
 /**
  * Rate Limiter using Token Bucket Algorithm
- * 
+ *
  * Controls API request rate to avoid exceeding quota limits.
  * Implements a token bucket that refills at a fixed rate.
  */
@@ -23,10 +23,10 @@ export class RateLimiter {
     this.maxTokens = burstSize || requestsPerMinute;
     this.tokens = this.maxTokens;
     this.lastRefillTime = Date.now();
-    
+
     // Calculate refill rate: tokens per millisecond
     this.refillRate = requestsPerMinute / 60000;
-    
+
     // Minimum interval to spread requests evenly
     this.minInterval = 60000 / requestsPerMinute;
   }
@@ -59,7 +59,7 @@ export class RateLimiter {
       // Calculate wait time for next token
       const tokensNeeded = 1 - this.tokens;
       const waitTime = Math.ceil(tokensNeeded / this.refillRate);
-      
+
       // Add small buffer to ensure token is available
       await this.sleep(waitTime + 10);
     }
@@ -100,7 +100,7 @@ export class RateLimiter {
    * Sleep for specified milliseconds
    */
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**

@@ -1,6 +1,6 @@
 /**
  * 任务状态查询脚本
- * 
+ *
  * 使用:
  * npx ts-node src/scripts/task-status.ts
  * npx ts-node src/scripts/task-status.ts --task-id abc-123
@@ -38,7 +38,7 @@ async function main() {
         process.exit(1);
       }
 
-      checkpoints.forEach(cp => {
+      checkpoints.forEach((cp) => {
         console.log(`市场: ${cp.market}`);
         console.log(`类型: ${cp.importType}`);
         console.log(`状态: ${cp.status}`);
@@ -62,7 +62,7 @@ async function main() {
         console.log(`✅ 当前没有运行中的任务\n`);
       } else {
         console.log(`⚠️ 当前有 ${runningTasks.length} 个运行中的任务:\n`);
-        
+
         runningTasks.forEach((task, index) => {
           console.log(`${index + 1}. 任务ID: ${task.taskId}`);
           console.log(`   进度: ${task.processedStocks}/${task.totalStocks}`);
@@ -86,13 +86,15 @@ async function main() {
 
       if (recentTasks.length > 0) {
         console.log(`\n📜 最近完成的任务:\n`);
-        
+
         recentTasks.forEach((task, index) => {
           const icon = task.status === 'completed' ? '✅' : '❌';
           console.log(`${index + 1}. ${icon} 任务ID: ${task.taskId}`);
           console.log(`   状态: ${task.status}`);
           console.log(`   成功/失败: ${task.successCount}/${task.failedCount}`);
-          console.log(`   用时: ${Math.round((task.endTime!.getTime() - task.startTime.getTime()) / 60000)} 分钟`);
+          console.log(
+            `   用时: ${Math.round((task.endTime!.getTime() - task.startTime.getTime()) / 60000)} 分钟`,
+          );
           console.log();
         });
       }

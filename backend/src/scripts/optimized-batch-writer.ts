@@ -32,7 +32,7 @@ export class BatchWriter<T> {
    */
   async add(item: T): Promise<void> {
     this.queue.push(item);
-    
+
     if (this.queue.length >= this.batchSize) {
       await this.flush();
     }
@@ -44,7 +44,7 @@ export class BatchWriter<T> {
    */
   async addBatch(items: T[]): Promise<void> {
     this.queue.push(...items);
-    
+
     while (this.queue.length >= this.batchSize) {
       await this.flush();
     }
@@ -59,7 +59,7 @@ export class BatchWriter<T> {
     }
 
     this.flushing = true;
-    
+
     try {
       const batch = this.queue.splice(0, this.batchSize);
       await this.flushFn(batch);
@@ -98,10 +98,7 @@ export class BatchWriter<T> {
  * @param batchSize 批次大小
  * @returns BatchWriter实例
  */
-export function createKLineWriter(
-  prisma: PrismaClient,
-  batchSize: number = 100,
-): BatchWriter<any> {
+export function createKLineWriter(prisma: PrismaClient, batchSize: number = 100): BatchWriter<any> {
   return new BatchWriter(batchSize, async (batch) => {
     await prisma.$transaction(async (tx) => {
       await tx.kLineData.createMany({

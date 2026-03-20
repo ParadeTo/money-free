@@ -138,7 +138,11 @@ export class CheckpointManager {
    * @param market 市场 (unused - kept for API compatibility)
    * @param failedStocks 失败的股票列表
    */
-  async markFailed(taskId: string, market: string | undefined, failedStocks: FailedStock[]): Promise<void> {
+  async markFailed(
+    taskId: string,
+    market: string | undefined,
+    failedStocks: FailedStock[],
+  ): Promise<void> {
     const now = new Date();
     await this.prisma.importCheckpoint.update({
       where: {

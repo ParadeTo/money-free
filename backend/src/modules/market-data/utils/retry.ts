@@ -42,9 +42,7 @@ export async function fetchWithRetry<T>(
       }
 
       if (error instanceof DataSourceError && !isRetryableError(error.errorType)) {
-        logger.warn(
-          `Non-retryable error (${error.errorType}), stopping retry: ${error.message}`,
-        );
+        logger.warn(`Non-retryable error (${error.errorType}), stopping retry: ${error.message}`);
         throw error;
       }
 
@@ -53,9 +51,7 @@ export async function fetchWithRetry<T>(
         opts.maxDelayMs,
       );
 
-      logger.warn(
-        `Attempt ${attempt}/${opts.maxAttempts} failed, retrying in ${delay}ms...`,
-      );
+      logger.warn(`Attempt ${attempt}/${opts.maxAttempts} failed, retrying in ${delay}ms...`);
 
       opts.onRetry(attempt, error);
 
@@ -63,10 +59,7 @@ export async function fetchWithRetry<T>(
     }
   }
 
-  logger.error(
-    `All ${opts.maxAttempts} attempts failed for operation`,
-    lastError,
-  );
+  logger.error(`All ${opts.maxAttempts} attempts failed for operation`, lastError);
   throw lastError;
 }
 

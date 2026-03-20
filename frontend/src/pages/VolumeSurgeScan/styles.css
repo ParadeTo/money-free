@@ -1,0 +1,44 @@
+.volume-surge-scan-page {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.page-header .subtitle {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.scan-trigger-card {
+  max-width: 600px;
+}
+
+.results-viewer {
+  padding: 16px 0;
+}
+
+.stock-detail-modal h3 {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.stock-detail-modal p {
+  margin-bottom: 8px;
+}
+
+.comparison-view {
+  padding: 16px 0;
+}

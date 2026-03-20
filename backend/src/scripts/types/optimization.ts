@@ -126,7 +126,10 @@ export const MARKET_TIMEZONES: Record<MarketType, string> = {
   US: 'America/New_York',
 };
 
-export const API_RATE_LIMITS: Record<DataSourceType, { requestsPerMinute: number; requestsPerHour: number }> = {
+export const API_RATE_LIMITS: Record<
+  DataSourceType,
+  { requestsPerMinute: number; requestsPerHour: number }
+> = {
   tushare: { requestsPerMinute: 200, requestsPerHour: 12000 },
   akshare: { requestsPerMinute: 100, requestsPerHour: 6000 },
   yahoo_finance: { requestsPerMinute: 60, requestsPerHour: 2000 },

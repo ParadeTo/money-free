@@ -52,9 +52,7 @@ export class DataSourceCache {
 
       if (status.consecutiveFailures >= this.failureThreshold) {
         status.isAvailable = false;
-        console.warn(
-          `⚠️ 数据源 ${source} 连续失败 ${status.consecutiveFailures} 次,标记为不可用`,
-        );
+        console.warn(`⚠️ 数据源 ${source} 连续失败 ${status.consecutiveFailures} 次,标记为不可用`);
       }
     }
   }

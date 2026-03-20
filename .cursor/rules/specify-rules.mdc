@@ -81,7 +81,6 @@ npm run dev            # Start development server
 ## Recent Changes
 - 007-data-fetch-optimization: Added TypeScript 5.x, Node.js 20.x (backend required) + NestJS, Prisma ORM, SQLite 3.40+, p-limit, date-fns
 - 006-vcp-kline-overlay: Added TypeScript 5.2 (strict mode enabled)
-- 004-stock-vcp-analysis: Added TypeScript 5.x, Node.js 20.x (backend), Node.js 18+ (frontend)
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

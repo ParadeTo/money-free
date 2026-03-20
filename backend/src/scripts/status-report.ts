@@ -22,14 +22,17 @@ async function generateReport() {
 
   let totalStocks = 0;
   stocksByMarket.forEach((group) => {
-    const marketName = {
-      SH: 'A股(沪)',
-      SZ: 'A股(深)',
-      HK: '港股',
-      US: '美股',
-    }[group.market] || group.market;
+    const marketName =
+      {
+        SH: 'A股(沪)',
+        SZ: 'A股(深)',
+        HK: '港股',
+        US: '美股',
+      }[group.market] || group.market;
 
-    console.log(`  ${marketName.padEnd(12)} ${group._count.stockCode.toString().padStart(4)} 只  (${group.currency})`);
+    console.log(
+      `  ${marketName.padEnd(12)} ${group._count.stockCode.toString().padStart(4)} 只  (${group.currency})`,
+    );
     totalStocks += group._count.stockCode;
   });
 
@@ -47,12 +50,13 @@ async function generateReport() {
 
   let totalKlines = 0n;
   for (const group of klinesByMarket) {
-    const marketName = {
-      SH: 'A股(沪)',
-      SZ: 'A股(深)',
-      HK: '港股',
-      US: '美股',
-    }[group.market] || group.market;
+    const marketName =
+      {
+        SH: 'A股(沪)',
+        SZ: 'A股(深)',
+        HK: '港股',
+        US: '美股',
+      }[group.market] || group.market;
 
     const count = group.kline_count;
     console.log(`  ${marketName.padEnd(12)} ${count.toString().padStart(10)} 条`);
@@ -93,12 +97,13 @@ async function generateReport() {
     if (vcpByMarket.length > 0) {
       console.log('  按市场分布:');
       for (const group of vcpByMarket) {
-        const marketName = {
-          SH: 'A股(沪)',
-          SZ: 'A股(深)',
-          HK: '港股',
-          US: '美股',
-        }[group.market] || group.market;
+        const marketName =
+          {
+            SH: 'A股(沪)',
+            SZ: 'A股(深)',
+            HK: '港股',
+            US: '美股',
+          }[group.market] || group.market;
         console.log(`    ${marketName.padEnd(12)} ${group.vcp_count.toString().padStart(3)} 只`);
       }
     } else {

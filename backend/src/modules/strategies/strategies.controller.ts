@@ -13,12 +13,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { StrategiesService } from './strategies.service';
 import { ScreenerService } from '../screener/screener.service';
 import {
@@ -42,8 +37,7 @@ export class StrategiesController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Create a new screening strategy',
-    description:
-      'Save a screening strategy with multiple filter conditions for reuse',
+    description: 'Save a screening strategy with multiple filter conditions for reuse',
   })
   @ApiResponse({
     status: 201,
@@ -51,9 +45,7 @@ export class StrategiesController {
     type: StrategyResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Invalid strategy data' })
-  async create(
-    @Body() dto: CreateStrategyDto,
-  ): Promise<StrategyResponseDto> {
+  async create(@Body() dto: CreateStrategyDto): Promise<StrategyResponseDto> {
     const userId = 'default-user';
     this.logger.log(`Creating strategy: ${dto.strategyName}`);
 
@@ -93,9 +85,7 @@ export class StrategiesController {
     type: StrategyResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Strategy not found' })
-  async findOne(
-    @Param('strategyId') strategyId: string,
-  ): Promise<StrategyResponseDto> {
+  async findOne(@Param('strategyId') strategyId: string): Promise<StrategyResponseDto> {
     const userId = 'default-user';
     this.logger.log(`Fetching strategy ${strategyId}`);
 
@@ -143,9 +133,7 @@ export class StrategiesController {
     description: 'Strategy deleted successfully',
   })
   @ApiResponse({ status: 404, description: 'Strategy not found' })
-  async remove(
-    @Param('strategyId') strategyId: string,
-  ): Promise<{ message: string }> {
+  async remove(@Param('strategyId') strategyId: string): Promise<{ message: string }> {
     const userId = 'default-user';
     this.logger.log(`Deleting strategy ${strategyId}`);
 
@@ -156,8 +144,7 @@ export class StrategiesController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Execute saved strategy',
-    description:
-      'Execute a saved screening strategy and return matching stocks',
+    description: 'Execute a saved screening strategy and return matching stocks',
   })
   @ApiParam({
     name: 'strategyId',
@@ -170,17 +157,12 @@ export class StrategiesController {
     type: FilterResultDto,
   })
   @ApiResponse({ status: 404, description: 'Strategy not found' })
-  async executeStrategy(
-    @Param('strategyId') strategyId: string,
-  ): Promise<FilterResultDto> {
+  async executeStrategy(@Param('strategyId') strategyId: string): Promise<FilterResultDto> {
     const userId = 'default-user';
     this.logger.log(`Executing strategy ${strategyId}`);
 
     // Get strategy conditions
-    const conditions = await this.strategiesService.getConditions(
-      userId,
-      strategyId,
-    );
+    const conditions = await this.strategiesService.getConditions(userId, strategyId);
 
     // Execute filter with conditions
     return this.screenerService.executeFilter(conditions);

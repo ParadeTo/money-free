@@ -43,9 +43,7 @@ async function quickImport() {
   });
 
   const endDate = new Date().toISOString().split('T')[0];
-  const startDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split('T')[0];
+  const startDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   let totalSuccess = 0;
   let totalFailed = 0;
@@ -58,10 +56,7 @@ async function quickImport() {
       const stockCode = `${stock.code}.HK`;
       console.log(`[HK] ${stockCode} (${stock.name})...`);
 
-      const stockInfo = await importManager.fetchStockInfoWithFallback(
-        stock.code,
-        MarketType.HK,
-      );
+      const stockInfo = await importManager.fetchStockInfoWithFallback(stock.code, MarketType.HK);
 
       if (!stockInfo.data) {
         console.error(`  ✗ 获取信息失败`);
@@ -152,10 +147,7 @@ async function quickImport() {
       const stockCode = `${stock.code}.US`;
       console.log(`[US] ${stockCode} (${stock.name})...`);
 
-      const stockInfo = await importManager.fetchStockInfoWithFallback(
-        stock.code,
-        MarketType.US,
-      );
+      const stockInfo = await importManager.fetchStockInfoWithFallback(stock.code, MarketType.US);
 
       if (!stockInfo.data) {
         console.error(`  ✗ 获取信息失败`);

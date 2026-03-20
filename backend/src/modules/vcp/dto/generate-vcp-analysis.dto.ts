@@ -4,7 +4,7 @@ import { Transform } from 'class-transformer';
 
 /**
  * DTO for generating VCP analysis request
- * 
+ *
  * @example
  * GET /api/vcp/:stockCode/analysis?forceRefresh=true
  */

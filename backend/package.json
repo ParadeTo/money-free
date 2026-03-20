@@ -59,7 +59,13 @@
     "task:status": "ts-node src/scripts/task-status.ts",
     "task:cleanup": "ts-node src/scripts/cleanup-old-logs.ts",
     "perf:report": "ts-node src/scripts/performance-report.ts",
-    "clean": "rm -rf dist node_modules"
+    "clean": "rm -rf dist node_modules",
+    "vss": "ts-node src/scripts/volume-surge-scan-cli.ts",
+    "vss:scan": "ts-node src/scripts/volume-surge-scan-cli.ts scan",
+    "vss:list": "ts-node src/scripts/volume-surge-scan-cli.ts list",
+    "vss:export": "ts-node src/scripts/volume-surge-scan-cli.ts export",
+    "vss:compare": "ts-node src/scripts/volume-surge-scan-cli.ts compare",
+    "verify:vss": "ts-node src/scripts/verify-volume-surge.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^3.0.0",
@@ -88,7 +94,8 @@
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
     "technicalindicators": "^3.1.0",
-    "uuid": "^13.0.0"
+    "uuid": "^13.0.0",
+    "yargs": "^17.7.2"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
@@ -102,6 +109,7 @@
     "@types/passport-jwt": "^3.0.13",
     "@types/passport-local": "^1.0.35",
     "@types/supertest": "^2.0.12",
+    "@types/yargs": "^17.0.35",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.42.0",

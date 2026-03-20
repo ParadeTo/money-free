@@ -13,9 +13,12 @@ export class VcpScannerService {
     private readonly trendTemplate: TrendTemplateService,
     private readonly rsRating: RsRatingService,
     private readonly vcpAnalyzer: VcpAnalyzerService,
-  ) { }
+  ) {}
 
-  async scanAllStocks(scanDate?: Date, markets?: string[]): Promise<{ passed: number; skipped: number; failed: number; total: number }> {
+  async scanAllStocks(
+    scanDate?: Date,
+    markets?: string[],
+  ): Promise<{ passed: number; skipped: number; failed: number; total: number }> {
     const date = scanDate || new Date();
     const dateStr = date.toISOString().split('T')[0];
     const marketFilter = markets && markets.length > 0 ? ` (${markets.join(', ')})` : '';
@@ -33,11 +36,15 @@ export class VcpScannerService {
 
     this.logger.log(`Found ${stocks.length} active stocks`);
 
-    const rsRatings = await this.calculateRsRatingsForAll(stocks.map((s: { stockCode: string; stockName: string }) => s.stockCode));
-    const rsMap = new Map(rsRatings.map(r => [r.stockCode, r]));
+    const rsRatings = await this.calculateRsRatingsForAll(
+      stocks.map((s: { stockCode: string; stockName: string }) => s.stockCode),
+    );
+    const rsMap = new Map(rsRatings.map((r) => [r.stockCode, r]));
 
     await this.prisma.vcpScanResult.deleteMany({
-      where: { scanDate: { gte: new Date(dateStr), lt: new Date(new Date(dateStr).getTime() + 86400000) } },
+      where: {
+        scanDate: { gte: new Date(dateStr), lt: new Date(new Date(dateStr).getTime() + 86400000) },
+      },
     });
 
     let passed = 0;
@@ -50,7 +57,10 @@ export class VcpScannerService {
     for (let i = 0; i < stocks.length; i++) {
       const stock = stocks[i];
       try {
-        const result = await this.analyzeStock(stock.stockCode, rsMap.get(stock.stockCode)?.rsRating ?? 0);
+        const result = await this.analyzeStock(
+          stock.stockCode,
+          rsMap.get(stock.stockCode)?.rsRating ?? 0,
+        );
         if (!result) {
           skippedInsufficientData++;
           skipped++;
@@ -92,21 +102,25 @@ export class VcpScannerService {
 
       if ((i + 1) % 500 === 0) {
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-        this.logger.log(`Progress: ${i + 1}/${stocks.length} (${elapsed}s elapsed, ${passed} passed)`);
+        this.logger.log(
+          `Progress: ${i + 1}/${stocks.length} (${elapsed}s elapsed, ${passed} passed)`,
+        );
       }
     }
 
     const totalElapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-    this.logger.log(JSON.stringify({
-      event: 'vcp_scan_summary',
-      passed,
-      skipped,
-      skippedInsufficientData,
-      skippedNoVcp,
-      failed,
-      total: stocks.length,
-      elapsedSeconds: totalElapsed,
-    }));
+    this.logger.log(
+      JSON.stringify({
+        event: 'vcp_scan_summary',
+        passed,
+        skipped,
+        skippedInsufficientData,
+        skippedNoVcp,
+        failed,
+        total: stocks.length,
+        elapsedSeconds: totalElapsed,
+      }),
+    );
     return { passed, skipped, failed, total: stocks.length };
   }
 
@@ -115,7 +129,15 @@ export class VcpScannerService {
       where: { stockCode, period: 'daily' },
       orderBy: { date: 'desc' },
       take: 300,
-      select: { date: true, open: true, high: true, low: true, close: true, volume: true, amount: true },
+      select: {
+        date: true,
+        open: true,
+        high: true,
+        low: true,
+        close: true,
+        volume: true,
+        amount: true,
+      },
     });
 
     if (klines.length < 252) return null;
@@ -143,23 +165,34 @@ export class VcpScannerService {
 
     const ttResult = this.trendTemplate.runAllChecks(ttInput);
 
-    const bars: KLineBar[] = sortedKlines.map((k: { date: Date; open: number; high: number; low: number; close: number; volume: number }) => ({
-      date: k.date.toISOString().split('T')[0],
-      open: k.open,
-      high: k.high,
-      low: k.low,
-      close: k.close,
-      volume: k.volume,
-    }));
+    const bars: KLineBar[] = sortedKlines.map(
+      (k: {
+        date: Date;
+        open: number;
+        high: number;
+        low: number;
+        close: number;
+        volume: number;
+      }) => ({
+        date: k.date.toISOString().split('T')[0],
+        open: k.open,
+        high: k.high,
+        low: k.low,
+        close: k.close,
+        volume: k.volume,
+      }),
+    );
 
     const vcpResult = this.vcpAnalyzer.analyze(bars);
 
-    const distHigh = latestIndicators.high52Week > 0
-      ? ((latestIndicators.high52Week - latest.close) / latestIndicators.high52Week) * 100
-      : 0;
-    const distLow = latestIndicators.low52Week > 0
-      ? ((latest.close - latestIndicators.low52Week) / latestIndicators.low52Week) * 100
-      : 0;
+    const distHigh =
+      latestIndicators.high52Week > 0
+        ? ((latestIndicators.high52Week - latest.close) / latestIndicators.high52Week) * 100
+        : 0;
+    const distLow =
+      latestIndicators.low52Week > 0
+        ? ((latest.close - latestIndicators.low52Week) / latestIndicators.low52Week) * 100
+        : 0;
 
     // 检测是否处于回调中
     const pullbacks = vcpResult.pullbacks || [];
@@ -259,8 +292,8 @@ export class VcpScannerService {
     // 如果在回调低点之后5天内，且价格还在低点到高点的范围内
     if (daysSinceLow >= 0 && daysSinceLow <= 5) {
       // 价格在低点附近（低点的-5%到+10%之间）
-      const nearLow = currentPrice >= lastPullback.lowPrice * 0.95 &&
-        currentPrice <= lastPullback.lowPrice * 1.10;
+      const nearLow =
+        currentPrice >= lastPullback.lowPrice * 0.95 && currentPrice <= lastPullback.lowPrice * 1.1;
 
       if (nearLow) return true;
     }

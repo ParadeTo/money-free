@@ -10,6 +10,7 @@ import { FavoritesModule } from './modules/favorites/favorites.module';
 import { ScreenerModule } from './modules/screener/screener.module';
 import { StrategiesModule } from './modules/strategies/strategies.module';
 import { VcpModule } from './modules/vcp/vcp.module';
+import { VolumeSurgeModule } from './modules/volume-surge/volume-surge.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { VcpModule } from './modules/vcp/vcp.module';
     ScreenerModule,
     StrategiesModule,
     VcpModule,
+    VolumeSurgeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

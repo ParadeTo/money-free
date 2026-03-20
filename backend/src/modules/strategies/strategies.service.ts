@@ -18,9 +18,7 @@ export class StrategiesService {
    * Create a new screening strategy with conditions
    */
   async create(userId: string, dto: CreateStrategyDto) {
-    this.logger.log(
-      `Creating strategy "${dto.strategyName}" for user ${userId}`,
-    );
+    this.logger.log(`Creating strategy "${dto.strategyName}" for user ${userId}`);
 
     try {
       const strategy = await this.prisma.screenerStrategy.create({
@@ -80,7 +78,7 @@ export class StrategiesService {
       },
     });
 
-    return strategies.map((s: typeof strategies[number]) => this.mapToResponse(s));
+    return strategies.map((s: (typeof strategies)[number]) => this.mapToResponse(s));
   }
 
   /**
@@ -104,9 +102,7 @@ export class StrategiesService {
     });
 
     if (!strategy) {
-      throw new NotFoundException(
-        `Strategy with ID ${strategyId} not found`,
-      );
+      throw new NotFoundException(`Strategy with ID ${strategyId} not found`);
     }
 
     return this.mapToResponse(strategy);
@@ -115,11 +111,7 @@ export class StrategiesService {
   /**
    * Update an existing strategy
    */
-  async update(
-    userId: string,
-    strategyId: string,
-    dto: UpdateStrategyDto,
-  ) {
+  async update(userId: string, strategyId: string, dto: UpdateStrategyDto) {
     this.logger.log(`Updating strategy ${strategyId} for user ${userId}`);
 
     // Verify strategy exists and belongs to user
@@ -131,9 +123,7 @@ export class StrategiesService {
     });
 
     if (!existing) {
-      throw new NotFoundException(
-        `Strategy with ID ${strategyId} not found`,
-      );
+      throw new NotFoundException(`Strategy with ID ${strategyId} not found`);
     }
 
     try {
@@ -193,9 +183,7 @@ export class StrategiesService {
     });
 
     if (!existing) {
-      throw new NotFoundException(
-        `Strategy with ID ${strategyId} not found`,
-      );
+      throw new NotFoundException(`Strategy with ID ${strategyId} not found`);
     }
 
     try {

@@ -27,9 +27,7 @@ export class DataSourceError extends Error {
 }
 
 export function isRetryableError(errorType: ErrorType): boolean {
-  return [
-    ErrorType.NETWORK_TIMEOUT,
-    ErrorType.RATE_LIMIT,
-    ErrorType.SERVICE_UNAVAILABLE,
-  ].includes(errorType);
+  return [ErrorType.NETWORK_TIMEOUT, ErrorType.RATE_LIMIT, ErrorType.SERVICE_UNAVAILABLE].includes(
+    errorType,
+  );
 }

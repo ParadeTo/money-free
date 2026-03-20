@@ -1,6 +1,6 @@
 /**
  * 清理旧日志和断点记录
- * 
+ *
  * 使用:
  * npx ts-node src/scripts/cleanup-old-logs.ts
  * npx ts-node src/scripts/cleanup-old-logs.ts --days 7

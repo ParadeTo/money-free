@@ -58,7 +58,9 @@ export class DataSourceManagerService {
         return { data, source: 'tushare' };
       } catch (error) {
         const err = error as Error;
-        this.logger.warn(`⚠️ Tushare failed for ${stockCode}: ${err.message}, falling back to AkShare`);
+        this.logger.warn(
+          `⚠️ Tushare failed for ${stockCode}: ${err.message}, falling back to AkShare`,
+        );
       }
     }
 
@@ -112,7 +114,9 @@ export class DataSourceManagerService {
         return { data, source: 'tushare' };
       } catch (error) {
         const err = error as Error;
-        this.logger.warn(`⚠️ Tushare failed for ${stockCode}: ${err.message}, falling back to AkShare`);
+        this.logger.warn(
+          `⚠️ Tushare failed for ${stockCode}: ${err.message}, falling back to AkShare`,
+        );
       }
     }
 

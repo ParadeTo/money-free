@@ -1,7 +1,7 @@
 /**
  * 更新指数成分股脚本
  * 手动触发重新获取指数成分股，添加新成员，保留已退出成员的历史数据
- * 
+ *
  * 用法:
  *   ts-node src/scripts/update-index-composition.ts --market <HK|US|all>
  */
@@ -66,21 +66,23 @@ async function updateIndexComposition() {
       });
 
       const existingCodes = new Set(existingStocks.map((s) => s.stockCode));
-      const newCodes = new Set(
-        constituents.map((c) => indexService.formatStockCode(c.code, 'HK')),
-      );
+      const newCodes = new Set(constituents.map((c) => indexService.formatStockCode(c.code, 'HK')));
 
       const addedCodes = [...newCodes].filter((code) => !existingCodes.has(code));
       const removedCodes = [...existingCodes].filter((code) => !newCodes.has(code));
 
       console.log(`\n新增成员: ${addedCodes.length}`);
       if (addedCodes.length > 0) {
-        console.log(`  ${addedCodes.slice(0, 10).join(', ')}${addedCodes.length > 10 ? '...' : ''}`);
+        console.log(
+          `  ${addedCodes.slice(0, 10).join(', ')}${addedCodes.length > 10 ? '...' : ''}`,
+        );
       }
 
       console.log(`退出成员: ${removedCodes.length}`);
       if (removedCodes.length > 0) {
-        console.log(`  ${removedCodes.slice(0, 10).join(', ')}${removedCodes.length > 10 ? '...' : ''}`);
+        console.log(
+          `  ${removedCodes.slice(0, 10).join(', ')}${removedCodes.length > 10 ? '...' : ''}`,
+        );
         console.log('  (这些股票的历史数据将被保留)');
       }
     }
@@ -100,21 +102,23 @@ async function updateIndexComposition() {
       });
 
       const existingCodes = new Set(existingStocks.map((s) => s.stockCode));
-      const newCodes = new Set(
-        constituents.map((c) => indexService.formatStockCode(c.code, 'US')),
-      );
+      const newCodes = new Set(constituents.map((c) => indexService.formatStockCode(c.code, 'US')));
 
       const addedCodes = [...newCodes].filter((code) => !existingCodes.has(code));
       const removedCodes = [...existingCodes].filter((code) => !newCodes.has(code));
 
       console.log(`\n新增成员: ${addedCodes.length}`);
       if (addedCodes.length > 0) {
-        console.log(`  ${addedCodes.slice(0, 10).join(', ')}${addedCodes.length > 10 ? '...' : ''}`);
+        console.log(
+          `  ${addedCodes.slice(0, 10).join(', ')}${addedCodes.length > 10 ? '...' : ''}`,
+        );
       }
 
       console.log(`退出成员: ${removedCodes.length}`);
       if (removedCodes.length > 0) {
-        console.log(`  ${removedCodes.slice(0, 10).join(', ')}${removedCodes.length > 10 ? '...' : ''}`);
+        console.log(
+          `  ${removedCodes.slice(0, 10).join(', ')}${removedCodes.length > 10 ? '...' : ''}`,
+        );
         console.log('  (这些股票的历史数据将被保留)');
       }
     }

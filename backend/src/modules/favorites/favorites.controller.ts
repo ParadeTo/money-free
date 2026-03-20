@@ -25,9 +25,7 @@ export class FavoritesController {
   @ApiResponse({ status: 201, description: '添加成功' })
   @ApiResponse({ status: 400, description: '无效股票代码' })
   @ApiResponse({ status: 409, description: '股票已在收藏列表中' })
-  async addFavorite(
-    @Body() dto: AddFavoriteDto,
-  ) {
+  async addFavorite(@Body() dto: AddFavoriteDto) {
     const userId = 'default-user';
     return this.favoritesService.addFavorite(userId, dto);
   }
@@ -35,9 +33,7 @@ export class FavoritesController {
   @Get()
   @ApiOperation({ summary: '获取收藏列表' })
   @ApiResponse({ status: 200, description: '返回收藏列表' })
-  async getFavorites(
-    @Query() dto: GetFavoritesDto,
-  ) {
+  async getFavorites(@Query() dto: GetFavoritesDto) {
     const userId = 'default-user';
     return this.favoritesService.getFavorites(userId, dto.group_name);
   }
@@ -46,10 +42,7 @@ export class FavoritesController {
   @ApiOperation({ summary: '更新收藏排序' })
   @ApiResponse({ status: 200, description: '排序更新成功' })
   @ApiResponse({ status: 404, description: '收藏不存在' })
-  async updateSort(
-    @Param('id') id: string,
-    @Body() dto: UpdateSortDto,
-  ) {
+  async updateSort(@Param('id') id: string, @Body() dto: UpdateSortDto) {
     const userId = 'default-user';
     const favoriteId = parseInt(id, 10);
     if (isNaN(favoriteId)) {
@@ -62,9 +55,7 @@ export class FavoritesController {
   @ApiOperation({ summary: '取消收藏' })
   @ApiResponse({ status: 200, description: '取消收藏成功' })
   @ApiResponse({ status: 404, description: '收藏不存在' })
-  async removeFavorite(
-    @Param('id') id: string,
-  ) {
+  async removeFavorite(@Param('id') id: string) {
     const userId = 'default-user';
     const favoriteId = parseInt(id, 10);
     if (isNaN(favoriteId)) {

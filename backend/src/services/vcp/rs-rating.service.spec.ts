@@ -23,7 +23,9 @@ describe('RsRatingService', () => {
 
   describe('calculatePercentileRank', () => {
     it('with various distributions', () => {
-      expect(service.calculatePercentileRank(50, [10, 20, 30, 40, 50, 60, 70, 80, 90, 100])).toBe(45);
+      expect(service.calculatePercentileRank(50, [10, 20, 30, 40, 50, 60, 70, 80, 90, 100])).toBe(
+        45,
+      );
     });
 
     it('empty array returns 0', () => {
@@ -58,9 +60,13 @@ describe('RsRatingService', () => {
       ];
       const results = service.calculateAllRsRatings(stockReturns);
       expect(results).toHaveLength(5);
-      expect(results.find(r => r.stockCode === 'C')?.rsRating).toBeGreaterThan(results.find(r => r.stockCode === 'A')?.rsRating ?? 0);
-      expect(results.find(r => r.stockCode === 'D')?.rsRating).toBeLessThan(results.find(r => r.stockCode === 'B')?.rsRating ?? 0);
-      results.forEach(r => {
+      expect(results.find((r) => r.stockCode === 'C')?.rsRating).toBeGreaterThan(
+        results.find((r) => r.stockCode === 'A')?.rsRating ?? 0,
+      );
+      expect(results.find((r) => r.stockCode === 'D')?.rsRating).toBeLessThan(
+        results.find((r) => r.stockCode === 'B')?.rsRating ?? 0,
+      );
+      results.forEach((r) => {
         expect(r.universeSize).toBe(5);
         expect(r.rankInUniverse).toBeGreaterThanOrEqual(1);
         expect(r.rankInUniverse).toBeLessThanOrEqual(5);

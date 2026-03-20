@@ -67,10 +67,7 @@ export class ScreenerService {
   /**
    * Apply single filter condition to stock list
    */
-  private async applyCondition(
-    stocks: any[],
-    condition: FilterConditionDto,
-  ): Promise<any[]> {
+  private async applyCondition(stocks: any[], condition: FilterConditionDto): Promise<any[]> {
     const stockCodes = stocks.map((s) => s.stockCode);
 
     switch (condition.conditionType) {
@@ -86,18 +83,10 @@ export class ScreenerService {
         return this.filterByPattern(stockCodes, condition.pattern!);
 
       case 'price_change':
-        return this.filterByPriceChange(
-          stockCodes,
-          condition.operator!,
-          condition.targetValue!,
-        );
+        return this.filterByPriceChange(stockCodes, condition.operator!, condition.targetValue!);
 
       case 'volume_change':
-        return this.filterByVolumeChange(
-          stockCodes,
-          condition.operator!,
-          condition.targetValue!,
-        );
+        return this.filterByVolumeChange(stockCodes, condition.operator!, condition.targetValue!);
 
       case 'week_52_high':
         return this.filterByWeek52High(stockCodes);
@@ -112,11 +101,7 @@ export class ScreenerService {
         return this.filterNear52Low(stockCodes, condition.targetValue || 5);
 
       case 'price_vs_ma':
-        return this.filterByPriceVsMA(
-          stockCodes,
-          condition.indicatorName!,
-          condition.operator!,
-        );
+        return this.filterByPriceVsMA(stockCodes, condition.indicatorName!, condition.operator!);
 
       case 'ma_vs_ma':
         if (!condition.ma1Period || !condition.ma2Period || !condition.operator) {
@@ -305,7 +290,12 @@ export class ScreenerService {
       const ma1Value = maValues[ma1Key]; // ma50, ma150, ma200
       const ma2Value = maValues[ma2Key]; // ma50, ma150, ma200
 
-      if (ma1Value === undefined || ma1Value === null || ma2Value === undefined || ma2Value === null) {
+      if (
+        ma1Value === undefined ||
+        ma1Value === null ||
+        ma2Value === undefined ||
+        ma2Value === null
+      ) {
         continue;
       }
 
@@ -343,10 +333,7 @@ export class ScreenerService {
   /**
    * T143: Filter by technical patterns
    */
-  private async filterByPattern(
-    stockCodes: string[],
-    pattern: string,
-  ): Promise<any[]> {
+  private async filterByPattern(stockCodes: string[], pattern: string): Promise<any[]> {
     const result: any[] = [];
 
     for (const stockCode of stockCodes) {
@@ -365,10 +352,7 @@ export class ScreenerService {
   /**
    * Check if stock matches pattern
    */
-  private async checkPattern(
-    stockCode: string,
-    pattern: string,
-  ): Promise<boolean> {
+  private async checkPattern(stockCode: string, pattern: string): Promise<boolean> {
     const indicators = await this.prisma.technicalIndicator.findMany({
       where: {
         stockCode,
@@ -450,8 +434,7 @@ export class ScreenerService {
 
       const today = klines[0];
       const yesterday = klines[1];
-      const changePercent =
-        ((today.close - yesterday.close) / yesterday.close) * 100;
+      const changePercent = ((today.close - yesterday.close) / yesterday.close) * 100;
 
       if (this.compareValues(changePercent, operator, targetPercent)) {
         const stock = await this.prisma.stock.findUnique({
@@ -485,8 +468,7 @@ export class ScreenerService {
 
       const today = klines[0];
       const yesterday = klines[1];
-      const changePercent =
-        ((today.volume - yesterday.volume) / yesterday.volume) * 100;
+      const changePercent = ((today.volume - yesterday.volume) / yesterday.volume) * 100;
 
       if (this.compareValues(changePercent, operator, targetPercent)) {
         const stock = await this.prisma.stock.findUnique({
@@ -574,10 +556,7 @@ export class ScreenerService {
   /**
    * Filter stocks near 52-week high
    */
-  private async filterNear52High(
-    stockCodes: string[],
-    percentThreshold: number,
-  ): Promise<any[]> {
+  private async filterNear52High(stockCodes: string[], percentThreshold: number): Promise<any[]> {
     const result: any[] = [];
 
     for (const stockCode of stockCodes) {
@@ -598,8 +577,7 @@ export class ScreenerService {
       if (!kline || !marker) continue;
 
       const markerValues = JSON.parse(marker.values);
-      const percentFromHigh =
-        ((markerValues.high - kline.close) / markerValues.high) * 100;
+      const percentFromHigh = ((markerValues.high - kline.close) / markerValues.high) * 100;
 
       if (percentFromHigh <= percentThreshold) {
         const stock = await this.prisma.stock.findUnique({
@@ -615,10 +593,7 @@ export class ScreenerService {
   /**
    * Filter stocks near 52-week low
    */
-  private async filterNear52Low(
-    stockCodes: string[],
-    percentThreshold: number,
-  ): Promise<any[]> {
+  private async filterNear52Low(stockCodes: string[], percentThreshold: number): Promise<any[]> {
     const result: any[] = [];
 
     for (const stockCode of stockCodes) {
@@ -639,8 +614,7 @@ export class ScreenerService {
       if (!kline || !marker) continue;
 
       const markerValues = JSON.parse(marker.values);
-      const percentFromLow =
-        ((kline.close - markerValues.low) / markerValues.low) * 100;
+      const percentFromLow = ((kline.close - markerValues.low) / markerValues.low) * 100;
 
       if (percentFromLow <= percentThreshold) {
         const stock = await this.prisma.stock.findUnique({
@@ -656,11 +630,7 @@ export class ScreenerService {
   /**
    * Compare values with operator
    */
-  private compareValues(
-    actual: number,
-    operator: string,
-    target: number,
-  ): boolean {
+  private compareValues(actual: number, operator: string, target: number): boolean {
     switch (operator) {
       case '>':
         return actual > target;

@@ -1,13 +1,13 @@
 /**
  * 优化的全量导入脚本 - 支持断点续传
- * 
+ *
  * 功能:
  * 1. 全量导入历史K线数据
  * 2. 支持断点续传
  * 3. 批量数据库写入
  * 4. 并发控制
  * 5. 错误重试和主备切换
- * 
+ *
  * 使用:
  * npx ts-node src/scripts/full-import-optimized.ts --market SH
  * npx ts-node src/scripts/full-import-optimized.ts --market HK --resume task-123
@@ -176,7 +176,7 @@ async function main() {
     const batchWriter = createKLineWriter(prisma, DEFAULT_BATCH_SIZE);
 
     // 获取股票列表
-    let stocks = await prisma.stock.findMany({
+    const stocks = await prisma.stock.findMany({
       where: { market: options.market },
       select: { stockCode: true, stockName: true, market: true },
     });
@@ -205,42 +205,39 @@ async function main() {
 
     // 并发导入
     const dataSourceManager = null as any; // 初始化实际服务
-    const results = await concurrentFetcher.executeByMarket(
-      stocks,
-      async (stock) => {
-        const result = await importSingleStock(
-          stock,
-          options.startDate!,
-          options.endDate!,
-          dataSourceManager,
-          indicatorCalculator,
-          batchWriter,
-        );
-        
-        progressTracker.recordResult(result);
-        
-        if (progressTracker.getMetrics().completed % 10 === 0) {
-          progressTracker.printProgress();
-          
-          // 保存断点
-          await checkpointManager.saveCheckpoint({
-            taskId,
-            market: options.market,
-            importType: 'full',
-            totalStocks: stocks.length,
-            importedStocks: progressTracker.getMetrics().completed,
-            failedStocks: progressTracker.getFailedStocks().map(code => ({
-              stockCode: code,
-              error: 'unknown',
-              attemptCount: 1,
-            })),
-            status: 'running',
-          });
-        }
-        
-        return result;
-      },
-    );
+    const results = await concurrentFetcher.executeByMarket(stocks, async (stock) => {
+      const result = await importSingleStock(
+        stock,
+        options.startDate!,
+        options.endDate!,
+        dataSourceManager,
+        indicatorCalculator,
+        batchWriter,
+      );
+
+      progressTracker.recordResult(result);
+
+      if (progressTracker.getMetrics().completed % 10 === 0) {
+        progressTracker.printProgress();
+
+        // 保存断点
+        await checkpointManager.saveCheckpoint({
+          taskId,
+          market: options.market,
+          importType: 'full',
+          totalStocks: stocks.length,
+          importedStocks: progressTracker.getMetrics().completed,
+          failedStocks: progressTracker.getFailedStocks().map((code) => ({
+            stockCode: code,
+            error: 'unknown',
+            attemptCount: 1,
+          })),
+          status: 'running',
+        });
+      }
+
+      return result;
+    });
 
     await batchWriter.flushAll();
 

@@ -1,11 +1,11 @@
 /**
  * 初始化指数成分股的K线数据（沪深300+中证500）
- * 
+ *
  * 功能：只初始化标记为指数成分股的股票（约800只），大幅减少初始化时间
- * 
+ *
  * 使用:
  * npx ts-node src/scripts/init-index-stocks-klines.ts [limit] [offset]
- * 
+ *
  * 例子:
  * npx ts-node src/scripts/init-index-stocks-klines.ts 100 0    # 初始化前100只指数成分股
  * npx ts-node src/scripts/init-index-stocks-klines.ts         # 初始化所有指数成分股
@@ -16,7 +16,10 @@ import { ConfigService } from '@nestjs/config';
 import { TushareService } from '../services/datasource/tushare.service';
 import { AkShareService } from '../services/datasource/akshare.service';
 import { DataSourceManagerService } from '../services/datasource/datasource-manager.service';
-import { TechnicalIndicatorsService, PriceData } from '../services/indicators/technical-indicators.service';
+import {
+  TechnicalIndicatorsService,
+  PriceData,
+} from '../services/indicators/technical-indicators.service';
 import { PythonBridgeService } from '../services/python-bridge/python-bridge.service';
 import pLimit from 'p-limit';
 
@@ -72,8 +75,8 @@ async function processStock(
     });
 
     // 计算技术指标
-    const sortedDailyData = [...dailyData].sort((a, b) =>
-      new Date(a.date).getTime() - new Date(b.date).getTime()
+    const sortedDailyData = [...dailyData].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
     );
 
     const priceData: PriceData[] = sortedDailyData.map((item) => ({
@@ -201,8 +204,8 @@ async function processStock(
         })),
       });
 
-      const sortedWeeklyData = [...weeklyData].sort((a, b) =>
-        new Date(a.date).getTime() - new Date(b.date).getTime()
+      const sortedWeeklyData = [...weeklyData].sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
       );
 
       const weeklyPriceData: PriceData[] = sortedWeeklyData.map((item) => ({
@@ -215,7 +218,11 @@ async function processStock(
         amount: item.amount,
       }));
 
-      const weeklyMaResults = indicatorsService.calculateMA(weeklyPriceData, { weekly: [10, 30, 40] }, 'weekly');
+      const weeklyMaResults = indicatorsService.calculateMA(
+        weeklyPriceData,
+        { weekly: [10, 30, 40] },
+        'weekly',
+      );
 
       await prisma.technicalIndicator.deleteMany({
         where: { stockCode: stock.stockCode, period: 'weekly' },
@@ -245,7 +252,6 @@ async function processStock(
 
     console.log(`✅ Successfully processed ${stock.stockCode}`);
     return { success: true };
-
   } catch (error: any) {
     console.error(`❌ Error: ${error.message}`);
     return { success: false, reason: 'error', error: error.message };
@@ -291,7 +297,7 @@ async function main() {
 
   console.log(`日期范围: ${startDateStr} 到 ${endDateStr}\n`);
 
-  let stats = { success: 0, failed: 0 };
+  const stats = { success: 0, failed: 0 };
   let completed = 0;
   const startTime = Date.now();
 
@@ -303,7 +309,13 @@ async function main() {
 
   const tasks = stocks.map((stock, index) =>
     concurrencyLimit(async () => {
-      const result = await processStock(stock, dataSourceManager, indicatorsService, startDateStr, endDateStr);
+      const result = await processStock(
+        stock,
+        dataSourceManager,
+        indicatorsService,
+        startDateStr,
+        endDateStr,
+      );
 
       if (result.success) {
         stats.success++;
@@ -320,14 +332,14 @@ async function main() {
       if (completed % 10 === 0 || completed === stocks.length) {
         console.log(
           `\n📊 Progress: ${completed}/${stocks.length} (${progress}%) | ` +
-          `Success: ${stats.success} | Failed: ${stats.failed} | ` +
-          `Elapsed: ${elapsed}s | Rate: ${rate.toFixed(1)}/min | ` +
-          `ETA: ${remaining}min`
+            `Success: ${stats.success} | Failed: ${stats.failed} | ` +
+            `Elapsed: ${elapsed}s | Rate: ${rate.toFixed(1)}/min | ` +
+            `ETA: ${remaining}min`,
         );
       }
 
       return result;
-    })
+    }),
   );
 
   await Promise.all(tasks);

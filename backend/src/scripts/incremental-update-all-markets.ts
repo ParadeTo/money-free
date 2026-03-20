@@ -1,13 +1,13 @@
 /**
  * 统一增量更新脚本 - 支持A股、港股和美股
- * 
+ *
  * 功能:
  * 1. 自动识别股票市场类型
  * 2. 使用对应的数据源获取最新数据
  * 3. 增量插入新数据（不删除旧数据）
  * 4. 重新计算技术指标（基于完整历史数据）
  * 5. 支持断点续传和并发控制
- * 
+ *
  * 使用:
  * npx ts-node src/scripts/incremental-update-all-markets.ts                    # 更新所有市场
  * npx ts-node src/scripts/incremental-update-all-markets.ts --markets A,HK,US  # 指定市场
@@ -34,7 +34,10 @@ import { AkShareAdapter } from '../modules/market-data/data-source/akshare-adapt
 import { CheckpointTracker } from '../modules/market-data/import/checkpoint-tracker';
 
 // 技术指标服务
-import { TechnicalIndicatorsService, PriceData } from '../services/indicators/technical-indicators.service';
+import {
+  TechnicalIndicatorsService,
+  PriceData,
+} from '../services/indicators/technical-indicators.service';
 import { MarketType } from '../types/market-data';
 
 const prisma = new PrismaClient();
@@ -93,7 +96,13 @@ async function updateAStock(
 
     if (!latestRecord) {
       logger.warn('⚠️ No existing data, skipping');
-      return { stockCode: stock.stockCode, market: stock.market, success: false, newRecords: 0, reason: 'no_existing_data' };
+      return {
+        stockCode: stock.stockCode,
+        market: stock.market,
+        success: false,
+        newRecords: 0,
+        reason: 'no_existing_data',
+      };
     }
 
     const latestDate = new Date(latestRecord.date);
@@ -105,7 +114,13 @@ async function updateAStock(
 
     if (latestDateStr >= todayStr) {
       logger.log('✅ Already up to date');
-      return { stockCode: stock.stockCode, market: stock.market, success: true, newRecords: 0, reason: 'already_latest' };
+      return {
+        stockCode: stock.stockCode,
+        market: stock.market,
+        success: true,
+        newRecords: 0,
+        reason: 'already_latest',
+      };
     }
 
     // 2. 获取增量数据
@@ -123,7 +138,13 @@ async function updateAStock(
 
     if (newDailyData.length === 0) {
       logger.log('⚠️ No new data available');
-      return { stockCode: stock.stockCode, market: stock.market, success: true, newRecords: 0, reason: 'no_new_data' };
+      return {
+        stockCode: stock.stockCode,
+        market: stock.market,
+        success: true,
+        newRecords: 0,
+        reason: 'no_new_data',
+      };
     }
 
     logger.log(`✅ Fetched ${newDailyData.length} records from ${dailySource}`);
@@ -177,11 +198,21 @@ async function updateAStock(
     await updateWeeklyData(stock.stockCode, dataSourceManager, indicatorsService, todayStr);
 
     logger.log(`✅ Successfully updated ${stock.stockCode}`);
-    return { stockCode: stock.stockCode, market: stock.market, success: true, newRecords: insertedCount };
-
+    return {
+      stockCode: stock.stockCode,
+      market: stock.market,
+      success: true,
+      newRecords: insertedCount,
+    };
   } catch (error: any) {
     logger.error(`❌ Error: ${error.message}`);
-    return { stockCode: stock.stockCode, market: stock.market, success: false, newRecords: 0, error: error.message };
+    return {
+      stockCode: stock.stockCode,
+      market: stock.market,
+      success: false,
+      newRecords: 0,
+      error: error.message,
+    };
   }
 }
 
@@ -204,7 +235,13 @@ async function updateHKUSStock(
 
     if (!latestRecord) {
       logger.warn('⚠️ No existing data, please run full import first');
-      return { stockCode: stock.stockCode, market: stock.market, success: false, newRecords: 0, reason: 'no_existing_data' };
+      return {
+        stockCode: stock.stockCode,
+        market: stock.market,
+        success: false,
+        newRecords: 0,
+        reason: 'no_existing_data',
+      };
     }
 
     const latestDate = new Date(latestRecord.date);
@@ -216,7 +253,13 @@ async function updateHKUSStock(
 
     if (latestDateStr >= todayStr) {
       logger.log('✅ Already up to date');
-      return { stockCode: stock.stockCode, market: stock.market, success: true, newRecords: 0, reason: 'already_latest' };
+      return {
+        stockCode: stock.stockCode,
+        market: stock.market,
+        success: true,
+        newRecords: 0,
+        reason: 'already_latest',
+      };
     }
 
     // 2. 计算需要更新的日期范围
@@ -236,7 +279,13 @@ async function updateHKUSStock(
 
     if (!klineResult.data || klineResult.data.length === 0) {
       logger.log('⚠️ No new data available');
-      return { stockCode: stock.stockCode, market: stock.market, success: true, newRecords: 0, reason: 'no_new_data' };
+      return {
+        stockCode: stock.stockCode,
+        market: stock.market,
+        success: true,
+        newRecords: 0,
+        reason: 'no_new_data',
+      };
     }
 
     const klineData = klineResult.data;
@@ -248,10 +297,11 @@ async function updateHKUSStock(
     for (const record of klineData) {
       try {
         // 确保日期是Date对象
-        const recordDate = typeof record.date === 'string' || typeof record.date === 'number' 
-          ? new Date(record.date) 
-          : record.date;
-        
+        const recordDate =
+          typeof record.date === 'string' || typeof record.date === 'number'
+            ? new Date(record.date)
+            : record.date;
+
         await prisma.kLineData.upsert({
           where: {
             stockCode_date_period: {
@@ -291,10 +341,21 @@ async function updateHKUSStock(
     logger.log(`💾 Inserted/Updated ${insertedCount} records`);
     logger.log(`✅ Successfully updated ${stock.stockCode}`);
 
-    return { stockCode: stock.stockCode, market: stock.market, success: true, newRecords: insertedCount };
+    return {
+      stockCode: stock.stockCode,
+      market: stock.market,
+      success: true,
+      newRecords: insertedCount,
+    };
   } catch (error: any) {
     logger.error(`❌ Error: ${error.message}`);
-    return { stockCode: stock.stockCode, market: stock.market, success: false, newRecords: 0, error: error.message };
+    return {
+      stockCode: stock.stockCode,
+      market: stock.market,
+      success: false,
+      newRecords: 0,
+      error: error.message,
+    };
   }
 }
 
@@ -543,7 +604,7 @@ async function updateWeeklyData(
  */
 function parseArgs() {
   const args = process.argv.slice(2);
-  
+
   let markets: string[] = ['SH', 'SZ', 'HK', 'US']; // 默认全部市场
   let limit: number | undefined;
   let indexOnly = false;
@@ -554,7 +615,7 @@ function parseArgs() {
       const marketArg = args[i + 1];
       if (marketArg.includes(',')) {
         markets = [];
-        marketArg.split(',').forEach(m => {
+        marketArg.split(',').forEach((m) => {
           const market = m.trim().toUpperCase();
           if (market === 'A') {
             markets.push('SH', 'SZ');
@@ -647,7 +708,7 @@ async function main() {
     byMarket: {},
   };
 
-  markets.forEach(market => {
+  markets.forEach((market) => {
     stats.byMarket[market] = {
       updated: 0,
       alreadyLatest: 0,
@@ -660,13 +721,13 @@ async function main() {
   const errors: ImportError[] = [];
 
   // 根据市场类型分组股票
-  const aStocks = stocks.filter(s => s.market === 'SH' || s.market === 'SZ');
-  const hkusStocks = stocks.filter(s => s.market === 'HK' || s.market === 'US');
+  const aStocks = stocks.filter((s) => s.market === 'SH' || s.market === 'SZ');
+  const hkusStocks = stocks.filter((s) => s.market === 'HK' || s.market === 'US');
 
   logger.log(`📊 股票分布:`);
   logger.log(`  A股 (SH/SZ): ${aStocks.length} 只`);
-  logger.log(`  港股 (HK): ${stocks.filter(s => s.market === 'HK').length} 只`);
-  logger.log(`  美股 (US): ${stocks.filter(s => s.market === 'US').length} 只\n`);
+  logger.log(`  港股 (HK): ${stocks.filter((s) => s.market === 'HK').length} 只`);
+  logger.log(`  美股 (US): ${stocks.filter((s) => s.market === 'US').length} 只\n`);
 
   // 并发控制
   const A_STOCK_CONCURRENCY = 8; // A股并发数
@@ -682,7 +743,7 @@ async function main() {
     const aStockTasks = aStocks.map((stock) =>
       aStockLimit(async () => {
         const result = await updateAStock(stock, dataSourceManager, indicatorsService);
-        
+
         if (result.success) {
           if (result.reason === 'already_latest') {
             stats.alreadyLatest++;
@@ -710,7 +771,7 @@ async function main() {
         if (completed % 10 === 0 || completed === stocks.length) {
           printProgress(completed, stocks.length, stats, startTime);
         }
-      })
+      }),
     );
 
     await Promise.all(aStockTasks);
@@ -752,7 +813,7 @@ async function main() {
         if (completed % 10 === 0 || completed === stocks.length) {
           printProgress(completed, stocks.length, stats, startTime);
         }
-      })
+      }),
     );
 
     await Promise.all(hkusTasks);
@@ -775,7 +836,8 @@ async function main() {
   // 按市场统计
   logger.log('📊 各市场统计:\n');
   Object.entries(stats.byMarket).forEach(([market, marketStats]) => {
-    const total = marketStats.updated + marketStats.alreadyLatest + marketStats.noNewData + marketStats.failed;
+    const total =
+      marketStats.updated + marketStats.alreadyLatest + marketStats.noNewData + marketStats.failed;
     if (total > 0) {
       logger.log(`${market}:`);
       logger.log(`  成功更新: ${marketStats.updated} 只`);
@@ -808,10 +870,10 @@ function printProgress(completed: number, total: number, stats: UpdateStats, sta
 
   logger.log(
     `\n📊 Progress: ${completed}/${total} (${progress}%) | ` +
-    `Updated: ${stats.updated} | Latest: ${stats.alreadyLatest} | ` +
-    `NoData: ${stats.noNewData} | Failed: ${stats.failed} | ` +
-    `Elapsed: ${elapsed}s | Rate: ${rate.toFixed(1)}/min | ` +
-    `ETA: ${remaining}min`
+      `Updated: ${stats.updated} | Latest: ${stats.alreadyLatest} | ` +
+      `NoData: ${stats.noNewData} | Failed: ${stats.failed} | ` +
+      `Elapsed: ${elapsed}s | Rate: ${rate.toFixed(1)}/min | ` +
+      `ETA: ${remaining}min`,
   );
 }
 

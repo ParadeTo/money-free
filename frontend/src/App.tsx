@@ -30,6 +30,7 @@ const FavoritePage = lazy(() => import('./pages/FavoritePage').then(m => ({ defa
 const ScreenerPage = lazy(() => import('./pages/ScreenerPage').then(m => ({ default: m.ScreenerPage })));
 const VcpScreenerPage = lazy(() => import('./pages/VcpScreenerPage').then(m => ({ default: m.VcpScreenerPage })));
 const VcpAnalysisPage = lazy(() => import('./pages/VcpAnalysisPage').then(m => ({ default: m.VcpAnalysisPage })));
+const VolumeSurgeScanPage = lazy(() => import('./pages/VolumeSurgeScan'));
 
 function App() {
   const loadingFallback = (
@@ -109,6 +110,16 @@ function App() {
                 element={
                   <MainLayout>
                     <FavoritePage />
+                  </MainLayout>
+                }
+              />
+              
+              {/* Volume Surge Scan page */}
+              <Route
+                path="/volume-surge-scan"
+                element={
+                  <MainLayout>
+                    <VolumeSurgeScanPage />
                   </MainLayout>
                 }
               />

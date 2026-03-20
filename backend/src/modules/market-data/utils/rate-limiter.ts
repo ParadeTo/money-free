@@ -15,11 +15,7 @@ export interface RateLimiterOptions {
 }
 
 export function createRateLimiter(options: RateLimiterOptions = {}) {
-  const {
-    concurrency = 3,
-    intervalMs = 1000,
-    requestsPerInterval = 3,
-  } = options;
+  const { concurrency = 3, intervalMs = 1000, requestsPerInterval = 3 } = options;
 
   const limit = pLimit(concurrency);
   let requestCount = 0;

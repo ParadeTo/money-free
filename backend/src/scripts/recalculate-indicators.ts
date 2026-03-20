@@ -4,7 +4,10 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { TechnicalIndicatorsService, PriceData } from '../services/indicators/technical-indicators.service';
+import {
+  TechnicalIndicatorsService,
+  PriceData,
+} from '../services/indicators/technical-indicators.service';
 
 const prisma = new PrismaClient();
 const indicatorsService = new TechnicalIndicatorsService();
@@ -16,7 +19,7 @@ async function main() {
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--markets' && i + 1 < args.length) {
-      markets = args[i + 1].split(',').map(m => m.trim().toUpperCase());
+      markets = args[i + 1].split(',').map((m) => m.trim().toUpperCase());
     }
   }
 
@@ -57,7 +60,7 @@ async function main() {
       console.log(`  📈 ${dailyKlines.length} 条日线数据`);
 
       // 2. 准备价格数据
-      const priceData: PriceData[] = dailyKlines.map((k: typeof dailyKlines[number]) => ({
+      const priceData: PriceData[] = dailyKlines.map((k: (typeof dailyKlines)[number]) => ({
         date: k.date,
         open: k.open,
         high: k.high,
@@ -75,7 +78,11 @@ async function main() {
       });
 
       // 4. 计算指标
-      const maResults = indicatorsService.calculateMA(priceData, { daily: [50, 150, 200] }, 'daily');
+      const maResults = indicatorsService.calculateMA(
+        priceData,
+        { daily: [50, 150, 200] },
+        'daily',
+      );
       const kdjResults = indicatorsService.calculateKDJ(priceData, 9, 3);
       const rsiResults = indicatorsService.calculateRSI(priceData, 14);
       const volumeResults = indicatorsService.calculateVolume(priceData, 52);
@@ -199,15 +206,17 @@ async function main() {
       if (weeklyKlines.length > 0) {
         console.log(`  📈 ${weeklyKlines.length} 条周线数据`);
 
-        const weeklyPriceData: PriceData[] = weeklyKlines.map((k: typeof weeklyKlines[number]) => ({
-          date: k.date,
-          open: k.open,
-          high: k.high,
-          low: k.low,
-          close: k.close,
-          volume: k.volume,
-          amount: k.amount || 0,
-        }));
+        const weeklyPriceData: PriceData[] = weeklyKlines.map(
+          (k: (typeof weeklyKlines)[number]) => ({
+            date: k.date,
+            open: k.open,
+            high: k.high,
+            low: k.low,
+            close: k.close,
+            volume: k.volume,
+            amount: k.amount || 0,
+          }),
+        );
 
         const weeklyMaResults = indicatorsService.calculateMA(
           weeklyPriceData,

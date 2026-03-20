@@ -13,10 +13,7 @@ export class KLinesController {
   @ApiParam({ name: 'stockCode', description: '股票代码', example: '600519' })
   @ApiResponse({ status: 200, description: '返回K线数据' })
   @ApiResponse({ status: 404, description: '股票不存在' })
-  async getKLines(
-    @Param('stockCode') stockCode: string,
-    @Query() dto: GetKLinesDto,
-  ) {
+  async getKLines(@Param('stockCode') stockCode: string, @Query() dto: GetKLinesDto) {
     return this.klinesService.getKLineData(stockCode, dto);
   }
 }

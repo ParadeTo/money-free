@@ -1,9 +1,9 @@
 /**
  * 批量增量更新股票最新数据
- * 
+ *
  * 默认只更新指数成分股（沪深300+中证500，约800只）
  * 使用 --all 更新全部股票
- * 
+ *
  * 使用:
  * npx ts-node src/scripts/batch-incremental-update-latest.ts            # 只更新指数成分股
  * npx ts-node src/scripts/batch-incremental-update-latest.ts --all      # 更新全部股票
@@ -23,7 +23,7 @@ const BATCH_SIZE = 500;
 const PAUSE_BETWEEN_BATCHES = 30000;
 
 async function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function main() {
@@ -33,7 +33,7 @@ async function main() {
   console.log('======================================\n');
 
   const totalStocks = await prisma.stock.count();
-  
+
   let targetCount: number;
   if (updateAll) {
     targetCount = totalStocks;

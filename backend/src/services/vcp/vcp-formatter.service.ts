@@ -13,7 +13,7 @@ export interface FormatOptions {
 
 /**
  * VCP Formatter Service
- * 
+ *
  * Formats VCP analysis results for different output formats:
  * - Text format (for command-line scripts)
  * - Display format (for frontend rendering)
@@ -22,7 +22,7 @@ export interface FormatOptions {
 export class VcpFormatterService {
   /**
    * Format VCP analysis to text report (for command-line output)
-   * 
+   *
    * @param analysis VCP analysis result
    * @param options Format options
    * @returns Formatted text report in Chinese
@@ -146,9 +146,12 @@ export class VcpFormatterService {
     lines.push(`📈 回调阶段详情 (${pullbacks.length} 个)\n`);
 
     displayPullbacks.forEach((p, i) => {
-      const status = p.daysSinceLow === 0 ? '🔴 正在回调中' : 
-                     p.daysSinceLow <= 3 ? `🟡 ${p.daysSinceLow}天前到达最低点` :
-                     `🟢 ${p.daysSinceLow}天前到达最低点`;
+      const status =
+        p.daysSinceLow === 0
+          ? '🔴 正在回调中'
+          : p.daysSinceLow <= 3
+            ? `🟡 ${p.daysSinceLow}天前到达最低点`
+            : `🟢 ${p.daysSinceLow}天前到达最低点`;
 
       lines.push(`  [回调 ${p.index}] ${status}`);
       lines.push(`    期间: ${p.highDate} → ${p.lowDate}`);

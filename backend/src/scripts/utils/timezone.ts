@@ -47,7 +47,7 @@ export function getMarketToday(market: MarketType): string {
 export function compareDates(date1: Date | string, date2: Date | string): number {
   const str1 = typeof date1 === 'string' ? date1 : date1.toISOString().split('T')[0];
   const str2 = typeof date2 === 'string' ? date2 : date2.toISOString().split('T')[0];
-  
+
   if (str1 < str2) return -1;
   if (str1 > str2) return 1;
   return 0;

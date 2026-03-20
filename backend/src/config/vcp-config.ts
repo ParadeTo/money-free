@@ -6,7 +6,7 @@
 export interface VcpMarketConfig {
   /** 市场代码 */
   market: 'SH' | 'SZ' | 'HK' | 'US';
-  
+
   /** 市场名称 */
   marketName: string;
 
@@ -17,10 +17,10 @@ export interface VcpMarketConfig {
   vcpPatternConfig: {
     /** 最小收缩阶段数 */
     minContractionCount: number;
-    
+
     /** 收缩识别的最小波动率降低比例（例如0.5表示波动率降低50%） */
     minVolatilityDecreaseRatio: number;
-    
+
     /** 成交量萎缩判断标准：最后阶段成交量相对前期的比例 */
     volumeDryingUpThreshold: number;
   };
@@ -29,10 +29,10 @@ export interface VcpMarketConfig {
   trendTemplateConfig: {
     /** RS评级最低要求 */
     minRsRating: number;
-    
+
     /** 距离52周高点的最大距离（百分比） */
     maxDistFrom52WeekHighPct: number;
-    
+
     /** 距离52周低点的最小距离（百分比） */
     minDistFrom52WeekLowPct: number;
   };
@@ -41,7 +41,7 @@ export interface VcpMarketConfig {
   pullbackConfig: {
     /** 回调幅度判断标准：超过此幅度认为是有效回调 */
     minPullbackPct: number;
-    
+
     /** 最大回调幅度：超过此幅度可能不是健康回调 */
     maxHealthyPullbackPct: number;
   };
@@ -50,7 +50,7 @@ export interface VcpMarketConfig {
   dataRequirements: {
     /** 最少需要的K线数据天数 */
     minKlineDays: number;
-    
+
     /** 分析使用的K线窗口大小 */
     analysisWindowDays: number;
   };
@@ -128,7 +128,9 @@ export const VCP_MARKET_CONFIGS: Record<string, VcpMarketConfig> = {
 export function getVcpConfig(market: string): VcpMarketConfig {
   const config = VCP_MARKET_CONFIGS[market.toUpperCase()];
   if (!config) {
-    throw new Error(`Unknown market: ${market}. Supported markets: ${Object.keys(VCP_MARKET_CONFIGS).join(', ')}`);
+    throw new Error(
+      `Unknown market: ${market}. Supported markets: ${Object.keys(VCP_MARKET_CONFIGS).join(', ')}`,
+    );
   }
   return config;
 }

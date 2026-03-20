@@ -3,17 +3,17 @@ import { Type, Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class GetIndicatorsDto {
-  @ApiPropertyOptional({ 
-    description: 'K线周期', 
-    enum: ['daily', 'weekly'], 
+  @ApiPropertyOptional({
+    description: 'K线周期',
+    enum: ['daily', 'weekly'],
     default: 'daily',
   })
   @IsOptional()
   @IsIn(['daily', 'weekly'])
   period?: 'daily' | 'weekly' = 'daily';
 
-  @ApiPropertyOptional({ 
-    description: '指标类型数组', 
+  @ApiPropertyOptional({
+    description: '指标类型数组',
     isArray: true,
     enum: ['ma', 'kdj', 'rsi', 'volume', 'amount', 'week52_marker'],
     example: ['ma', 'kdj', 'volume'],
@@ -28,16 +28,16 @@ export class GetIndicatorsDto {
   @IsIn(['ma', 'kdj', 'rsi', 'volume', 'amount', 'week52_marker'], { each: true })
   indicators?: string[];
 
-  @ApiPropertyOptional({ 
-    description: '开始日期（YYYY-MM-DD）', 
+  @ApiPropertyOptional({
+    description: '开始日期（YYYY-MM-DD）',
     example: '2024-01-01',
   })
   @IsOptional()
   @IsDateString()
   startDate?: string;
 
-  @ApiPropertyOptional({ 
-    description: '结束日期（YYYY-MM-DD）', 
+  @ApiPropertyOptional({
+    description: '结束日期（YYYY-MM-DD）',
     example: '2024-12-31',
   })
   @IsOptional()

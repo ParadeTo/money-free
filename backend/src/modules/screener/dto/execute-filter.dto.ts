@@ -1,14 +1,7 @@
 // backend/src/modules/screener/dto/execute-filter.dto.ts
 // T149 [P] [US2] Create execute-filter.dto.ts with FilterCondition[] validation
 
-import {
-  IsArray,
-  IsEnum,
-  IsNumber,
-  IsOptional,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
+import { IsArray, IsEnum, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 

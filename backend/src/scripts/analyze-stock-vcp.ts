@@ -29,8 +29,8 @@ async function main() {
     // 如果通过代码找不到，尝试通过名称查找
     if (!stock) {
       stock = await prisma.stock.findFirst({
-        where: { 
-          stockName: { contains: input }
+        where: {
+          stockName: { contains: input },
         },
         select: {
           stockCode: true,
@@ -47,18 +47,20 @@ async function main() {
     }
 
     // 货币符号映射
-    const currencySymbol = {
-      CNY: '¥',
-      HKD: 'HK$',
-      USD: '$',
-    }[stock.currency] || '';
+    const currencySymbol =
+      {
+        CNY: '¥',
+        HKD: 'HK$',
+        USD: '$',
+      }[stock.currency] || '';
 
-    const marketName = {
-      SH: 'A股(沪)',
-      SZ: 'A股(深)',
-      HK: '港股',
-      US: '美股',
-    }[stock.market] || stock.market;
+    const marketName =
+      {
+        SH: 'A股(沪)',
+        SZ: 'A股(深)',
+        HK: '港股',
+        US: '美股',
+      }[stock.market] || stock.market;
 
     logger.log(`\n${'='.repeat(100)}`);
     logger.log(`📈 VCP 形态分析 - ${stock.stockName} (${stock.stockCode}) [${marketName}]`);
@@ -121,7 +123,7 @@ async function main() {
     if (analysis.contractions.length > 0) {
       logger.log(`${'─'.repeat(100)}`);
       logger.log(`📉 收缩阶段详情 (${analysis.contractions.length} 个):\n`);
-      
+
       analysis.contractions.forEach((contraction, i) => {
         logger.log(`  [收缩 ${i + 1}]`);
         logger.log(`    期间: ${contraction.swingHighDate} → ${contraction.swingLowDate}`);
@@ -138,16 +140,18 @@ async function main() {
     if (pullbacks.length > 0) {
       logger.log(`${'─'.repeat(100)}`);
       logger.log(`📈 回调阶段详情 (${pullbacks.length} 个):\n`);
-      
+
       pullbacks.forEach((pullback, i) => {
         const lastBar = bars[bars.length - 1];
         const pullbackLowDate = new Date(pullback.lowDate);
         const lastBarDate = new Date(lastBar.date);
-        const daysSinceLow = Math.floor((lastBarDate.getTime() - pullbackLowDate.getTime()) / (1000 * 60 * 60 * 24));
-        
+        const daysSinceLow = Math.floor(
+          (lastBarDate.getTime() - pullbackLowDate.getTime()) / (1000 * 60 * 60 * 24),
+        );
+
         const isActive = daysSinceLow <= 5;
         const status = daysSinceLow === 0 ? '⚡ 回调中' : `${daysSinceLow}天前到达最低点`;
-        
+
         logger.log(`  [回调 ${i + 1}] ${isActive ? '🔴 ' + status : status}`);
         logger.log(`    期间: ${pullback.highDate} → ${pullback.lowDate}`);
         logger.log(`    高点: ${currencySymbol}${pullback.highPrice.toFixed(2)}`);
@@ -163,23 +167,30 @@ async function main() {
       const lastBar = bars[bars.length - 1];
       const pullbackLowDate = new Date(lastPullback.lowDate);
       const lastBarDate = new Date(lastBar.date);
-      const daysSinceLow = Math.floor((lastBarDate.getTime() - pullbackLowDate.getTime()) / (1000 * 60 * 60 * 24));
+      const daysSinceLow = Math.floor(
+        (lastBarDate.getTime() - pullbackLowDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
 
       logger.log(`${'─'.repeat(100)}`);
       logger.log(`🎯 最新回调分析:\n`);
-      logger.log(`  回调开始: ${lastPullback.highDate} @ ${currencySymbol}${lastPullback.highPrice.toFixed(2)}`);
-      logger.log(`  回调最低: ${lastPullback.lowDate} @ ${currencySymbol}${lastPullback.lowPrice.toFixed(2)}`);
+      logger.log(
+        `  回调开始: ${lastPullback.highDate} @ ${currencySymbol}${lastPullback.highPrice.toFixed(2)}`,
+      );
+      logger.log(
+        `  回调最低: ${lastPullback.lowDate} @ ${currencySymbol}${lastPullback.lowPrice.toFixed(2)}`,
+      );
       logger.log(`  回调幅度: ${lastPullback.pullbackPct.toFixed(2)}%`);
       logger.log(`  回调天数: ${lastPullback.durationDays} 天`);
       logger.log(`  距最低点: ${daysSinceLow} 天`);
       logger.log(`  当前价格: ${currencySymbol}${lastBar.close.toFixed(2)}`);
-      
-      const recoveryPct = ((lastBar.close - lastPullback.lowPrice) / lastPullback.lowPrice * 100);
+
+      const recoveryPct = ((lastBar.close - lastPullback.lowPrice) / lastPullback.lowPrice) * 100;
       logger.log(`  从最低点反弹: ${recoveryPct.toFixed(2)}%`);
-      
-      const distFromHigh = ((lastBar.close - lastPullback.highPrice) / lastPullback.highPrice * 100);
+
+      const distFromHigh =
+        ((lastBar.close - lastPullback.highPrice) / lastPullback.highPrice) * 100;
       logger.log(`  距回调高点: ${distFromHigh.toFixed(2)}%`);
-      
+
       if (daysSinceLow === 0) {
         logger.log(`  📍 状态: 🔴 正在回调中`);
       } else if (daysSinceLow <= 3) {
@@ -192,7 +203,7 @@ async function main() {
     // 显示最近10天的K线数据
     logger.log(`\n${'─'.repeat(100)}`);
     logger.log(`📅 最近 10 天K线数据:\n`);
-    
+
     const recentBars = bars.slice(-10);
     console.log(
       [
@@ -203,14 +214,14 @@ async function main() {
         '收盘'.padStart(10),
         '涨跌幅%'.padStart(10),
         '成交量(手)'.padStart(12),
-      ].join(' | ')
+      ].join(' | '),
     );
     console.log('-'.repeat(100));
 
     recentBars.forEach((bar, i) => {
       const prevClose = i > 0 ? recentBars[i - 1].close : bar.open;
-      const changePct = ((bar.close - prevClose) / prevClose * 100);
-      
+      const changePct = ((bar.close - prevClose) / prevClose) * 100;
+
       console.log(
         [
           bar.date.padEnd(12),
@@ -220,12 +231,11 @@ async function main() {
           bar.close.toFixed(2).padStart(10),
           changePct.toFixed(2).padStart(10),
           (bar.volume / 100).toFixed(0).padStart(12),
-        ].join(' | ')
+        ].join(' | '),
       );
     });
 
     logger.log(`\n${'='.repeat(100)}\n`);
-
   } catch (error: any) {
     logger.error(`Analysis failed: ${error.message}`);
     logger.error(error.stack);

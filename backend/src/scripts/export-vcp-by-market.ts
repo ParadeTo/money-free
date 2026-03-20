@@ -84,7 +84,9 @@ async function main() {
         continue;
       }
 
-      logger.log(`${group.name}: 找到 ${results.length} 只符合VCP基础条件的股票，正在实时分析...\n`);
+      logger.log(
+        `${group.name}: 找到 ${results.length} 只符合VCP基础条件的股票，正在实时分析...\n`,
+      );
 
       const allVcpStocks: StockWithStatus[] = [];
 
@@ -123,10 +125,13 @@ async function main() {
           const lastPullback = pullbacks[pullbacks.length - 1];
           const lastPullbackLowDate = new Date(lastPullback.lowDate);
           const lastBarDate = new Date(lastBar.date);
-          const daysSinceLow = Math.floor((lastBarDate.getTime() - lastPullbackLowDate.getTime()) / (1000 * 60 * 60 * 24));
+          const daysSinceLow = Math.floor(
+            (lastBarDate.getTime() - lastPullbackLowDate.getTime()) / (1000 * 60 * 60 * 24),
+          );
 
           // 计算从回调低点到当前的反弹幅度
-          const recoveryPct = ((lastBar.close - lastPullback.lowPrice) / lastPullback.lowPrice) * 100;
+          const recoveryPct =
+            ((lastBar.close - lastPullback.lowPrice) / lastPullback.lowPrice) * 100;
 
           pullbackInfo = {
             durationDays: lastPullback.durationDays,
@@ -159,11 +164,12 @@ async function main() {
           }
         }
 
-        const currencySymbol = {
-          CNY: '¥',
-          HKD: 'HK$',
-          USD: '$',
-        }[r.stock.currency] || '';
+        const currencySymbol =
+          {
+            CNY: '¥',
+            HKD: 'HK$',
+            USD: '$',
+          }[r.stock.currency] || '';
 
         allVcpStocks.push({
           stockCode: r.stockCode,
@@ -187,20 +193,39 @@ async function main() {
 
       // 分类统计并过滤回调幅度小于10%
       const MAX_PULLBACK_PCT = 10;
-      const inContraction = allVcpStocks.filter(s => s.status === 'contraction');
+      const inContraction = allVcpStocks.filter((s) => s.status === 'contraction');
       const inPullback = allVcpStocks
-        .filter(s => s.status === 'in_pullback' && s.pullbackInfo && s.pullbackInfo.pullbackPct < MAX_PULLBACK_PCT)
+        .filter(
+          (s) =>
+            s.status === 'in_pullback' &&
+            s.pullbackInfo &&
+            s.pullbackInfo.pullbackPct < MAX_PULLBACK_PCT,
+        )
         .sort((a, b) => a.pullbackInfo!.pullbackPct - b.pullbackInfo!.pullbackPct);
       const pullbackEnded = allVcpStocks
-        .filter(s => s.status === 'pullback_ended' && s.pullbackInfo && s.pullbackInfo.pullbackPct < MAX_PULLBACK_PCT)
+        .filter(
+          (s) =>
+            s.status === 'pullback_ended' &&
+            s.pullbackInfo &&
+            s.pullbackInfo.pullbackPct < MAX_PULLBACK_PCT,
+        )
         .sort((a, b) => b.rsRating - a.rsRating);
       const contractionSorted = inContraction.sort((a, b) => b.rsRating - a.rsRating);
 
       const totalFiltered = inPullback.length + pullbackEnded.length + inContraction.length;
-      logger.log(`${group.name} 分类完成 (过滤回调>${MAX_PULLBACK_PCT}%): 回调中 ${inPullback.length} 只 | 回调结束 ${pullbackEnded.length} 只 | 收缩中 ${inContraction.length} 只\n`);
+      logger.log(
+        `${group.name} 分类完成 (过滤回调>${MAX_PULLBACK_PCT}%): 回调中 ${inPullback.length} 只 | 回调结束 ${pullbackEnded.length} 只 | 收缩中 ${inContraction.length} 只\n`,
+      );
 
       // 生成 Markdown 内容
-      const markdown = generateMarkdown(group.name, scanDateStr, totalFiltered, inPullback, pullbackEnded, contractionSorted);
+      const markdown = generateMarkdown(
+        group.name,
+        scanDateStr,
+        totalFiltered,
+        inPullback,
+        pullbackEnded,
+        contractionSorted,
+      );
 
       // 输出到文件（按日期分组到子目录）
       const baseDir = path.join(process.cwd(), '..', 'docs', 'vcp', 'daily-reports');
@@ -221,7 +246,6 @@ async function main() {
     }
 
     logger.log('🎉 所有市场导出完成！');
-
   } catch (error: any) {
     logger.error(`Failed to export VCP results: ${error.message}`);
     logger.error(error.stack);
@@ -237,7 +261,7 @@ function generateMarkdown(
   totalCount: number,
   inPullback: StockWithStatus[],
   pullbackEnded: StockWithStatus[],
-  inContraction: StockWithStatus[]
+  inContraction: StockWithStatus[],
 ): string {
   let md = `# VCP 选股 - ${marketName}
 
@@ -278,7 +302,8 @@ function generateMarkdown(
 
   inPullback.forEach((stock) => {
     const pb = stock.pullbackInfo!;
-    const marketName = { SH: 'A股(沪)', SZ: 'A股(深)', HK: '港股', US: '美股' }[stock.market] || stock.market;
+    const marketName =
+      { SH: 'A股(沪)', SZ: 'A股(深)', HK: '港股', US: '美股' }[stock.market] || stock.market;
     md += `#### ${stock.stockCode} - ${stock.stockName} [${marketName}]\n\n`;
     md += `- **最新价**: ${stock.currencySymbol}${stock.latestPrice.toFixed(2)}（${stock.priceChangePct >= 0 ? '+' : ''}${stock.priceChangePct.toFixed(2)}%）\n`;
     md += `- **RS评分**: ${stock.rsRating}（相对强度）\n`;
@@ -312,17 +337,20 @@ function generateMarkdown(
 
   md += `\n### 高RS评分股票详情（RS ≥ 85）\n\n`;
 
-  pullbackEnded.filter(s => s.rsRating >= 85).forEach((stock) => {
-    const pb = stock.pullbackInfo!;
-    const marketName = { SH: 'A股(沪)', SZ: 'A股(深)', HK: '港股', US: '美股' }[stock.market] || stock.market;
-    md += `#### ${stock.stockCode} - ${stock.stockName} [${marketName}] (RS: ${stock.rsRating})\n\n`;
-    md += `- **最新价**: ${stock.currencySymbol}${stock.latestPrice.toFixed(2)}（${stock.priceChangePct >= 0 ? '+' : ''}${stock.priceChangePct.toFixed(2)}%）\n`;
-    md += `- **收缩次数**: ${stock.contractionCount} 次，最后收缩 ${stock.lastContractionPct.toFixed(2)}%\n`;
-    md += `- **回调信息**: 回调 ${pb.pullbackPct.toFixed(2)}%，持续 ${pb.durationDays} 天\n`;
-    md += `- **反弹表现**: 从低点反弹 ${pb.recoveryPct.toFixed(2)}%（${pb.daysSinceLow} 天前到达低点）\n`;
-    md += `- **成交量萎缩**: ${stock.volumeDryingUp ? '✅ 是' : '❌ 否'}\n`;
-    md += `- **距52周高**: ${stock.distFrom52WeekHigh.toFixed(2)}%\n\n`;
-  });
+  pullbackEnded
+    .filter((s) => s.rsRating >= 85)
+    .forEach((stock) => {
+      const pb = stock.pullbackInfo!;
+      const marketName =
+        { SH: 'A股(沪)', SZ: 'A股(深)', HK: '港股', US: '美股' }[stock.market] || stock.market;
+      md += `#### ${stock.stockCode} - ${stock.stockName} [${marketName}] (RS: ${stock.rsRating})\n\n`;
+      md += `- **最新价**: ${stock.currencySymbol}${stock.latestPrice.toFixed(2)}（${stock.priceChangePct >= 0 ? '+' : ''}${stock.priceChangePct.toFixed(2)}%）\n`;
+      md += `- **收缩次数**: ${stock.contractionCount} 次，最后收缩 ${stock.lastContractionPct.toFixed(2)}%\n`;
+      md += `- **回调信息**: 回调 ${pb.pullbackPct.toFixed(2)}%，持续 ${pb.durationDays} 天\n`;
+      md += `- **反弹表现**: 从低点反弹 ${pb.recoveryPct.toFixed(2)}%（${pb.daysSinceLow} 天前到达低点）\n`;
+      md += `- **成交量萎缩**: ${stock.volumeDryingUp ? '✅ 是' : '❌ 否'}\n`;
+      md += `- **距52周高**: ${stock.distFrom52WeekHigh.toFixed(2)}%\n\n`;
+    });
 
   md += `---
 
@@ -344,7 +372,8 @@ function generateMarkdown(
   md += `\n### 详细信息（前20只）\n\n`;
 
   inContraction.slice(0, 20).forEach((stock) => {
-    const marketName = { SH: 'A股(沪)', SZ: 'A股(深)', HK: '港股', US: '美股' }[stock.market] || stock.market;
+    const marketName =
+      { SH: 'A股(沪)', SZ: 'A股(深)', HK: '港股', US: '美股' }[stock.market] || stock.market;
     md += `#### ${stock.stockCode} - ${stock.stockName} [${marketName}]\n\n`;
     md += `- **最新价**: ${stock.currencySymbol}${stock.latestPrice.toFixed(2)}（${stock.priceChangePct >= 0 ? '+' : ''}${stock.priceChangePct.toFixed(2)}%）\n`;
     md += `- **RS评分**: ${stock.rsRating}\n`;
@@ -376,7 +405,7 @@ function generateMarkdown(
 
 `;
 
-  const topEnded = pullbackEnded.filter(s => s.rsRating >= 90).slice(0, 5);
+  const topEnded = pullbackEnded.filter((s) => s.rsRating >= 90).slice(0, 5);
   topEnded.forEach((stock, idx) => {
     md += `${idx + 1}. **${stock.stockName}** (${stock.stockCode}) - RS ${stock.rsRating}, 反弹 ${stock.pullbackInfo!.recoveryPct.toFixed(2)}%\n`;
   });

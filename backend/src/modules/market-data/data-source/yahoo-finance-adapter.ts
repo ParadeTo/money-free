@@ -30,9 +30,7 @@ export class YahooFinanceAdapter implements IDataSourceAdapter {
   }
 
   async fetchIndexConstituents(indexCode: string): Promise<IndexConstituent[]> {
-    this.logger.log(
-      `Fetching index constituents for ${indexCode} from Yahoo Finance`,
-    );
+    this.logger.log(`Fetching index constituents for ${indexCode} from Yahoo Finance`);
 
     const validIndices = ['HSI', 'HSTECH', 'SP500', 'NDX100'];
     if (!validIndices.includes(indexCode)) {
@@ -74,9 +72,7 @@ export class YahooFinanceAdapter implements IDataSourceAdapter {
   }
 
   async fetchStockInfo(symbol: string, market: MarketType): Promise<StockInfo> {
-    this.logger.log(
-      `Fetching stock info for ${symbol} (${market}) from Yahoo Finance`,
-    );
+    this.logger.log(`Fetching stock info for ${symbol} (${market}) from Yahoo Finance`);
 
     if (market !== MarketType.HK && market !== MarketType.US) {
       throw new DataSourceError(

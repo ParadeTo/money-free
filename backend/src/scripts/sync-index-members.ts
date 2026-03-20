@@ -1,9 +1,9 @@
 /**
  * 同步指数成分股标记
- * 
+ *
  * 通过 AkShare 获取沪深300和中证500的成分股列表，
  * 更新 stocks 表的 index_code 字段。
- * 
+ *
  * 使用:
  * npx ts-node src/scripts/sync-index-members.ts
  */
@@ -29,8 +29,12 @@ function fetchIndexMembers(indexCode: string): Promise<string[]> {
     let stdout = '';
     let stderr = '';
 
-    proc.stdout.on('data', (chunk) => { stdout += chunk.toString(); });
-    proc.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
+    proc.stdout.on('data', (chunk) => {
+      stdout += chunk.toString();
+    });
+    proc.stderr.on('data', (chunk) => {
+      stderr += chunk.toString();
+    });
 
     proc.stdin.write(JSON.stringify({ index_code: indexCode }));
     proc.stdin.end();
@@ -114,7 +118,9 @@ async function main() {
 
   const totalStocks = await prisma.stock.count();
   console.log(`\n  数据库总股票: ${totalStocks} 只`);
-  console.log(`  增量更新范围: ${totalMarked} 只 (${((totalMarked / totalStocks) * 100).toFixed(1)}%)`);
+  console.log(
+    `  增量更新范围: ${totalMarked} 只 (${((totalMarked / totalStocks) * 100).toFixed(1)}%)`,
+  );
   console.log(`  预计更新耗时: ~${((totalMarked * 5.8) / 3600).toFixed(1)} 小时\n`);
 }
 

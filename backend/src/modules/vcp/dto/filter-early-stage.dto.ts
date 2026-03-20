@@ -105,8 +105,8 @@ export class EarlyStageStockDto {
   @ApiProperty({ description: '成交量是否萎缩', example: false })
   volumeDryingUp!: boolean;
 
-  @ApiProperty({ 
-    description: 'VCP阶段', 
+  @ApiProperty({
+    description: 'VCP阶段',
     enum: ['contraction', 'in_pullback', 'pullback_ended'],
     example: 'in_pullback',
   })

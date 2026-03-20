@@ -1,13 +1,13 @@
 #!/usr/bin/env ts-node
 /**
  * A股批量增量更新脚本
- * 
+ *
  * 功能：
  * - 自动分批处理所有A股（SH+SZ）
  * - 每批100只股票
  * - 批次间自动等待60秒避免限流
  * - 显示总体进度和统计
- * 
+ *
  * 使用：
  * npx ts-node src/scripts/update-a-shares-batch.ts
  */
@@ -35,20 +35,21 @@ async function runBatch(offset: number, limit: number): Promise<BatchResult | nu
     const scriptPath = path.join(__dirname, 'incremental-update-latest.ts');
     const node20Path = '/Users/youxingzhi/.nvm/versions/node/v20.19.5/bin/node';
     const npxPath = '/Users/youxingzhi/.nvm/versions/node/v20.19.5/bin/npx';
-    
+
     console.log(`\n🚀 Starting batch at offset ${offset}...`);
-    
-    const proc = spawn(npxPath, [
-      'ts-node',
-      scriptPath,
-      '--markets=SH,SZ',
-      limit.toString(),
-      offset.toString()
-    ], {
-      cwd: path.join(__dirname, '..', '..'),
-      stdio: 'pipe',
-      env: { ...process.env, PATH: '/Users/youxingzhi/.nvm/versions/node/v20.19.5/bin:' + process.env.PATH }
-    });
+
+    const proc = spawn(
+      npxPath,
+      ['ts-node', scriptPath, '--markets=SH,SZ', limit.toString(), offset.toString()],
+      {
+        cwd: path.join(__dirname, '..', '..'),
+        stdio: 'pipe',
+        env: {
+          ...process.env,
+          PATH: '/Users/youxingzhi/.nvm/versions/node/v20.19.5/bin:' + process.env.PATH,
+        },
+      },
+    );
 
     let stdout = '';
     let stderr = '';
@@ -96,28 +97,28 @@ async function runBatch(offset: number, limit: number): Promise<BatchResult | nu
 
 async function main() {
   console.log('📊 A股批量增量更新开始...\n');
-  
+
   // 查询A股总数
   const totalAShares = await prisma.stock.count({
-    where: { market: { in: ['SH', 'SZ'] } }
+    where: { market: { in: ['SH', 'SZ'] } },
   });
-  
+
   console.log(`总共 ${totalAShares} 只A股需要更新`);
   const totalBatches = Math.ceil(totalAShares / BATCH_SIZE);
   console.log(`分 ${totalBatches} 批处理，每批 ${BATCH_SIZE} 只\n`);
-  
+
   const startTime = Date.now();
   const allResults: BatchResult[] = [];
-  
+
   for (let batch = 0; batch < totalBatches; batch++) {
     const offset = batch * BATCH_SIZE;
-    
+
     console.log(`\n${'='.repeat(60)}`);
     console.log(`📦 批次 ${batch + 1}/${totalBatches} (offset: ${offset})`);
     console.log('='.repeat(60));
-    
+
     const result = await runBatch(offset, BATCH_SIZE);
-    
+
     if (result) {
       allResults.push(result);
       console.log(`\n✅ 批次 ${batch + 1} 完成：`);
@@ -127,23 +128,23 @@ async function main() {
     } else {
       console.error(`\n❌ 批次 ${batch + 1} 失败`);
     }
-    
+
     // 如果不是最后一批，等待一段时间
     if (batch < totalBatches - 1) {
       const waitSeconds = Math.ceil(WAIT_BETWEEN_BATCHES / 1000);
       console.log(`\n⏳ 等待 ${waitSeconds} 秒避免限流...`);
-      await new Promise(resolve => setTimeout(resolve, WAIT_BETWEEN_BATCHES));
+      await new Promise((resolve) => setTimeout(resolve, WAIT_BETWEEN_BATCHES));
       console.log('✅ 继续下一批');
     }
   }
-  
+
   // 最终统计
   const totalElapsed = Date.now() - startTime;
   const totalSuccess = allResults.reduce((sum, r) => sum + r.success, 0);
   const totalNoData = allResults.reduce((sum, r) => sum + r.noData, 0);
   const totalFailed = allResults.reduce((sum, r) => sum + r.failed, 0);
   const totalNewRecords = allResults.reduce((sum, r) => sum + r.newRecords, 0);
-  
+
   console.log('\n\n' + '='.repeat(60));
   console.log('🎉 全部批次完成！');
   console.log('='.repeat(60));
@@ -153,7 +154,7 @@ async function main() {
   console.log(`失败: ${totalFailed} 只`);
   console.log(`新增K线: ${totalNewRecords.toLocaleString()} 条`);
   console.log(`总耗时: ${(totalElapsed / 1000 / 60).toFixed(1)} 分钟\n`);
-  
+
   await prisma.$disconnect();
 }
 

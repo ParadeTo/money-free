@@ -13,10 +13,7 @@ export class IndicatorsController {
   @ApiParam({ name: 'stockCode', description: '股票代码', example: '600519' })
   @ApiResponse({ status: 200, description: '返回技术指标数据' })
   @ApiResponse({ status: 404, description: '股票不存在' })
-  async getIndicators(
-    @Param('stockCode') stockCode: string,
-    @Query() dto: GetIndicatorsDto,
-  ) {
+  async getIndicators(@Param('stockCode') stockCode: string, @Query() dto: GetIndicatorsDto) {
     return this.indicatorsService.getIndicators(stockCode, dto);
   }
 

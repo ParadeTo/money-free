@@ -24,25 +24,22 @@ export class AkShareService {
   async getDailyKLine(params: {
     symbol: string;
     start_date?: string; // YYYY-MM-DD
-    end_date?: string;   // YYYY-MM-DD
+    end_date?: string; // YYYY-MM-DD
   }): Promise<AkShareKLineData[]> {
     try {
       // 转换 symbol 为纯代码 (去除 sh/sz 前缀)
       const stockCode = params.symbol.replace(/^(sh|sz)/i, '');
-      
+
       // 转换日期格式 YYYY-MM-DD -> YYYYMMDD
       const startDate = params.start_date?.replace(/-/g, '');
       const endDate = params.end_date?.replace(/-/g, '');
 
-      const result = await this.pythonBridge.execute<any>(
-        'akshare_fetcher.py',
-        {
-          stock_code: stockCode,
-          period: 'daily',
-          start_date: startDate,
-          end_date: endDate,
-        },
-      );
+      const result = await this.pythonBridge.execute<any>('akshare_fetcher.py', {
+        stock_code: stockCode,
+        period: 'daily',
+        start_date: startDate,
+        end_date: endDate,
+      });
 
       if (result.error || !result.data) {
         throw new Error(result.error || 'Failed to fetch data from AkShare');
@@ -67,20 +64,17 @@ export class AkShareService {
     try {
       // 转换 symbol 为纯代码 (去除 sh/sz 前缀)
       const stockCode = params.symbol.replace(/^(sh|sz)/i, '');
-      
+
       // 转换日期格式 YYYY-MM-DD -> YYYYMMDD
       const startDate = params.start_date?.replace(/-/g, '');
       const endDate = params.end_date?.replace(/-/g, '');
 
-      const result = await this.pythonBridge.execute<any>(
-        'akshare_fetcher.py',
-        {
-          stock_code: stockCode,
-          period: 'weekly',
-          start_date: startDate,
-          end_date: endDate,
-        },
-      );
+      const result = await this.pythonBridge.execute<any>('akshare_fetcher.py', {
+        stock_code: stockCode,
+        period: 'weekly',
+        start_date: startDate,
+        end_date: endDate,
+      });
 
       if (result.error || !result.data) {
         throw new Error(result.error || 'Failed to fetch data from AkShare');

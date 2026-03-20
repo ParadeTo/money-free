@@ -4,7 +4,13 @@ import { Transform, Type } from 'class-transformer';
 
 export class GetVcpScanDto {
   @ApiPropertyOptional({
-    enum: ['contractionCount', 'lastContractionPct', 'volumeDryingUp', 'rsRating', 'priceChangePct'],
+    enum: [
+      'contractionCount',
+      'lastContractionPct',
+      'volumeDryingUp',
+      'rsRating',
+      'priceChangePct',
+    ],
     default: 'lastContractionPct',
   })
   @IsOptional()

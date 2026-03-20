@@ -29,9 +29,7 @@ async function testImport() {
   ];
 
   const endDate = new Date().toISOString().split('T')[0];
-  const startDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split('T')[0];
+  const startDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   let successCount = 0;
   let failCount = 0;
@@ -41,10 +39,7 @@ async function testImport() {
       console.log(`\n测试 ${stock.code} (${stock.name})...`);
 
       console.log('  1. 获取基本信息...');
-      const stockInfo = await importManager.fetchStockInfoWithFallback(
-        stock.code,
-        MarketType.HK,
-      );
+      const stockInfo = await importManager.fetchStockInfoWithFallback(stock.code, MarketType.HK);
 
       if (!stockInfo.data) {
         console.error(`    ✗ 失败:`, stockInfo.errors);
@@ -69,7 +64,9 @@ async function testImport() {
       }
 
       console.log(`    ✓ ${klines.data.length} 条记录 (来源: ${klines.source})`);
-      console.log(`    最早: ${klines.data[0].date}, 最新: ${klines.data[klines.data.length - 1].date}`);
+      console.log(
+        `    最早: ${klines.data[0].date}, 最新: ${klines.data[klines.data.length - 1].date}`,
+      );
 
       successCount++;
     } catch (error) {

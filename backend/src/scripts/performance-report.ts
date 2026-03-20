@@ -1,6 +1,6 @@
 /**
  * 性能报告脚本
- * 
+ *
  * 使用:
  * npx ts-node src/scripts/performance-report.ts
  * npx ts-node src/scripts/performance-report.ts --last 10
@@ -64,9 +64,7 @@ async function main() {
     let totalThroughput = 0;
 
     recentTasks.forEach((task, index) => {
-      const duration = Math.round(
-        (task.endTime!.getTime() - task.startTime.getTime()) / 60000,
-      );
+      const duration = Math.round((task.endTime!.getTime() - task.startTime.getTime()) / 60000);
       const successRate = task.totalStocks
         ? Math.round((task.successCount! / task.totalStocks) * 100)
         : 0;

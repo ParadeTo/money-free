@@ -65,13 +65,19 @@ export class VcpAnalyzerService {
   analyze(klines: KLineBar[]): VcpAnalysisResult {
     const window = klines.slice(-this.DETECTION_WINDOW);
     if (window.length < 30) {
-      return { hasVcp: false, contractions: [], contractionCount: 0, lastContractionPct: 0, volumeDryingUp: false };
+      return {
+        hasVcp: false,
+        contractions: [],
+        contractionCount: 0,
+        lastContractionPct: 0,
+        volumeDryingUp: false,
+      };
     }
 
     const swingHighs = this.findSwingHighs(window);
     const swingLows = this.findSwingLows(window);
     const contractions = this.extractContractions(swingHighs, swingLows, window);
-    const filtered = contractions.filter(c => c.depthPct >= this.MIN_CONTRACTION_DEPTH);
+    const filtered = contractions.filter((c) => c.depthPct >= this.MIN_CONTRACTION_DEPTH);
 
     // 检测上涨趋势中的回调
     const pullbacks = this.findPullbacksInUptrend(klines);
@@ -104,7 +110,7 @@ export class VcpAnalyzerService {
   findSwingHighs(bars: KLineBar[]): SwingPoint[] {
     const points: SwingPoint[] = [];
     for (let i = this.LOOKBACK; i < bars.length - this.LOOKBACK; i++) {
-      const windowHighs = bars.slice(i - this.LOOKBACK, i + this.LOOKBACK + 1).map(b => b.high);
+      const windowHighs = bars.slice(i - this.LOOKBACK, i + this.LOOKBACK + 1).map((b) => b.high);
       if (bars[i].high === Math.max(...windowHighs)) {
         if (points.length === 0 || i - points[points.length - 1].index >= this.MIN_PIVOT_GAP) {
           points.push({ index: i, date: bars[i].date, price: bars[i].high });
@@ -117,7 +123,7 @@ export class VcpAnalyzerService {
   findSwingLows(bars: KLineBar[]): SwingPoint[] {
     const points: SwingPoint[] = [];
     for (let i = this.LOOKBACK; i < bars.length - this.LOOKBACK; i++) {
-      const windowLows = bars.slice(i - this.LOOKBACK, i + this.LOOKBACK + 1).map(b => b.low);
+      const windowLows = bars.slice(i - this.LOOKBACK, i + this.LOOKBACK + 1).map((b) => b.low);
       if (bars[i].low === Math.min(...windowLows)) {
         if (points.length === 0 || i - points[points.length - 1].index >= this.MIN_PIVOT_GAP) {
           points.push({ index: i, date: bars[i].date, price: bars[i].low });
@@ -127,16 +133,21 @@ export class VcpAnalyzerService {
     return points;
   }
 
-  extractContractions(highs: SwingPoint[], lows: SwingPoint[], bars: KLineBar[]): ContractionResult[] {
+  extractContractions(
+    highs: SwingPoint[],
+    lows: SwingPoint[],
+    bars: KLineBar[],
+  ): ContractionResult[] {
     const contractions: ContractionResult[] = [];
 
     for (const high of highs) {
-      const matchingLow = lows.find(low => low.index > high.index && (lows.find(nextLow => nextLow.index > high.index) === low));
+      const matchingLow = lows.find(
+        (low) =>
+          low.index > high.index && lows.find((nextLow) => nextLow.index > high.index) === low,
+      );
       if (!matchingLow) continue;
 
-      const nextLow = lows
-        .filter(l => l.index > high.index)
-        .sort((a, b) => a.index - b.index)[0];
+      const nextLow = lows.filter((l) => l.index > high.index).sort((a, b) => a.index - b.index)[0];
 
       if (!nextLow) continue;
 
@@ -144,9 +155,10 @@ export class VcpAnalyzerService {
       const durationDays = nextLow.index - high.index;
 
       const contractionBars = bars.slice(high.index, nextLow.index + 1);
-      const avgVolume = contractionBars.length > 0
-        ? contractionBars.reduce((sum, b) => sum + b.volume, 0) / contractionBars.length
-        : 0;
+      const avgVolume =
+        contractionBars.length > 0
+          ? contractionBars.reduce((sum, b) => sum + b.volume, 0) / contractionBars.length
+          : 0;
 
       contractions.push({
         index: contractions.length + 1,
@@ -207,7 +219,7 @@ export class VcpAnalyzerService {
 
     for (const high of localHighs) {
       // 找到高点后的第一个低点
-      const nextLow = localLows.find(low => low.index > high.index);
+      const nextLow = localLows.find((low) => low.index > high.index);
       if (!nextLow) continue;
 
       // 确保这个低点之后价格又上涨了（形成回调而不是下跌）
@@ -219,9 +231,10 @@ export class VcpAnalyzerService {
       if (pullbackPct >= this.MIN_PULLBACK_DEPTH && pullbackPct <= 30) {
         const durationDays = nextLow.index - high.index;
         const pullbackBars = window.slice(high.index, nextLow.index + 1);
-        const avgVolume = pullbackBars.length > 0
-          ? pullbackBars.reduce((sum, b) => sum + b.volume, 0) / pullbackBars.length
-          : 0;
+        const avgVolume =
+          pullbackBars.length > 0
+            ? pullbackBars.reduce((sum, b) => sum + b.volume, 0) / pullbackBars.length
+            : 0;
 
         pullbacks.push({
           index: pullbacks.length + 1,
@@ -250,7 +263,7 @@ export class VcpAnalyzerService {
     for (let i = lookback; i < bars.length; i++) {
       const startIdx = Math.max(0, i - lookback);
       const endIdx = Math.min(bars.length, i + lookback + 1);
-      const windowHighs = bars.slice(startIdx, endIdx).map(b => b.high);
+      const windowHighs = bars.slice(startIdx, endIdx).map((b) => b.high);
 
       if (bars[i].high === Math.max(...windowHighs)) {
         points.push({ index: i, date: bars[i].date, price: bars[i].high });
@@ -269,7 +282,7 @@ export class VcpAnalyzerService {
     for (let i = lookback; i < bars.length; i++) {
       const startIdx = Math.max(0, i - lookback);
       const endIdx = Math.min(bars.length, i + lookback + 1);
-      const windowLows = bars.slice(startIdx, endIdx).map(b => b.low);
+      const windowLows = bars.slice(startIdx, endIdx).map((b) => b.low);
 
       if (bars[i].low === Math.min(...windowLows)) {
         points.push({ index: i, date: bars[i].date, price: bars[i].low });
@@ -311,7 +324,7 @@ export class VcpAnalyzerService {
     if (afterLow.length < 2) return false;
 
     const lowPrice = bars[lowIndex].low;
-    const maxAfterLow = Math.max(...afterLow.map(b => b.high));
+    const maxAfterLow = Math.max(...afterLow.map((b) => b.high));
 
     // 恢复幅度至少是回调的30%，或者已经接近前高
     const recoveryPct = (maxAfterLow - lowPrice) / lowPrice;

@@ -1,6 +1,6 @@
 /**
  * VCP Analysis Types
- * 
+ *
  * Shared type definitions for VCP analysis across backend services.
  */
 

@@ -127,5 +127,5 @@ export function isValidDate(date: any): boolean {
  * @returns 格式化的错误消息
  */
 export function formatValidationErrors(errors: ValidationError[]): string {
-  return errors.map(e => `${e.field}: ${e.reason} (value: ${e.value})`).join('; ');
+  return errors.map((e) => `${e.field}: ${e.reason} (value: ${e.value})`).join('; ');
 }

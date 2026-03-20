@@ -72,9 +72,7 @@ export class AkShareAdapter implements IDataSourceAdapter {
 
     try {
       const scriptName =
-        market === MarketType.HK
-          ? 'fetch_hk_stock_info.py'
-          : 'fetch_us_stock_info.py';
+        market === MarketType.HK ? 'fetch_hk_stock_info.py' : 'fetch_us_stock_info.py';
 
       const result = await this.callPythonBridge(scriptName, {
         symbol,
@@ -127,8 +125,7 @@ export class AkShareAdapter implements IDataSourceAdapter {
     }
 
     try {
-      const scriptName =
-        market === MarketType.HK ? 'fetch_hk_klines.py' : 'fetch_us_klines.py';
+      const scriptName = market === MarketType.HK ? 'fetch_hk_klines.py' : 'fetch_us_klines.py';
 
       const result = await this.callPythonBridge(scriptName, {
         symbol,

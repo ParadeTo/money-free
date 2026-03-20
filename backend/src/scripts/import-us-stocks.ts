@@ -1,10 +1,10 @@
 /**
  * 美股数据导入脚本
  * 支持从标普500和纳斯达克100导入核心美股数据
- * 
+ *
  * 用法:
  *   ts-node src/scripts/import-us-stocks.ts [options]
- * 
+ *
  * 选项:
  *   --index <SP500|NDX100|all>  指定要导入的指数 (默认: all)
  *   --years <number>            历史数据年数 (默认: 10)
@@ -21,7 +21,10 @@ import { AkShareAdapter } from '../modules/market-data/data-source/akshare-adapt
 import { YahooFinanceAdapter } from '../modules/market-data/data-source/yahoo-finance-adapter';
 import { ImportManager } from '../modules/market-data/import/import-manager';
 import { CheckpointTracker } from '../modules/market-data/import/checkpoint-tracker';
-import { IndexCompositionService, US_INDICES } from '../modules/market-data/import/index-composition';
+import {
+  IndexCompositionService,
+  US_INDICES,
+} from '../modules/market-data/import/index-composition';
 import { createRateLimiter } from '../modules/market-data/utils/rate-limiter';
 import { MarketType } from '../types/market-data';
 
@@ -185,13 +188,15 @@ async function importUSStocks() {
     });
 
     // 并行处理
-    const tasks = stocksToImport.map((constituent, index) => 
+    const tasks = stocksToImport.map((constituent, index) =>
       rateLimiter(async () => {
         const stockCode = indexService.formatStockCode(constituent.code, 'US');
         processedCount++;
         const currentIndex = index + 1 + importedStockCodes.length;
         try {
-          console.log(`[${currentIndex}/${stats.totalStocks}] Processing ${stockCode} (${constituent.name})...`);
+          console.log(
+            `[${currentIndex}/${stats.totalStocks}] Processing ${stockCode} (${constituent.name})...`,
+          );
 
           const stockInfoResult = await importManager.fetchStockInfoWithFallback(
             constituent.code,
@@ -293,10 +298,7 @@ async function importUSStocks() {
             }
 
             if (checkpoint) {
-              await checkpointTracker.updateProgress(
-                checkpoint.taskId,
-                processedCount + 1,
-              );
+              await checkpointTracker.updateProgress(checkpoint.taskId, processedCount + 1);
             }
           }
 
@@ -315,7 +317,7 @@ async function importUSStocks() {
         } finally {
           // processedCount is already incremented at the start
         }
-      })
+      }),
     );
 
     // 执行所有并行任务
@@ -333,7 +335,9 @@ async function importUSStocks() {
     console.log(`成功: ${stats.successCount}`);
     console.log(`失败: ${stats.failedCount}`);
     console.log(`跳过: ${stats.skippedCount}`);
-    console.log(`耗时: ${((stats.endTime!.getTime() - stats.startTime.getTime()) / 1000).toFixed(2)}秒`);
+    console.log(
+      `耗时: ${((stats.endTime!.getTime() - stats.startTime.getTime()) / 1000).toFixed(2)}秒`,
+    );
 
     if (stats.errors.length > 0) {
       console.log('\n❌ 失败详情:');

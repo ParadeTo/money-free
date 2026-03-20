@@ -99,7 +99,7 @@ export class TushareService {
   async getAdjFactor(params: {
     ts_code: string;
     start_date?: string; // YYYYMMDD
-    end_date?: string;   // YYYYMMDD
+    end_date?: string; // YYYYMMDD
     trade_date?: string; // YYYYMMDD
   }): Promise<Array<{ ts_code: string; trade_date: string; adj_factor: number }>> {
     try {
@@ -139,7 +139,7 @@ export class TushareService {
   async getDailyKLine(params: {
     ts_code: string;
     start_date?: string; // YYYYMMDD
-    end_date?: string;   // YYYYMMDD
+    end_date?: string; // YYYYMMDD
   }): Promise<TushareKLineData[]> {
     try {
       // 1. 获取不复权数据
@@ -185,12 +185,12 @@ export class TushareService {
 
       // 4. 构建日期到复权因子的映射
       const factorMap = new Map<string, number>();
-      adjFactors.forEach(item => {
+      adjFactors.forEach((item) => {
         factorMap.set(item.trade_date, item.adj_factor);
       });
 
       // 5. 应用前复权计算：前复权价 = 不复权价 × (当日复权因子 / 最新复权因子)
-      const adjustedData = klineData.map(item => {
+      const adjustedData = klineData.map((item) => {
         const factor = factorMap.get(item.trade_date) || latestFactor;
         const ratio = factor / latestFactor;
 
@@ -267,12 +267,12 @@ export class TushareService {
 
       // 4. 构建日期到复权因子的映射
       const factorMap = new Map<string, number>();
-      adjFactors.forEach(item => {
+      adjFactors.forEach((item) => {
         factorMap.set(item.trade_date, item.adj_factor);
       });
 
       // 5. 应用前复权计算：前复权价 = 不复权价 × (当日复权因子 / 最新复权因子)
-      const adjustedData = klineData.map(item => {
+      const adjustedData = klineData.map((item) => {
         const factor = factorMap.get(item.trade_date) || latestFactor;
         const ratio = factor / latestFactor;
 
@@ -348,7 +348,7 @@ export class TushareService {
         requestParams.trade_date = params.trade_date;
       } else {
         const today = new Date();
-        let tryDate = new Date(today);
+        const tryDate = new Date(today);
 
         for (let i = 0; i < 10; i++) {
           const dateStr = tryDate.toISOString().split('T')[0].replace(/-/g, '');

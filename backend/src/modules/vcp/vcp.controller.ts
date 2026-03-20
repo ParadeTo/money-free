@@ -3,7 +3,10 @@ import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiParam, ApiBody } from 
 import { VcpService } from './vcp.service';
 import { GetVcpScanDto } from './dto/get-vcp-scan.dto';
 import { VcpScanResponseDto, VcpDetailResponseDto } from './dto/vcp-response.dto';
-import { FilterEarlyStageRequestDto, FilterEarlyStageResponseDto } from './dto/filter-early-stage.dto';
+import {
+  FilterEarlyStageRequestDto,
+  FilterEarlyStageResponseDto,
+} from './dto/filter-early-stage.dto';
 import { GenerateVcpAnalysisDto } from './dto/generate-vcp-analysis.dto';
 import { VcpAnalysisResponseDto } from './dto/vcp-analysis-response.dto';
 
@@ -12,15 +15,35 @@ import { VcpAnalysisResponseDto } from './dto/vcp-analysis-response.dto';
 export class VcpController {
   private readonly logger = new Logger(VcpController.name);
 
-  constructor(private readonly vcpService: VcpService) { }
+  constructor(private readonly vcpService: VcpService) {}
 
   @Get('scan')
   @ApiOperation({ summary: '获取 VCP 待突破扫描结果列表' })
   @ApiResponse({ status: 200, description: 'VCP 扫描结果', type: VcpScanResponseDto })
-  @ApiQuery({ name: 'sortBy', required: false, enum: ['contractionCount', 'lastContractionPct', 'volumeDryingUp', 'rsRating', 'priceChangePct'] })
+  @ApiQuery({
+    name: 'sortBy',
+    required: false,
+    enum: [
+      'contractionCount',
+      'lastContractionPct',
+      'volumeDryingUp',
+      'rsRating',
+      'priceChangePct',
+    ],
+  })
   @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'] })
-  @ApiQuery({ name: 'inPullbackOnly', required: false, type: Boolean, description: '只返回处于回调中的股票' })
-  @ApiQuery({ name: 'maxPullbackPct', required: false, type: Number, description: '最大回调幅度（百分比），过滤掉回调幅度大于此值的股票' })
+  @ApiQuery({
+    name: 'inPullbackOnly',
+    required: false,
+    type: Boolean,
+    description: '只返回处于回调中的股票',
+  })
+  @ApiQuery({
+    name: 'maxPullbackPct',
+    required: false,
+    type: Number,
+    description: '最大回调幅度（百分比），过滤掉回调幅度大于此值的股票',
+  })
   async getScanResults(@Query() dto: GetVcpScanDto) {
     return this.vcpService.getLatestScanResults(dto);
   }
@@ -37,17 +60,17 @@ export class VcpController {
   @Post('early-stage')
   @ApiOperation({ summary: '筛选早期启动阶段的VCP股票' })
   @ApiBody({ type: FilterEarlyStageRequestDto })
-  @ApiResponse({ 
-    status: 200, 
-    description: '筛选结果', 
+  @ApiResponse({
+    status: 200,
+    description: '筛选结果',
     type: FilterEarlyStageResponseDto,
   })
-  @ApiResponse({ 
-    status: 400, 
+  @ApiResponse({
+    status: 400,
     description: '参数验证失败',
   })
-  @ApiResponse({ 
-    status: 500, 
+  @ApiResponse({
+    status: 500,
     description: '筛选服务暂时不可用',
   })
   async filterEarlyStage(@Body() conditions: FilterEarlyStageRequestDto) {
@@ -58,7 +81,7 @@ export class VcpController {
 
     try {
       const result = await this.vcpService.filterEarlyStage(conditions);
-      
+
       this.logger.log({
         action: 'filter_early_stage_success',
         total: result.total,
@@ -78,16 +101,16 @@ export class VcpController {
 
   /**
    * Generate VCP analysis for a single stock (T025-T026 [US1])
-   * 
+   *
    * @param stockCode Stock code
    * @param dto Query parameters (forceRefresh)
    * @returns Complete VCP analysis result
    */
   @Get(':stockCode/analysis')
   @ApiOperation({ summary: '生成单只股票的 VCP 分析报告' })
-  @ApiParam({ 
-    name: 'stockCode', 
-    description: '股票代码', 
+  @ApiParam({
+    name: 'stockCode',
+    description: '股票代码',
     example: '605117',
   })
   @ApiQuery({
@@ -97,13 +120,13 @@ export class VcpController {
     description: '是否强制实时重新计算（忽略缓存）',
     example: false,
   })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'VCP 分析报告', 
+  @ApiResponse({
+    status: 200,
+    description: 'VCP 分析报告',
     type: VcpAnalysisResponseDto,
   })
-  @ApiResponse({ 
-    status: 404, 
+  @ApiResponse({
+    status: 404,
     description: '未找到股票代码',
     schema: {
       example: {
@@ -113,8 +136,8 @@ export class VcpController {
       },
     },
   })
-  @ApiResponse({ 
-    status: 400, 
+  @ApiResponse({
+    status: 400,
     description: 'K线数据不足',
     schema: {
       example: {

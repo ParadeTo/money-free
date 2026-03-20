@@ -5,12 +5,12 @@ const logger = new Logger('DatabaseConfig');
 
 /**
  * SQLite 性能优化配置
- * 
+ *
  * WAL (Write-Ahead Logging) 模式:
  * - 提升并发性能，读写可以同时进行
  * - 更快的写入速度
  * - 更好的并发支持
- * 
+ *
  * 性能参数:
  * - cache_size: -64000 (约 64MB 缓存)
  * - journal_mode: WAL (写前日志模式)
@@ -92,9 +92,11 @@ export async function checkDatabaseHealth(prisma: PrismaClient): Promise<{
   try {
     // 连接性检查
     await prisma.$queryRaw`SELECT 1`;
-    
+
     // 完整性检查
-    const [integrity] = await (prisma.$queryRawUnsafe as (q: string) => Promise<any[]>)('PRAGMA integrity_check;');
+    const [integrity] = await (prisma.$queryRawUnsafe as (q: string) => Promise<any[]>)(
+      'PRAGMA integrity_check;',
+    );
     const integrityCheck = integrity.integrity_check === 'ok';
 
     // 获取统计信息

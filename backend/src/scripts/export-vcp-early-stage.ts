@@ -22,10 +22,26 @@ async function main() {
     .name('export-vcp-early-stage')
     .description('导出早期启动阶段的VCP股票到Markdown文档')
     .version('1.0.0')
-    .option('--low-threshold <number>', '距52周低点阈值（%），范围20-60', String(DEFAULT_FILTER_CONDITIONS.distFrom52WeekLow))
-    .option('--high-threshold <number>', '距52周高点阈值（%），范围10-50', String(DEFAULT_FILTER_CONDITIONS.distFrom52WeekHigh))
-    .option('--min-contraction <number>', '最小收缩次数，范围2-8', String(DEFAULT_FILTER_CONDITIONS.contractionCountMin))
-    .option('--max-contraction <number>', '最大收缩次数，范围2-8', String(DEFAULT_FILTER_CONDITIONS.contractionCountMax))
+    .option(
+      '--low-threshold <number>',
+      '距52周低点阈值（%），范围20-60',
+      String(DEFAULT_FILTER_CONDITIONS.distFrom52WeekLow),
+    )
+    .option(
+      '--high-threshold <number>',
+      '距52周高点阈值（%），范围10-50',
+      String(DEFAULT_FILTER_CONDITIONS.distFrom52WeekHigh),
+    )
+    .option(
+      '--min-contraction <number>',
+      '最小收缩次数，范围2-8',
+      String(DEFAULT_FILTER_CONDITIONS.contractionCountMin),
+    )
+    .option(
+      '--max-contraction <number>',
+      '最大收缩次数，范围2-8',
+      String(DEFAULT_FILTER_CONDITIONS.contractionCountMax),
+    )
     .option('-o, --output <path>', '输出文件路径', '')
     .option('--verbose', '显示详细日志')
     .parse(process.argv);
@@ -33,10 +49,18 @@ async function main() {
   const options: CliOptions = program.opts();
 
   const conditions: FilterConditions = {
-    distFrom52WeekLow: options.lowThreshold ? parseFloat(options.lowThreshold) : DEFAULT_FILTER_CONDITIONS.distFrom52WeekLow,
-    distFrom52WeekHigh: options.highThreshold ? parseFloat(options.highThreshold) : DEFAULT_FILTER_CONDITIONS.distFrom52WeekHigh,
-    contractionCountMin: options.minContraction ? parseInt(options.minContraction) : DEFAULT_FILTER_CONDITIONS.contractionCountMin,
-    contractionCountMax: options.maxContraction ? parseInt(options.maxContraction) : DEFAULT_FILTER_CONDITIONS.contractionCountMax,
+    distFrom52WeekLow: options.lowThreshold
+      ? parseFloat(options.lowThreshold)
+      : DEFAULT_FILTER_CONDITIONS.distFrom52WeekLow,
+    distFrom52WeekHigh: options.highThreshold
+      ? parseFloat(options.highThreshold)
+      : DEFAULT_FILTER_CONDITIONS.distFrom52WeekHigh,
+    contractionCountMin: options.minContraction
+      ? parseInt(options.minContraction)
+      : DEFAULT_FILTER_CONDITIONS.contractionCountMin,
+    contractionCountMax: options.maxContraction
+      ? parseInt(options.maxContraction)
+      : DEFAULT_FILTER_CONDITIONS.contractionCountMax,
   };
 
   const app = await NestFactory.createApplicationContext(AppModule, {
@@ -56,7 +80,7 @@ async function main() {
       'vcp',
       'daily-reports',
       today,
-      `VCP选股-早期启动-${today}.md`
+      `VCP选股-早期启动-${today}.md`,
     );
     const outputPath = options.output || defaultOutput;
 
@@ -74,7 +98,6 @@ async function main() {
     if (result.tip) {
       console.log(`💡 ${result.tip.message}\n`);
     }
-
   } catch (error: any) {
     console.error(`\n错误: ${error.message}\n`);
     if (options.verbose) {
@@ -99,11 +122,14 @@ function generateMarkdown(result: any, conditions: FilterConditions, date: strin
   lines.push('');
   lines.push(`- **距52周低点**: ≤ ${conditions.distFrom52WeekLow}% (还有上涨空间)`);
   lines.push(`- **距52周高点**: ≤ ${conditions.distFrom52WeekHigh}% (接近高点，强势股)`);
-  lines.push(`- **收缩次数**: ${conditions.contractionCountMin}-${conditions.contractionCountMax} 次`);
+  lines.push(
+    `- **收缩次数**: ${conditions.contractionCountMin}-${conditions.contractionCountMax} 次`,
+  );
   lines.push('');
 
   if (result.tip) {
-    const tipEmoji = result.tip.type === 'error' ? '❌' : result.tip.type === 'warning' ? '⚠️' : 'ℹ️';
+    const tipEmoji =
+      result.tip.type === 'error' ? '❌' : result.tip.type === 'warning' ? '⚠️' : 'ℹ️';
     lines.push('## 智能提示');
     lines.push('');
     lines.push(`${tipEmoji} **${result.tip.message}**`);
@@ -160,9 +186,13 @@ function generateMarkdown(result: any, conditions: FilterConditions, date: strin
 
   lines.push('## 投资建议');
   lines.push('');
-  lines.push('1. **优先关注"收缩中"股票**: 这些股票正在构筑VCP形态，波动性收缩，是早期介入的最佳时机');
+  lines.push(
+    '1. **优先关注"收缩中"股票**: 这些股票正在构筑VCP形态，波动性收缩，是早期介入的最佳时机',
+  );
   lines.push('2. **距52周低点越近越好**: 说明股票还处于底部区域，上涨空间更大');
-  lines.push('3. **结合基本面分析**: VCP形态是技术分析工具，建议配合公司基本面、行业趋势等进行综合判断');
+  lines.push(
+    '3. **结合基本面分析**: VCP形态是技术分析工具，建议配合公司基本面、行业趋势等进行综合判断',
+  );
   lines.push('4. **设置止损位**: 建议在最后一次收缩的低点下方设置止损位');
   lines.push('5. **分批建仓**: 可以在收缩过程中分批买入，降低成本');
   lines.push('');
@@ -176,18 +206,29 @@ function generateMarkdown(result: any, conditions: FilterConditions, date: strin
 function generateStockTable(stocks: any[]): string {
   const lines: string[] = [];
 
-  lines.push('| 代码 | 名称 | 最新价 | 涨幅% | 距52周低% | 距52周高% | 收缩次数 | 收缩幅度% | RS评分 | 成交量萎缩 |');
-  lines.push('|------|------|--------|-------|-----------|-----------|----------|-----------|--------|-----------|');
+  lines.push(
+    '| 代码 | 名称 | 最新价 | 涨幅% | 距52周低% | 距52周高% | 收缩次数 | 收缩幅度% | RS评分 | 成交量萎缩 |',
+  );
+  lines.push(
+    '|------|------|--------|-------|-----------|-----------|----------|-----------|--------|-----------|',
+  );
 
   stocks.forEach((stock: any) => {
-    const priceChange = stock.priceChangePct >= 0 ? `+${stock.priceChangePct.toFixed(2)}` : stock.priceChangePct.toFixed(2);
+    const priceChange =
+      stock.priceChangePct >= 0
+        ? `+${stock.priceChangePct.toFixed(2)}`
+        : stock.priceChangePct.toFixed(2);
     const volumeDryUp = stock.volumeDryingUp ? '是' : '否';
 
-    lines.push(`| ${stock.stockCode} | ${stock.stockName} | ${stock.latestPrice.toFixed(2)} | ${priceChange} | ${stock.distFrom52WeekLow.toFixed(2)} | ${stock.distFrom52WeekHigh.toFixed(2)} | ${stock.contractionCount} | ${stock.lastContractionPct.toFixed(2)} | ${stock.rsRating} | ${volumeDryUp} |`);
+    lines.push(
+      `| ${stock.stockCode} | ${stock.stockName} | ${stock.latestPrice.toFixed(2)} | ${priceChange} | ${stock.distFrom52WeekLow.toFixed(2)} | ${stock.distFrom52WeekHigh.toFixed(2)} | ${stock.contractionCount} | ${stock.lastContractionPct.toFixed(2)} | ${stock.rsRating} | ${volumeDryUp} |`,
+    );
 
     if (stock.pullbackInfo) {
       const pb = stock.pullbackInfo;
-      lines.push(`| | *回调详情* | 幅度: ${pb.pullbackPct.toFixed(2)}% | 持续: ${pb.durationDays}天 | 低点: ${pb.lowDate} | 距今: ${pb.daysSinceLow}天 | 反弹: ${pb.recoveryPct.toFixed(2)}% | | | |`);
+      lines.push(
+        `| | *回调详情* | 幅度: ${pb.pullbackPct.toFixed(2)}% | 持续: ${pb.durationDays}天 | 低点: ${pb.lowDate} | 距今: ${pb.daysSinceLow}天 | 反弹: ${pb.recoveryPct.toFixed(2)}% | | | |`,
+      );
     }
   });
 

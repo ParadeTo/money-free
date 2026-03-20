@@ -4,10 +4,10 @@ import { VcpService } from './vcp.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { VcpAnalyzerService } from '../../services/vcp/vcp-analyzer.service';
 import { VcpEarlyFilterService } from '../../services/vcp/vcp-early-filter.service';
-import { 
-  createMockPrismaService, 
-  createMockVcpAnalyzer, 
-  createMockStock, 
+import {
+  createMockPrismaService,
+  createMockVcpAnalyzer,
+  createMockStock,
   createMockVcpScanResult,
   createMockKLineData,
 } from '../../../tests/utils/mock-services';
@@ -72,8 +72,8 @@ describe('VcpService - generateAnalysis', () => {
       oldDate.setDate(oldDate.getDate() - 10); // 10 days ago
 
       const mockStock = createMockStock({ stockCode });
-      const mockScanResult = createMockVcpScanResult({ 
-        stockCode, 
+      const mockScanResult = createMockVcpScanResult({
+        stockCode,
         scanDate: oldDate,
       });
 
@@ -95,8 +95,8 @@ describe('VcpService - generateAnalysis', () => {
       recentDate.setDate(recentDate.getDate() - 5); // 5 days ago
 
       const mockStock = createMockStock({ stockCode });
-      const mockScanResult = createMockVcpScanResult({ 
-        stockCode, 
+      const mockScanResult = createMockVcpScanResult({
+        stockCode,
         scanDate: recentDate,
       });
 
@@ -123,11 +123,11 @@ describe('VcpService - generateAnalysis', () => {
       prisma.stock.findUnique.mockResolvedValue(mockStock);
       prisma.vcpScanResult.findFirst.mockResolvedValue(null); // No cache
       prisma.kLineData.findMany.mockResolvedValue(
-        mockKLines.map(k => ({
+        mockKLines.map((k) => ({
           ...k,
           date: new Date(k.date),
           period: 'daily',
-        }))
+        })),
       );
       vcpAnalyzer.analyze.mockResolvedValue(mockAnalysisResult);
 
@@ -151,11 +151,11 @@ describe('VcpService - generateAnalysis', () => {
       prisma.stock.findUnique.mockResolvedValue(mockStock);
       prisma.vcpScanResult.findFirst.mockResolvedValue(null); // No cache
       prisma.kLineData.findMany.mockResolvedValue(
-        mockKLines.map(k => ({
+        mockKLines.map((k) => ({
           ...k,
           date: new Date(k.date),
           period: 'daily',
-        }))
+        })),
       );
       vcpAnalyzer.analyze.mockResolvedValue(mockAnalysisResult);
 
@@ -175,11 +175,9 @@ describe('VcpService - generateAnalysis', () => {
       prisma.stock.findUnique.mockResolvedValue(null);
 
       // Act & Assert
+      await expect(service.generateAnalysis(stockCode, false)).rejects.toThrow(NotFoundException);
       await expect(service.generateAnalysis(stockCode, false)).rejects.toThrow(
-        NotFoundException
-      );
-      await expect(service.generateAnalysis(stockCode, false)).rejects.toThrow(
-        `Stock ${stockCode} not found`
+        `Stock ${stockCode} not found`,
       );
     });
   });
@@ -194,19 +192,17 @@ describe('VcpService - generateAnalysis', () => {
       prisma.stock.findUnique.mockResolvedValue(mockStock);
       prisma.vcpScanResult.findFirst.mockResolvedValue(null); // No cache
       prisma.kLineData.findMany.mockResolvedValue(
-        insufficientKLines.map(k => ({
+        insufficientKLines.map((k) => ({
           ...k,
           date: new Date(k.date),
           period: 'daily',
-        }))
+        })),
       );
 
       // Act & Assert
+      await expect(service.generateAnalysis(stockCode, false)).rejects.toThrow(BadRequestException);
       await expect(service.generateAnalysis(stockCode, false)).rejects.toThrow(
-        BadRequestException
-      );
-      await expect(service.generateAnalysis(stockCode, false)).rejects.toThrow(
-        'Insufficient K-line data'
+        'Insufficient K-line data',
       );
     });
   });

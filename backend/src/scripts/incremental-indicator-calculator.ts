@@ -25,17 +25,14 @@ export class IncrementalIndicatorCalculator {
    * @param newDataEndDate 新增数据的结束日期
    * @returns 指标计算窗口
    */
-  calculateIndicatorWindow(
-    newDataStartDate: Date,
-    newDataEndDate: Date,
-  ): IndicatorWindow {
+  calculateIndicatorWindow(newDataStartDate: Date, newDataEndDate: Date): IndicatorWindow {
     // MA60需要60天历史数据
     // KDJ需要约15天历史数据
     // RSI14需要14天历史数据
     // 52周标记需要52周(364天)历史数据
-    
+
     const maxWindowSize = 364; // 52周,覆盖所有指标需求
-    
+
     return {
       startDate: subDays(newDataStartDate, maxWindowSize),
       endDate: newDataEndDate,
@@ -49,14 +46,10 @@ export class IncrementalIndicatorCalculator {
    * @param startDate 起始日期
    * @param endDate 结束日期
    */
-  async recalculateIndicators(
-    stockCode: string,
-    startDate: Date,
-    endDate: Date,
-  ): Promise<void> {
+  async recalculateIndicators(stockCode: string, startDate: Date, endDate: Date): Promise<void> {
     // 获取窗口范围内的K线数据
     const window = this.calculateIndicatorWindow(startDate, endDate);
-    
+
     const klineData = await this.prisma.kLineData.findMany({
       where: {
         stockCode,
@@ -119,11 +112,7 @@ export class IncrementalIndicatorCalculator {
   /**
    * 计算移动平均线(MA5, MA10, MA20, MA60)
    */
-  private calculateMA(
-    klineData: any[],
-    startDate: Date,
-    endDate: Date,
-  ): any[] {
+  private calculateMA(klineData: any[], startDate: Date, endDate: Date): any[] {
     const indicators: any[] = [];
     const periods = [5, 10, 20, 60];
 
@@ -155,11 +144,7 @@ export class IncrementalIndicatorCalculator {
   /**
    * 计算KDJ指标
    */
-  private calculateKDJ(
-    klineData: any[],
-    startDate: Date,
-    endDate: Date,
-  ): any[] {
+  private calculateKDJ(klineData: any[], startDate: Date, endDate: Date): any[] {
     // 简化实现,实际应使用完整的KDJ算法
     return [];
   }
@@ -167,11 +152,7 @@ export class IncrementalIndicatorCalculator {
   /**
    * 计算RSI指标
    */
-  private calculateRSI(
-    klineData: any[],
-    startDate: Date,
-    endDate: Date,
-  ): any[] {
+  private calculateRSI(klineData: any[], startDate: Date, endDate: Date): any[] {
     // 简化实现,实际应使用完整的RSI算法
     return [];
   }
@@ -179,11 +160,7 @@ export class IncrementalIndicatorCalculator {
   /**
    * 计算成交量指标
    */
-  private calculateVolumeIndicators(
-    klineData: any[],
-    startDate: Date,
-    endDate: Date,
-  ): any[] {
+  private calculateVolumeIndicators(klineData: any[], startDate: Date, endDate: Date): any[] {
     const indicators: any[] = [];
 
     klineData.forEach((data) => {
@@ -205,11 +182,7 @@ export class IncrementalIndicatorCalculator {
   /**
    * 计算52周高低点标记
    */
-  private calculate52WeekMarkers(
-    klineData: any[],
-    startDate: Date,
-    endDate: Date,
-  ): any[] {
+  private calculate52WeekMarkers(klineData: any[], startDate: Date, endDate: Date): any[] {
     const indicators: any[] = [];
     const weekSize = 364; // 52周
 
@@ -218,10 +191,10 @@ export class IncrementalIndicatorCalculator {
 
       // 获取过去52周的数据
       const weekData = klineData.slice(Math.max(0, index - weekSize + 1), index + 1);
-      
+
       if (weekData.length > 0) {
-        const high52 = Math.max(...weekData.map(d => d.high));
-        const low52 = Math.min(...weekData.map(d => d.low));
+        const high52 = Math.max(...weekData.map((d) => d.high));
+        const low52 = Math.min(...weekData.map((d) => d.low));
 
         indicators.push({
           date: data.date,
@@ -255,7 +228,7 @@ export class IncrementalIndicatorCalculator {
       try {
         await this.recalculateIndicators(stock.stockCode, startDate, endDate);
         completed++;
-        
+
         if (completed % 100 === 0) {
           console.log(`  进度: ${completed}/${stocks.length}`);
         }

@@ -75,7 +75,7 @@ export class FavoritesService {
     });
 
     const result = await Promise.all(
-      favorites.map(async (fav: typeof favorites[number]) => {
+      favorites.map(async (fav: (typeof favorites)[number]) => {
         const latestKlines = await this.prisma.kLineData.findMany({
           where: { stockCode: fav.stockCode, period: 'daily' },
           orderBy: { date: 'desc' },
@@ -92,16 +92,12 @@ export class FavoritesService {
           latestPrice = latestKline.close;
           if (prevKline) {
             priceChange = latestKline.close - prevKline.close;
-            priceChangePercent =
-              prevKline.close > 0
-                ? (priceChange / prevKline.close) * 100
-                : 0;
+            priceChangePercent = prevKline.close > 0 ? (priceChange / prevKline.close) * 100 : 0;
           } else {
             priceChange = latestKline.close - latestKline.open;
             priceChangePercent =
               latestKline.open > 0
-                ? ((latestKline.close - latestKline.open) / latestKline.open) *
-                  100
+                ? ((latestKline.close - latestKline.open) / latestKline.open) * 100
                 : 0;
           }
         }
