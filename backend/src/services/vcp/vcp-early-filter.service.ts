@@ -21,7 +21,7 @@ export class VcpEarlyFilterService {
     private readonly vcpAnalyzer: VcpAnalyzerService,
   ) {}
 
-  async filterEarlyStage(conditions: FilterConditions): Promise<FilterResult> {
+  async filterEarlyStage(conditions: FilterConditions, targetDate?: Date): Promise<FilterResult> {
     this.logger.log({
       action: 'filter_early_stage_start',
       conditions,
@@ -29,7 +29,16 @@ export class VcpEarlyFilterService {
 
     this.validateConditions(conditions);
 
-    const scanDate = await this.getLatestScanDate();
+    let scanDate: Date | null;
+    if (targetDate) {
+      const found = await this.prisma.vcpScanResult.findFirst({
+        where: { scanDate: { gte: targetDate, lt: new Date(targetDate.getTime() + 86400000) } },
+        select: { scanDate: true },
+      });
+      scanDate = found?.scanDate ?? null;
+    } else {
+      scanDate = await this.getLatestScanDate();
+    }
     if (!scanDate) {
       throw new BadRequestException('未找到VCP扫描数据，请先运行VCP扫描');
     }

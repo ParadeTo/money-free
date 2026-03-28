@@ -42,18 +42,38 @@ async function main() {
     const prisma = app.get(PrismaService);
     const vcpAnalyzer = app.get(VcpAnalyzerService);
 
-    // 获取最新扫描日期
-    const latestResult = await prisma.vcpScanResult.findFirst({
-      orderBy: { scanDate: 'desc' },
-      select: { scanDate: true },
-    });
-
-    if (!latestResult) {
-      logger.warn('No VCP scan results found in database');
-      return;
+    // 获取扫描日期（--date 指定或最新）
+    const args = process.argv.slice(2);
+    let targetDateStr: string | undefined;
+    for (let i = 0; i < args.length; i++) {
+      if (args[i] === '--date' && i + 1 < args.length) {
+        targetDateStr = args[i + 1];
+      }
     }
 
-    const scanDate = latestResult.scanDate;
+    let scanDate: Date;
+    if (targetDateStr) {
+      const found = await prisma.vcpScanResult.findFirst({
+        where: { scanDate: { gte: new Date(targetDateStr), lt: new Date(new Date(targetDateStr).getTime() + 86400000) } },
+        select: { scanDate: true },
+      });
+      if (!found) {
+        logger.warn(`No VCP scan results found for date: ${targetDateStr}`);
+        return;
+      }
+      scanDate = found.scanDate;
+      logger.log(`Using scan date: ${targetDateStr}`);
+    } else {
+      const latestResult = await prisma.vcpScanResult.findFirst({
+        orderBy: { scanDate: 'desc' },
+        select: { scanDate: true },
+      });
+      if (!latestResult) {
+        logger.warn('No VCP scan results found in database');
+        return;
+      }
+      scanDate = latestResult.scanDate;
+    }
     const scanDateStr = scanDate.toISOString().split('T')[0];
     logger.log(`Latest scan date: ${scanDateStr}\n`);
 

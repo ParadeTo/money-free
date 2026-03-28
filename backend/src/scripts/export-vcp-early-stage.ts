@@ -11,6 +11,7 @@ interface CliOptions {
   highThreshold?: string;
   minContraction?: string;
   maxContraction?: string;
+  date?: string;
   output?: string;
   verbose?: boolean;
 }
@@ -43,6 +44,7 @@ async function main() {
       String(DEFAULT_FILTER_CONDITIONS.contractionCountMax),
     )
     .option('-o, --output <path>', '输出文件路径', '')
+    .option('--date <date>', '指定扫描日期，格式 YYYY-MM-DD（默认最新）')
     .option('--verbose', '显示详细日志')
     .parse(process.argv);
 
@@ -70,9 +72,9 @@ async function main() {
   const filterService = app.get(VcpEarlyFilterService);
 
   try {
-    const result = await filterService.filterEarlyStage(conditions);
+    const result = await filterService.filterEarlyStage(conditions, options.date ? new Date(options.date) : undefined);
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = options.date || new Date().toISOString().split('T')[0];
     const defaultOutput = path.join(
       process.cwd(),
       '..',

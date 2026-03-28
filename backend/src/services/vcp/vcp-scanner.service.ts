@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../modules/prisma/prisma.service';
 import { TrendTemplateService, TrendTemplateInput } from './trend-template.service';
-import { RsRatingService, StockReturn } from './rs-rating.service';
+import { RsRatingService, IbdStockPrices } from './rs-rating.service';
 import { VcpAnalyzerService, KLineBar } from './vcp-analyzer.service';
 
 @Injectable()
@@ -248,31 +248,55 @@ export class VcpScannerService {
   }
 
   private async calculateRsRatingsForAll(stockCodes: string[]) {
-    const returns: StockReturn[] = [];
+    const stockPrices: IbdStockPrices[] = [];
 
     for (const code of stockCodes) {
-      const latest = await this.prisma.kLineData.findFirst({
-        where: { stockCode: code, period: 'daily' },
-        orderBy: { date: 'desc' },
-        select: { close: true },
-      });
+      const [latest, p63, p126, p189, p252] = await Promise.all([
+        this.prisma.kLineData.findFirst({
+          where: { stockCode: code, period: 'daily' },
+          orderBy: { date: 'desc' },
+          select: { close: true },
+        }),
+        this.prisma.kLineData.findFirst({
+          where: { stockCode: code, period: 'daily' },
+          orderBy: { date: 'desc' },
+          skip: 63,
+          select: { close: true },
+        }),
+        this.prisma.kLineData.findFirst({
+          where: { stockCode: code, period: 'daily' },
+          orderBy: { date: 'desc' },
+          skip: 126,
+          select: { close: true },
+        }),
+        this.prisma.kLineData.findFirst({
+          where: { stockCode: code, period: 'daily' },
+          orderBy: { date: 'desc' },
+          skip: 189,
+          select: { close: true },
+        }),
+        this.prisma.kLineData.findFirst({
+          where: { stockCode: code, period: 'daily' },
+          orderBy: { date: 'desc' },
+          skip: 252,
+          select: { close: true },
+        }),
+      ]);
 
-      const oneYearAgo = await this.prisma.kLineData.findFirst({
-        where: { stockCode: code, period: 'daily' },
-        orderBy: { date: 'desc' },
-        skip: 252,
-        select: { close: true },
-      });
-
-      if (latest && oneYearAgo) {
-        returns.push({
+      // 至少需要当前价格和 12 个月前价格才能参与评级
+      if (latest && p252) {
+        stockPrices.push({
           stockCode: code,
-          oneYearReturn: this.rsRating.calculateOneYearReturn(latest.close, oneYearAgo.close),
+          currentPrice: latest.close,
+          price3MonthsAgo: p63?.close ?? latest.close,
+          price6MonthsAgo: p126?.close ?? latest.close,
+          price9MonthsAgo: p189?.close ?? latest.close,
+          price12MonthsAgo: p252.close,
         });
       }
     }
 
-    return this.rsRating.calculateAllRsRatings(returns);
+    return this.rsRating.calculateAllRsRatings(stockPrices);
   }
 
   /**

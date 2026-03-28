@@ -14,16 +14,21 @@ async function main() {
     // Parse command line arguments
     const args = process.argv.slice(2);
     let markets: string[] | undefined;
+    let scanDate: Date | undefined;
 
     for (let i = 0; i < args.length; i++) {
       if (args[i] === '--markets' && i + 1 < args.length) {
         markets = args[i + 1].split(',').map((m) => m.trim().toUpperCase());
         logger.log(`Filtering by markets: ${markets.join(', ')}`);
       }
+      if (args[i] === '--date' && i + 1 < args.length) {
+        scanDate = new Date(args[i + 1]);
+        logger.log(`Using scan date: ${args[i + 1]}`);
+      }
     }
 
     logger.log('Starting VCP batch calculation...');
-    const result = await scanner.scanAllStocks(undefined, markets);
+    const result = await scanner.scanAllStocks(scanDate, markets);
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
     logger.log(

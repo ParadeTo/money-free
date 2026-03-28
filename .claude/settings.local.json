@@ -16,7 +16,8 @@
       "Bash(echo \"NODE_OPTIONS: $NODE_OPTIONS\")",
       "Bash(unset NODE_OPTIONS && node dist/main.js 2>&1)",
       "mcp__ide__getDiagnostics",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npx jest:*)"
     ]
   }
 }
