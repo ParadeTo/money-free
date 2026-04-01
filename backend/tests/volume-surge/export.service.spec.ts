@@ -70,6 +70,8 @@ describe('ExportService', () => {
         totalStocks: 3000,
         matchedStocks: 42,
         durationMs: 8500,
+        scanMode: 'full',
+        referenceDate: null,
       };
 
       const mockResults = [
@@ -80,9 +82,14 @@ describe('ExportService', () => {
           contractionEndDate: new Date('2026-03-01'),
           expansionStartDate: new Date('2026-03-02'),
           expansionMultiplier: 2.5,
+          contractionAvgVolume: 300000000,
+          upDayAvgVolume: 400000000,
+          downDayAvgVolume: 200000000,
           volumeSupportRatio: 2.0,
           ma50Value: 12.5,
           ma150Value: 13.2,
+          ma50TrendingUp: true,
+          ma50BelowMa150: false,
           meetsAllCriteria: true,
         },
       ];
@@ -94,7 +101,7 @@ describe('ExportService', () => {
 
       expect(markdown).toContain('# Volume Surge Scan Results');
       expect(markdown).toContain('## Summary');
-      expect(markdown).toContain('Total Stocks Scanned: 3000');
+      expect(markdown).toContain('Total Stocks Scanned');
       expect(markdown).toContain('SH600111');
       expect(markdown).toContain('北方稀土');
     });

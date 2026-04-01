@@ -60,9 +60,10 @@ describe('MovingAverageService', () => {
 
   describe('calculateMA50Slope', () => {
     it('应计算最近5个交易日50日均线的线性回归斜率', async () => {
+      // Simulate orderBy: desc — index 0 is the most recent date with the highest close
       const mockKLineData = Array(150).fill(null).map((_, i) => ({
-        date: new Date(2026, 0, i + 1),
-        close: 10 + i * 0.02,
+        date: new Date(2026, 0, 150 - i),
+        close: 10 + (149 - i) * 0.02,
         volume: 1000000,
         open: 10,
       }));
@@ -75,9 +76,10 @@ describe('MovingAverageService', () => {
     });
 
     it('应识别下降趋势（负斜率）', async () => {
+      // Simulate orderBy: desc — index 0 is the most recent date with the lowest close
       const mockKLineData = Array(150).fill(null).map((_, i) => ({
-        date: new Date(2026, 0, i + 1),
-        close: 15 - i * 0.02,
+        date: new Date(2026, 0, 150 - i),
+        close: 15 - (149 - i) * 0.02,
         volume: 1000000,
         open: 15,
       }));
@@ -92,9 +94,11 @@ describe('MovingAverageService', () => {
 
   describe('getMovingAverageTrend', () => {
     it('应返回完整的均线趋势对象', async () => {
+      // Simulate orderBy: desc — index 0 is the most recent date with the highest close
+      // Recent prices are rising, so ma50 > ma150 and slope > 0
       const mockKLineData = Array(150).fill(null).map((_, i) => ({
-        date: new Date(2026, 0, i + 1),
-        close: 10 + i * 0.01,
+        date: new Date(2026, 0, 150 - i),
+        close: 10 + (149 - i) * 0.01,
         volume: 1000000,
         open: 10,
       }));
@@ -104,25 +108,28 @@ describe('MovingAverageService', () => {
       const result = await service.getMovingAverageTrend('TEST001');
 
       expect(result).toBeDefined();
-      expect(result.ma50).toBeGreaterThan(0);
-      expect(result.ma150).toBeGreaterThan(0);
-      expect(result.ma50Slope).toBeGreaterThan(0);
-      expect(result.isTrendingUp).toBe(true);
-      expect(result.ma50BelowMa150).toBe(true);
+      expect(result!.ma50).toBeGreaterThan(0);
+      expect(result!.ma150).toBeGreaterThan(0);
+      expect(result!.ma50Slope).toBeGreaterThan(0);
+      expect(result!.isTrendingUp).toBe(true);
+      expect(result!.ma50BelowMa150).toBe(false);
     });
 
     it('应正确判断50日均线是否低于150日均线', async () => {
+      // Simulate orderBy: desc — index 0 is the most recent date
+      // Recent 50 days (i=0..49) have close=12, older 100 days (i=50..149) have close=10
+      // So ma50 (12) > ma150 (~10.67), meaning ma50BelowMa150 is false
       const mockKLineData = Array(150).fill(null).map((_, i) => {
-        if (i < 100) return { date: new Date(2026, 0, i + 1), close: 10, volume: 1000000, open: 10 };
-        return { date: new Date(2026, 0, i + 1), close: 12, volume: 1000000, open: 10 };
+        if (i < 50) return { date: new Date(2026, 0, 150 - i), close: 12, volume: 1000000, open: 10 };
+        return { date: new Date(2026, 0, 150 - i), close: 10, volume: 1000000, open: 10 };
       });
 
       jest.spyOn(prisma.kLineData, 'findMany').mockResolvedValue(mockKLineData as any);
 
       const result = await service.getMovingAverageTrend('TEST001');
 
-      expect(result.ma50).toBeGreaterThan(result.ma150);
-      expect(result.ma50BelowMa150).toBe(false);
+      expect(result!.ma50).toBeGreaterThan(result!.ma150);
+      expect(result!.ma50BelowMa150).toBe(false);
     });
   });
 });

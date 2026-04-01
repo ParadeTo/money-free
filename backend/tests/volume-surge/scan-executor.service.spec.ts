@@ -2,12 +2,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ScanExecutorService } from '../../src/modules/volume-surge/services/scan-executor.service';
 import { PatternDetectorService } from '../../src/modules/volume-surge/services/pattern-detector.service';
 import { MovingAverageService } from '../../src/modules/volume-surge/services/moving-average.service';
+import { VolumeSupportCalculatorService } from '../../src/modules/volume-surge/services/volume-support-calculator.service';
 import { PrismaService } from '../../src/modules/prisma/prisma.service';
 
 describe('ScanExecutorService', () => {
   let service: ScanExecutorService;
   let patternDetector: PatternDetectorService;
   let movingAverage: MovingAverageService;
+  let volumeSupportCalculator: VolumeSupportCalculatorService;
   let prisma: PrismaService;
 
   beforeEach(async () => {
@@ -24,6 +26,12 @@ describe('ScanExecutorService', () => {
           provide: MovingAverageService,
           useValue: {
             getMovingAverageTrend: jest.fn(),
+          },
+        },
+        {
+          provide: VolumeSupportCalculatorService,
+          useValue: {
+            calculateVolumeSupport: jest.fn(),
           },
         },
         {
@@ -47,6 +55,7 @@ describe('ScanExecutorService', () => {
     service = module.get<ScanExecutorService>(ScanExecutorService);
     patternDetector = module.get<PatternDetectorService>(PatternDetectorService);
     movingAverage = module.get<MovingAverageService>(MovingAverageService);
+    volumeSupportCalculator = module.get<VolumeSupportCalculatorService>(VolumeSupportCalculatorService);
     prisma = module.get<PrismaService>(PrismaService);
   });
 
@@ -100,6 +109,10 @@ describe('ScanExecutorService', () => {
 
       jest.spyOn(prisma.stock, 'findMany').mockResolvedValue(mockStocks as any);
       jest.spyOn(patternDetector, 'detectPattern').mockResolvedValue(null);
+      jest.spyOn(prisma.volumeSurgeScan, 'create').mockResolvedValue({
+        id: 'scan-456',
+        status: 'RUNNING',
+      } as any);
 
       await service.executeScan({ mode: 'AUTO', source: 'test' });
 
@@ -112,6 +125,10 @@ describe('ScanExecutorService', () => {
 
       jest.spyOn(prisma.stock, 'findMany').mockResolvedValue(mockStocks as any);
       jest.spyOn(movingAverage, 'getMovingAverageTrend').mockResolvedValue(null);
+      jest.spyOn(prisma.volumeSurgeScan, 'create').mockResolvedValue({
+        id: 'scan-789',
+        status: 'RUNNING',
+      } as any);
 
       const result = await service.executeScan({ mode: 'AUTO', source: 'test' });
 
@@ -143,12 +160,18 @@ describe('ScanExecutorService', () => {
         ma50BelowMa150: true,
       });
 
+      jest.spyOn(volumeSupportCalculator, 'calculateVolumeSupport').mockResolvedValue({
+        upDayAvgVolume: 1200000,
+        downDayAvgVolume: 800000,
+        ratio: 1.5,
+      } as any);
+
       const result = await service.scanSingleStock('TEST001', { mode: 'AUTO' });
 
       expect(result).toBeDefined();
-      expect(result.stockCode).toBe('TEST001');
-      expect(result.criteria.meetsVolumeCriteria).toBe(true);
-      expect(result.criteria.meetsMaCriteria).toBe(true);
+      expect(result!.stockCode).toBe('TEST001');
+      expect(result!.criteria.meetsVolumeCriteria).toBe(true);
+      expect(result!.criteria.meetsMaCriteria).toBe(true);
     });
 
     it('应返回null如果股票不符合条件', async () => {

@@ -49,24 +49,36 @@ describe('API Retry Mechanism', () => {
     });
 
     it('should handle rate limit errors with extended wait', async () => {
-      const fn = jest.fn().mockRejectedValue({
-        message: 'Rate limit exceeded',
-        statusCode: 429,
-      });
+      jest.useFakeTimers();
 
-      const startTime = Date.now();
-      
-      await expect(
-        retryWithBackoff(fn, {
-          maxRetries: 1,
-          backoffMs: [10],
-          retryableErrors: [],
-        })
-      ).rejects.toThrow();
+      const rateLimitError = new Error('Rate limit exceeded') as any;
+      rateLimitError.statusCode = 429;
 
-      const elapsed = Date.now() - startTime;
-      expect(elapsed).toBeGreaterThan(59000); // Should wait ~60 seconds
-    }, 65000);
+      const fn = jest.fn().mockRejectedValue(rateLimitError);
+
+      // Start the retry (maxRetries=1 means 2 total attempts: attempt 0 and attempt 1)
+      // Each rate-limit hit sleeps 60s before continuing; the loop exhausts after 2 fn() calls
+      let resolvedError: any;
+      const promise = retryWithBackoff(fn, {
+        maxRetries: 1,
+        backoffMs: [10],
+        retryableErrors: [],
+      }).catch((err) => { resolvedError = err; });
+
+      // Advance time past both 60s sleeps
+      await jest.advanceTimersByTimeAsync(60000);
+      await jest.advanceTimersByTimeAsync(60000);
+
+      // Wait for any remaining microtasks to settle
+      await promise;
+
+      expect(resolvedError).toBeDefined();
+      expect(resolvedError.message).toBe('Rate limit exceeded');
+      // fn is called once per loop attempt: attempt 0 and attempt 1
+      expect(fn).toHaveBeenCalledTimes(2);
+
+      jest.useRealTimers();
+    });
   });
 
   describe('fetchWithFallback', () => {

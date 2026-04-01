@@ -14,7 +14,7 @@ describe('ComparisonService', () => {
           provide: PrismaService,
           useValue: {
             volumeSurgeScan: { findUnique: jest.fn() },
-            scanResult: { findMany: jest.fn() },
+            scanResult: { findMany: jest.fn(), count: jest.fn().mockResolvedValue(10) },
             $queryRaw: jest.fn(),
           },
         },

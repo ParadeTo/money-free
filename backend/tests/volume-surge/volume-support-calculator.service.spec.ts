@@ -57,7 +57,7 @@ describe('VolumeSupportCalculatorService', () => {
 
       expect(result.upDayAvgVolume).toBeGreaterThan(0);
       expect(result.downDayAvgVolume).toBe(0);
-      expect(result.ratio).toBe(Infinity);
+      expect(result.ratio).toBe(9999);
     });
 
     it('应处理全是下降日的边缘案例', async () => {

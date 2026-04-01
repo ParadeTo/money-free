@@ -17,7 +17,14 @@
       "Bash(unset NODE_OPTIONS && node dist/main.js 2>&1)",
       "mcp__ide__getDiagnostics",
       "Bash(grep:*)",
-      "Bash(npx jest:*)"
+      "Bash(npx jest:*)",
+      "Bash(ls /Users/youxingzhi/ayou/money-free/backend/scan-*.md)",
+      "Bash(rm .update-progress.json)",
+      "Bash(rm backend/scan-*.md)",
+      "Bash(rm -rf backend/logs)",
+      "Bash(rm index.js ti.md test-pullbacks.js vcp-visualization.html)",
+      "Bash(rm -rf backend/scripts_disabled)",
+      "Bash(node:*)"
     ]
   }
 }

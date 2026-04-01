@@ -40,22 +40,28 @@ describe('CheckpointManager', () => {
 
       expect(mockPrisma.importCheckpoint.upsert).toHaveBeenCalledWith({
         where: {
-          taskId_market: {
-            taskId: 'task-001',
-            market: 'SH',
-          },
+          taskId: 'task-001',
         },
-        update: expect.objectContaining({
+        update: {
+          market: 'SH',
           importType: 'incremental',
           totalStocks: 100,
           importedStocks: 50,
+          failedStocks: '[]',
           status: 'running',
-        }),
-        create: expect.objectContaining({
+          lastUpdateTime: expect.any(Date),
+        },
+        create: {
           taskId: 'task-001',
           market: 'SH',
           importType: 'incremental',
-        }),
+          totalStocks: 100,
+          importedStocks: 50,
+          failedStocks: '[]',
+          status: 'running',
+          startTime: expect.any(Date),
+          lastUpdateTime: expect.any(Date),
+        },
       });
     });
   });
@@ -102,14 +108,12 @@ describe('CheckpointManager', () => {
 
       expect(mockPrisma.importCheckpoint.update).toHaveBeenCalledWith({
         where: {
-          taskId_market: {
-            taskId: 'task-001',
-            market: 'SH',
-          },
+          taskId: 'task-001',
         },
         data: {
           status: 'completed',
-          updatedAt: expect.any(Date),
+          lastUpdateTime: expect.any(Date),
+          endTime: expect.any(Date),
         },
       });
     });
@@ -125,15 +129,13 @@ describe('CheckpointManager', () => {
 
       expect(mockPrisma.importCheckpoint.update).toHaveBeenCalledWith({
         where: {
-          taskId_market: {
-            taskId: 'task-001',
-            market: 'SH',
-          },
+          taskId: 'task-001',
         },
         data: {
           status: 'failed',
           failedStocks: JSON.stringify(failedStocks),
-          updatedAt: expect.any(Date),
+          lastUpdateTime: expect.any(Date),
+          endTime: expect.any(Date),
         },
       });
     });

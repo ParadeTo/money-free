@@ -39,8 +39,8 @@ describe('VolumeSurgeController', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.data.scanId).toBe('scan-123');
-      expect(result.data.status).toBe('running');
+      expect(result.data!.scanId).toBe('scan-123');
+      expect(result.data!.status).toBe(ScanStatus.RUNNING);
     });
 
     it('应接受手动模式扫描请求（带参考日期）', async () => {
@@ -54,7 +54,7 @@ describe('VolumeSurgeController', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.data.scanId).toBe('scan-456');
+      expect(result.data!.scanId).toBe('scan-456');
       expect(service.scan).toHaveBeenCalledWith({
         mode: ScanMode.MANUAL,
         referenceDate: '2026-03-02',
@@ -63,23 +63,23 @@ describe('VolumeSurgeController', () => {
     });
 
     it('应拒绝手动模式但未提供参考日期的请求', async () => {
-      await expect(
-        controller.triggerScan({
-          mode: ScanMode.MANUAL,
-        }),
-      ).rejects.toThrow();
+      const result = await controller.triggerScan({
+        mode: ScanMode.MANUAL,
+      });
+
+      expect(result.success).toBe(false);
     });
 
     it('应拒绝未来日期作为参考日期', async () => {
       const futureDate = new Date();
       futureDate.setFullYear(futureDate.getFullYear() + 1);
 
-      await expect(
-        controller.triggerScan({
-          mode: ScanMode.MANUAL,
-          referenceDate: futureDate.toISOString().split('T')[0],
-        }),
-      ).rejects.toThrow();
+      const result = await controller.triggerScan({
+        mode: ScanMode.MANUAL,
+        referenceDate: futureDate.toISOString().split('T')[0],
+      });
+
+      expect(result.success).toBe(false);
     });
   });
 
@@ -107,7 +107,7 @@ describe('VolumeSurgeController', () => {
       const result = await controller.getScanStatus('nonexistent');
 
       expect(result.success).toBe(false);
-      expect(result.error.code).toBe('SCAN_NOT_FOUND');
+      expect(result.error!.code).toBe('SCAN_NOT_FOUND');
     });
   });
 
@@ -119,7 +119,7 @@ describe('VolumeSurgeController', () => {
       const result = await controller.cancelScan('scan-123');
 
       expect(result.success).toBe(true);
-      expect(result.data.status).toBe('cancelled');
+      expect(result.data!.status).toBe(ScanStatus.CANCELLED);
     });
 
     it('应拒绝取消已完成的扫描', async () => {
@@ -127,7 +127,9 @@ describe('VolumeSurgeController', () => {
         new Error('Cannot cancel completed scan'),
       );
 
-      await expect(controller.cancelScan('scan-123')).rejects.toThrow();
+      const result = await controller.cancelScan('scan-123');
+
+      expect(result.success).toBe(false);
     });
   });
 });

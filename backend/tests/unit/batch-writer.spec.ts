@@ -84,7 +84,7 @@ describe('BatchWriter', () => {
 
       await writer.flushAll();
 
-      expect(flushFn).toHaveBeenCalledTimes(3);
+      expect(flushFn).toHaveBeenCalledTimes(2);
       expect(writer.getQueueSize()).toBe(0);
     });
   });

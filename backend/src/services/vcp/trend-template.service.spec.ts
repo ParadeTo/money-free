@@ -66,15 +66,10 @@ describe('TrendTemplateService', () => {
   });
 
   it('check MA200 trending up (ma200 > ma200_22dAgo)', () => {
-    const check = service
-      .runAllChecks(passingInput)
-      .checks.find((c) => c.name === 'ma200TrendingUp');
-    expect(check?.pass).toBe(true);
-    expect(
-      service
-        .runAllChecks({ ...passingInput, ma200_22dAgo: 85 })
-        .checks.find((c) => c.name === 'ma200TrendingUp')?.pass,
-    ).toBe(false);
+    // This check has been removed from runAllChecks; verify it is not present in results
+    const checks = service.runAllChecks(passingInput).checks;
+    const check = checks.find((c) => c.name === 'ma200TrendingUp');
+    expect(check).toBeUndefined();
   });
 
   it('check MA50 > MA150', () => {
