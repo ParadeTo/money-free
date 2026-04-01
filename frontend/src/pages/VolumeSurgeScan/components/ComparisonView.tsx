@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Select, Button, Table, Tag, Space, message, Spin } from 'antd';
-import { CompareOutlined } from '@ant-design/icons';
+import { Card, Form, Select, Button, Table, Tag, Space, Statistic, Spin, Empty, message } from 'antd';
+import { SwapOutlined } from '@ant-design/icons';
+import { Link } from 'react-router-dom';
 import { volumeSurgeScanApi } from '../../../services/volumeSurgeScanApi';
-import { ScanSummary, PersistentStock } from '../../../types/scan.types';
+import { ScanSummary, PersistentStock, CompareResult } from '../../../types/scan.types';
+import type { TableProps } from 'antd';
 import dayjs from 'dayjs';
 
 const ComparisonView: React.FC = () => {
@@ -10,7 +12,7 @@ const ComparisonView: React.FC = () => {
   const [scans, setScans] = useState<ScanSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [comparing, setComparing] = useState(false);
-  const [comparisonResult, setComparisonResult] = useState<any>(null);
+  const [comparisonResult, setComparisonResult] = useState<CompareResult | null>(null);
 
   useEffect(() => {
     fetchScans();
@@ -21,17 +23,18 @@ const ComparisonView: React.FC = () => {
     try {
       const response = await volumeSurgeScanApi.getScans({ limit: 100 });
       if (response.success && response.data) {
-        const completedScans = response.data.items.filter((s) => s.status === 'COMPLETED');
+        const completedScans = response.data.scans.filter((s) => s.status === 'COMPLETED');
         setScans(completedScans);
       }
     } catch (error) {
+      message.error('Failed to load scans');
       console.error('Failed to fetch scans:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCompare = async (values: any) => {
+  const handleCompare = async (values: { scanId1: string; scanId2: string }) => {
     if (values.scanId1 === values.scanId2) {
       message.warning('Please select two different scans');
       return;
@@ -64,7 +67,7 @@ const ComparisonView: React.FC = () => {
     return <Tag color={config.color}>{config.text}</Tag>;
   };
 
-  const columns = [
+  const columns: TableProps<PersistentStock>['columns'] = [
     {
       title: 'Stock Code',
       dataIndex: 'stockCode',
@@ -72,7 +75,9 @@ const ComparisonView: React.FC = () => {
       width: 120,
       render: (code: string, record: PersistentStock) => (
         <div>
-          <strong>{code}</strong>
+          <Link to={`/chart/${code}`} style={{ fontWeight: 'bold' }}>
+            {code}
+          </Link>
           <div style={{ fontSize: '12px', color: '#888' }}>{record.stockName}</div>
         </div>
       ),
@@ -103,56 +108,60 @@ const ComparisonView: React.FC = () => {
   return (
     <div className="comparison-view">
       <Card title="Compare Two Scans" loading={loading}>
-        <Form form={form} layout="inline" onFinish={handleCompare}>
-          <Form.Item
-            name="scanId1"
-            label="First Scan"
-            rules={[{ required: true, message: 'Please select the first scan' }]}
-          >
-            <Select
-              placeholder="Select first scan"
-              style={{ width: 250 }}
-              showSearch
-              optionFilterProp="children"
+        {!loading && scans.length < 2 ? (
+          <Empty description="No completed scans available for comparison. Run at least two scans first." />
+        ) : (
+          <Form form={form} layout="inline" onFinish={handleCompare}>
+            <Form.Item
+              name="scanId1"
+              label="First Scan"
+              rules={[{ required: true, message: 'Please select the first scan' }]}
             >
-              {scans.map((s) => (
-                <Select.Option key={s.scanId} value={s.scanId}>
-                  {dayjs(s.scanDate).format('YYYY-MM-DD')} - {s.matchedStocks} matched
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
+              <Select
+                placeholder="Select first scan"
+                style={{ width: 250 }}
+                showSearch
+                optionFilterProp="children"
+              >
+                {scans.map((s) => (
+                  <Select.Option key={s.scanId} value={s.scanId}>
+                    {dayjs(s.scanDate).format('YYYY-MM-DD')} - {s.matchedStocks} matched
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
 
-          <Form.Item
-            name="scanId2"
-            label="Second Scan"
-            rules={[{ required: true, message: 'Please select the second scan' }]}
-          >
-            <Select
-              placeholder="Select second scan"
-              style={{ width: 250 }}
-              showSearch
-              optionFilterProp="children"
+            <Form.Item
+              name="scanId2"
+              label="Second Scan"
+              rules={[{ required: true, message: 'Please select the second scan' }]}
             >
-              {scans.map((s) => (
-                <Select.Option key={s.scanId} value={s.scanId}>
-                  {dayjs(s.scanDate).format('YYYY-MM-DD')} - {s.matchedStocks} matched
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
+              <Select
+                placeholder="Select second scan"
+                style={{ width: 250 }}
+                showSearch
+                optionFilterProp="children"
+              >
+                {scans.map((s) => (
+                  <Select.Option key={s.scanId} value={s.scanId}>
+                    {dayjs(s.scanDate).format('YYYY-MM-DD')} - {s.matchedStocks} matched
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
 
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              icon={<CompareOutlined />}
-              loading={comparing}
-            >
-              Compare
-            </Button>
-          </Form.Item>
-        </Form>
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                icon={<SwapOutlined />}
+                loading={comparing}
+              >
+                Compare
+              </Button>
+            </Form.Item>
+          </Form>
+        )}
       </Card>
 
       {comparisonResult && (
@@ -177,12 +186,16 @@ const ComparisonView: React.FC = () => {
 
           <Card style={{ marginTop: 16 }} title="Persistent Stocks (Matched in Both Scans)">
             <Spin spinning={comparing}>
-              <Table
-                dataSource={comparisonResult.persistentStocks}
-                columns={columns}
-                rowKey="stockCode"
-                pagination={{ pageSize: 20 }}
-              />
+              {comparisonResult.persistentStocks.length === 0 ? (
+                <Empty description="No persistent stocks found between the two scans" />
+              ) : (
+                <Table
+                  dataSource={comparisonResult.persistentStocks}
+                  columns={columns}
+                  rowKey="stockCode"
+                  pagination={{ pageSize: 20 }}
+                />
+              )}
             </Spin>
           </Card>
         </>

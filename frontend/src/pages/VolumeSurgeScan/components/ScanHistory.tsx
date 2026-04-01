@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Tag, Button, Space, Pagination, Card } from 'antd';
+import { Table, Tag, Button, Space, Pagination, Card, Empty, message } from 'antd';
 import { EyeOutlined, ReloadOutlined } from '@ant-design/icons';
 import { volumeSurgeScanApi } from '../../../services/volumeSurgeScanApi';
 import { ScanSummary } from '../../../types/scan.types';
+import type { TableProps } from 'antd';
 import dayjs from 'dayjs';
 
 interface ScanHistoryProps {
@@ -28,14 +29,15 @@ const ScanHistory: React.FC<ScanHistoryProps> = ({ refreshTrigger = 0, onScanSel
       });
 
       if (response.success && response.data) {
-        setScans(response.data.items);
+        setScans(response.data.scans);
         setPagination({
-          current: page,
-          pageSize,
-          total: response.data.total,
+          current: response.data.pagination.page,
+          pageSize: response.data.pagination.limit,
+          total: response.data.pagination.total,
         });
       }
     } catch (error) {
+      message.error('Failed to load scan history');
       console.error('Failed to fetch scans:', error);
     } finally {
       setLoading(false);
@@ -57,7 +59,7 @@ const ScanHistory: React.FC<ScanHistoryProps> = ({ refreshTrigger = 0, onScanSel
     return <Tag color={config.color}>{config.text}</Tag>;
   };
 
-  const columns = [
+  const columns: TableProps<ScanSummary>['columns'] = [
     {
       title: 'Scan Date',
       dataIndex: 'scanDate',
@@ -95,7 +97,7 @@ const ScanHistory: React.FC<ScanHistoryProps> = ({ refreshTrigger = 0, onScanSel
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: any, record: ScanSummary) => (
+      render: (_: unknown, record: ScanSummary) => (
         <Space>
           <Button
             type="link"
@@ -118,22 +120,28 @@ const ScanHistory: React.FC<ScanHistoryProps> = ({ refreshTrigger = 0, onScanSel
         </Button>
       }
     >
-      <Table
-        dataSource={scans}
-        columns={columns}
-        loading={loading}
-        rowKey="scanId"
-        pagination={false}
-      />
-      <Pagination
-        style={{ marginTop: 16, textAlign: 'right' }}
-        current={pagination.current}
-        pageSize={pagination.pageSize}
-        total={pagination.total}
-        onChange={fetchScans}
-        showSizeChanger
-        showTotal={(total) => `Total ${total} scans`}
-      />
+      {!loading && scans.length === 0 ? (
+        <Empty description="No scans found. Start a new scan to see results here." />
+      ) : (
+        <>
+          <Table
+            dataSource={scans}
+            columns={columns}
+            loading={loading}
+            rowKey="scanId"
+            pagination={false}
+          />
+          <Pagination
+            style={{ marginTop: 16, textAlign: 'right' }}
+            current={pagination.current}
+            pageSize={pagination.pageSize}
+            total={pagination.total}
+            onChange={fetchScans}
+            showSizeChanger
+            showTotal={(total) => `Total ${total} scans`}
+          />
+        </>
+      )}
     </Card>
   );
 };

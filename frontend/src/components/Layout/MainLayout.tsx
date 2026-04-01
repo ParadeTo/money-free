@@ -8,6 +8,7 @@ import {
   StarOutlined, 
   FilterOutlined, 
   ThunderboltOutlined,
+  RiseOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ReactNode } from 'react';
@@ -40,6 +41,11 @@ export function MainLayout({ children }: MainLayoutProps) {
       label: 'VCP Scanner',
     },
     {
+      key: '/volume-surge-scan',
+      icon: <RiseOutlined />,
+      label: 'Volume Surge',
+    },
+    {
       key: '/favorites',
       icon: <StarOutlined />,
       label: 'Favorites',
@@ -51,6 +57,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     if (path.startsWith('/chart')) return '/chart';
     if (path.startsWith('/screener')) return '/screener';
     if (path.startsWith('/vcp')) return '/vcp';
+    if (path.startsWith('/volume-surge-scan')) return '/volume-surge-scan';
     if (path.startsWith('/favorites')) return '/favorites';
     return '/chart';
   };

@@ -53,7 +53,7 @@ export interface ScanCriteria {
 
 export interface StockScanResult {
   stockCode: string;
-  stockName?: string;
+  stockName: string;
   volumePattern: VolumePattern;
   volumeSupport: VolumeSupport;
   movingAverages: MovingAverageTrend;
@@ -137,4 +137,35 @@ export interface PaginatedResponse<T> {
     total: number;
     totalPages: number;
   };
+}
+
+export interface ScanListData {
+  scans: ScanSummary[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface ScanResultsData {
+  results: ScanResultDetail[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+  summary: {
+    totalScanned: number;
+    matched: number;
+    unmatched: number;
+  };
+}
+
+export interface ExportData {
+  content: string;
+  format: string;
+  filename: string;
 }

@@ -1,25 +1,24 @@
-import axios from 'axios';
+import { api } from './api';
 import {
   ScanRequest,
   ScanSummary,
-  ScanResultDetail,
   CompareRequest,
   CompareResult,
   ApiResponse,
-  PaginatedResponse,
+  ScanListData,
+  ScanResultsData,
+  ExportData,
 } from '../types/scan.types';
 
-const API_BASE_URL = 'http://localhost:3000/api/volume-surge';
+const BASE = '/api/volume-surge';
 
 export const volumeSurgeScanApi = {
   async startScan(request: ScanRequest): Promise<ApiResponse<{ scanId: string; status: string; message: string }>> {
-    const response = await axios.post(`${API_BASE_URL}/scan`, request);
-    return response.data;
+    return api.post<ApiResponse<{ scanId: string; status: string; message: string }>>(`${BASE}/scan`, request);
   },
 
   async getScanStatus(scanId: string): Promise<ApiResponse<ScanSummary>> {
-    const response = await axios.get(`${API_BASE_URL}/scans/${scanId}`);
-    return response.data;
+    return api.get<ApiResponse<ScanSummary>>(`${BASE}/scans/${scanId}`);
   },
 
   async getScans(params?: {
@@ -27,9 +26,8 @@ export const volumeSurgeScanApi = {
     limit?: number;
     status?: string;
     mode?: string;
-  }): Promise<ApiResponse<PaginatedResponse<ScanSummary>>> {
-    const response = await axios.get(`${API_BASE_URL}/scans`, { params });
-    return response.data;
+  }): Promise<ApiResponse<ScanListData>> {
+    return api.get<ApiResponse<ScanListData>>(`${BASE}/scans`, { params });
   },
 
   async getScanResults(
@@ -41,13 +39,8 @@ export const volumeSurgeScanApi = {
       page?: number;
       limit?: number;
     },
-  ): Promise<ApiResponse<{
-    results: ScanResultDetail[];
-    pagination: any;
-    summary: any;
-  }>> {
-    const response = await axios.get(`${API_BASE_URL}/scans/${scanId}/results`, { params });
-    return response.data;
+  ): Promise<ApiResponse<ScanResultsData>> {
+    return api.get<ApiResponse<ScanResultsData>>(`${BASE}/scans/${scanId}/results`, { params });
   },
 
   async exportResults(
@@ -55,23 +48,21 @@ export const volumeSurgeScanApi = {
     format: 'csv' | 'markdown',
     filter: 'all' | 'matched' = 'matched',
   ): Promise<string> {
-    const response = await axios.get(`${API_BASE_URL}/scans/${scanId}/export`, {
+    const response = await api.get<ApiResponse<ExportData>>(`${BASE}/scans/${scanId}/export`, {
       params: { format, filter },
     });
-    
-    if (response.data.success) {
-      return response.data.data.content;
+
+    if (response.success && response.data) {
+      return response.data.content;
     }
-    throw new Error(response.data.error?.message || 'Export failed');
+    throw new Error(response.error?.message || 'Export failed');
   },
 
   async compareScans(request: CompareRequest): Promise<ApiResponse<CompareResult>> {
-    const response = await axios.post(`${API_BASE_URL}/compare`, request);
-    return response.data;
+    return api.post<ApiResponse<CompareResult>>(`${BASE}/compare`, request);
   },
 
   async cancelScan(scanId: string): Promise<ApiResponse<{ scanId: string; status: string; message: string }>> {
-    const response = await axios.post(`${API_BASE_URL}/scans/${scanId}/cancel`);
-    return response.data;
+    return api.post<ApiResponse<{ scanId: string; status: string; message: string }>>(`${BASE}/scans/${scanId}/cancel`);
   },
 };
