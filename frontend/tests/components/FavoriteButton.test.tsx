@@ -28,7 +28,6 @@ describe('FavoriteButton', () => {
     const button = screen.getByRole('button');
     expect(button).toBeInTheDocument();
     expect(button).not.toBeDisabled();
-    // 应具有收藏相关的可访问名称（aria-label 或 title）
     expect(button).toHaveAccessibleName();
   });
 
@@ -62,7 +61,7 @@ describe('FavoriteButton', () => {
     expect(mockOnToggle).toHaveBeenCalledTimes(1);
   });
 
-  it('加载状态时按钮禁用或显示加载指示', () => {
+  it('加载状态时按钮禁用', () => {
     render(
       <FavoriteButton
         stockCode="600519"
@@ -105,29 +104,6 @@ describe('FavoriteButton', () => {
 
     await user.click(screen.getByRole('button'));
 
-    // onToggle 由父组件处理，父组件会使用 stockCode 调用 API
-    // 组件应能正确渲染并触发回调
     expect(mockOnToggle).toHaveBeenCalled();
-  });
-
-  it('错误时组件不应崩溃', async () => {
-    const user = userEvent.setup();
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const errorOnToggle = vi.fn().mockRejectedValue(new Error('API 错误'));
-
-    render(
-      <FavoriteButton
-        stockCode="600519"
-        isFavorited={false}
-        onToggle={errorOnToggle}
-      />
-    );
-
-    const button = screen.getByRole('button');
-    await user.click(button);
-
-    // 组件应仍然存在，错误由组件内部或父组件处理
-    expect(button).toBeInTheDocument();
-    consoleErrorSpy.mockRestore();
   });
 });

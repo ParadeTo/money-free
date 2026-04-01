@@ -16,10 +16,10 @@ describe('VcpOverlayLayer', () => {
   beforeEach(() => {
     mockChart = {
       timeScale: vi.fn(() => ({
-        timeToCoordinate: vi.fn((time) => 100),
+        timeToCoordinate: vi.fn(() => 100),
         getVisibleLogicalRange: vi.fn(() => ({ from: 0, to: 100 })),
+        getVisibleRange: vi.fn(() => ({ from: '2024-01-01', to: '2024-12-31' })),
         subscribeVisibleLogicalRangeChange: vi.fn((callback) => {
-          // Immediately call with initial range
           callback({ from: 0, to: 100 });
         }),
         unsubscribeVisibleLogicalRangeChange: vi.fn(),
@@ -29,11 +29,49 @@ describe('VcpOverlayLayer', () => {
     } as any;
 
     mockSeries = {
-      priceToCoordinate: vi.fn((price) => 200),
+      priceToCoordinate: vi.fn(() => 200),
       attachPrimitive: vi.fn(),
       detachPrimitive: vi.fn(),
     } as any;
   });
+
+  const mockVcpData: VcpAnalysis = {
+    stockCode: '600233',
+    stockName: '圆通速递',
+    market: 'SH',
+    currency: 'CNY',
+    scanDate: '2024-03-14',
+    cached: false,
+    isExpired: false,
+    hasVcp: true,
+    summary: {
+      contractionCount: 1,
+      lastContractionPct: 7.43,
+      volumeDryingUp: true,
+      rsRating: 85,
+      inPullback: false,
+      pullbackCount: 0,
+      latestPrice: 15.5,
+      priceChangePct: 2.3,
+      distFrom52WeekHigh: 8.5,
+      distFrom52WeekLow: 45.2,
+    },
+    contractions: [
+      {
+        index: 1,
+        swingHighDate: '2024-01-15',
+        swingHighPrice: 45.2,
+        swingLowDate: '2024-02-10',
+        swingLowPrice: 41.85,
+        depthPct: 7.43,
+        durationDays: 25,
+        avgVolume: 125000,
+      },
+    ],
+    pullbacks: [],
+    klines: [],
+    trendTemplate: { pass: true, checks: [] },
+  };
 
   it('should not render anything when vcpData is null', () => {
     const { container } = render(
@@ -50,44 +88,6 @@ describe('VcpOverlayLayer', () => {
   });
 
   it('should not render when visible is false', () => {
-    const mockVcpData: VcpAnalysis = {
-      stockCode: '600233',
-      stockName: '圆通速递',
-      market: 'SH',
-      currency: 'CNY',
-      scanDate: '2024-03-14',
-      cached: false,
-      isExpired: false,
-      hasVcp: true,
-      summary: {
-        contractionCount: 1,
-        lastContractionPct: 7.43,
-        volumeDryingUp: true,
-        rsRating: 85,
-        inPullback: false,
-        pullbackCount: 0,
-        latestPrice: 15.5,
-        priceChangePct: 2.3,
-        distFrom52WeekHigh: 8.5,
-        distFrom52WeekLow: 45.2,
-      },
-      contractions: [
-        {
-          index: 1,
-          swingHighDate: '2024-01-15',
-          swingHighPrice: 45.2,
-          swingLowDate: '2024-02-10',
-          swingLowPrice: 41.85,
-          depthPct: 7.43,
-          durationDays: 25,
-          avgVolume: 125000,
-        },
-      ],
-      pullbacks: [],
-      klines: [],
-      trendTemplate: { pass: true, checks: [] },
-    };
-
     const { container } = render(
       <VcpOverlayLayer
         vcpData={mockVcpData}
@@ -102,44 +102,6 @@ describe('VcpOverlayLayer', () => {
   });
 
   it('should attach primitive when visible and has data', () => {
-    const mockVcpData: VcpAnalysis = {
-      stockCode: '600233',
-      stockName: '圆通速递',
-      market: 'SH',
-      currency: 'CNY',
-      scanDate: '2024-03-14',
-      cached: false,
-      isExpired: false,
-      hasVcp: true,
-      summary: {
-        contractionCount: 1,
-        lastContractionPct: 7.43,
-        volumeDryingUp: true,
-        rsRating: 85,
-        inPullback: false,
-        pullbackCount: 0,
-        latestPrice: 15.5,
-        priceChangePct: 2.3,
-        distFrom52WeekHigh: 8.5,
-        distFrom52WeekLow: 45.2,
-      },
-      contractions: [
-        {
-          index: 1,
-          swingHighDate: '2024-01-15',
-          swingHighPrice: 45.2,
-          swingLowDate: '2024-02-10',
-          swingLowPrice: 41.85,
-          depthPct: 7.43,
-          durationDays: 25,
-          avgVolume: 125000,
-        },
-      ],
-      pullbacks: [],
-      klines: [],
-      trendTemplate: { pass: true, checks: [] },
-    };
-
     render(
       <VcpOverlayLayer
         vcpData={mockVcpData}
@@ -149,49 +111,10 @@ describe('VcpOverlayLayer', () => {
       />
     );
 
-    // Should attach primitive to series
     expect(mockSeries.attachPrimitive).toHaveBeenCalled();
   });
 
   it('should detach primitive on unmount', () => {
-    const mockVcpData: VcpAnalysis = {
-      stockCode: '600233',
-      stockName: '圆通速递',
-      market: 'SH',
-      currency: 'CNY',
-      scanDate: '2024-03-14',
-      cached: false,
-      isExpired: false,
-      hasVcp: true,
-      summary: {
-        contractionCount: 1,
-        lastContractionPct: 7.43,
-        volumeDryingUp: true,
-        rsRating: 85,
-        inPullback: false,
-        pullbackCount: 0,
-        latestPrice: 15.5,
-        priceChangePct: 2.3,
-        distFrom52WeekHigh: 8.5,
-        distFrom52WeekLow: 45.2,
-      },
-      contractions: [
-        {
-          index: 1,
-          swingHighDate: '2024-01-15',
-          swingHighPrice: 45.2,
-          swingLowDate: '2024-02-10',
-          swingLowPrice: 41.85,
-          depthPct: 7.43,
-          durationDays: 25,
-          avgVolume: 125000,
-        },
-      ],
-      pullbacks: [],
-      klines: [],
-      trendTemplate: { pass: true, checks: [] },
-    };
-
     const { unmount } = render(
       <VcpOverlayLayer
         vcpData={mockVcpData}
@@ -203,61 +126,6 @@ describe('VcpOverlayLayer', () => {
 
     unmount();
 
-    // Should detach primitive on cleanup
     expect(mockSeries.detachPrimitive).toHaveBeenCalled();
-  });
-
-  it('should call onLineHover when provided', () => {
-    const onLineHover = vi.fn();
-    const mockVcpData: VcpAnalysis = {
-      stockCode: '600233',
-      stockName: '圆通速递',
-      market: 'SH',
-      currency: 'CNY',
-      scanDate: '2024-03-14',
-      cached: false,
-      isExpired: false,
-      hasVcp: true,
-      summary: {
-        contractionCount: 1,
-        lastContractionPct: 7.43,
-        volumeDryingUp: true,
-        rsRating: 85,
-        inPullback: false,
-        pullbackCount: 0,
-        latestPrice: 15.5,
-        priceChangePct: 2.3,
-        distFrom52WeekHigh: 8.5,
-        distFrom52WeekLow: 45.2,
-      },
-      contractions: [
-        {
-          index: 1,
-          swingHighDate: '2024-01-15',
-          swingHighPrice: 45.2,
-          swingLowDate: '2024-02-10',
-          swingLowPrice: 41.85,
-          depthPct: 7.43,
-          durationDays: 25,
-          avgVolume: 125000,
-        },
-      ],
-      pullbacks: [],
-      klines: [],
-      trendTemplate: { pass: true, checks: [] },
-    };
-
-    render(
-      <VcpOverlayLayer
-        vcpData={mockVcpData}
-        chart={mockChart as IChartApi}
-        series={mockSeries as ISeriesApi<'Candlestick'>}
-        visible={true}
-        onLineHover={onLineHover}
-      />
-    );
-
-    // onLineHover prop should be accepted (actual hover testing requires more complex setup)
-    expect(onLineHover).toBeDefined();
   });
 });

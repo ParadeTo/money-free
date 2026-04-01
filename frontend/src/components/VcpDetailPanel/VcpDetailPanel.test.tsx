@@ -62,21 +62,21 @@ describe('VcpDetailPanel', () => {
     });
   });
 
-  it('renders contraction table with 收缩记录 heading', async () => {
+  it('renders contraction table with Contraction Records heading', async () => {
     vi.mocked(vcpService.getVcpDetail).mockResolvedValue(mockDetailResponse);
     render(<VcpDetailPanel stockCode="600519.SH" />);
 
     await waitFor(() => {
-      expect(screen.getByText('收缩记录')).toBeInTheDocument();
+      expect(screen.getByText('Contraction Records')).toBeInTheDocument();
     });
   });
 
-  it('shows 查看K线 button', async () => {
+  it('shows View Chart button', async () => {
     vi.mocked(vcpService.getVcpDetail).mockResolvedValue(mockDetailResponse);
     render(<VcpDetailPanel stockCode="600519.SH" />);
 
     await waitFor(() => {
-      expect(screen.getByText('查看K线')).toBeInTheDocument();
+      expect(screen.getByText('View Chart')).toBeInTheDocument();
     });
   });
 

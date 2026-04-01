@@ -16,14 +16,14 @@ describe('TrendTemplateChecks', () => {
     expect(screen.getByText('RS Rating ≥ 70')).toBeInTheDocument();
   });
 
-  it('shows 全部通过 tag when allPass is true', () => {
+  it('shows All Pass tag when allPass is true', () => {
     render(<TrendTemplateChecks checks={mockChecks} allPass={true} />);
-    expect(screen.getByText('全部通过')).toBeInTheDocument();
+    expect(screen.getByText('All Pass')).toBeInTheDocument();
   });
 
-  it('shows 部分未通过 tag when allPass is false', () => {
+  it('shows Partial Pass tag when allPass is false', () => {
     render(<TrendTemplateChecks checks={mockChecks} allPass={false} />);
-    expect(screen.getByText('部分未通过')).toBeInTheDocument();
+    expect(screen.getByText('Partial Pass')).toBeInTheDocument();
   });
 
   it('renders CheckCircleOutlined for passing checks', () => {

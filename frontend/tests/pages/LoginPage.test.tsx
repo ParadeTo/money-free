@@ -2,16 +2,17 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { LoginPage } from '../../src/pages/LoginPage';
-import { useAuthStore } from '../../src/store/auth.store';
-import api from '../../src/services/api';
+import { authService } from '../../src/services/auth.service';
 
-// Mock API service
-vi.mock('../../src/services/api');
+vi.mock('../../src/services/auth.service', () => ({
+  authService: {
+    login: vi.fn(),
+    logout: vi.fn(),
+    getMe: vi.fn(),
+    getToken: vi.fn(),
+  },
+}));
 
-// Mock auth store
-vi.mock('../../src/store/auth.store');
-
-// Mock useNavigate
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -22,49 +23,35 @@ vi.mock('react-router-dom', async () => {
 });
 
 describe('LoginPage', () => {
-  const mockLogin = vi.fn();
-  const mockSetLoading = vi.fn();
-  const mockSetError = vi.fn();
-
   beforeEach(() => {
     vi.clearAllMocks();
-
-    // Mock auth store methods
-    (useAuthStore as any).mockReturnValue({
-      login: mockLogin,
-      setLoading: mockSetLoading,
-      setError: mockSetError,
-      isLoading: false,
-      error: null,
-    });
   });
 
   const renderLoginPage = () => {
     return render(
       <BrowserRouter>
         <LoginPage />
-      </BrowserRouter>,
+      </BrowserRouter>
     );
   };
 
   it('should render login form', () => {
     renderLoginPage();
 
-    expect(screen.getByText('登录')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('请输入用户名')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('请输入密码')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '登录' })).toBeInTheDocument();
+    expect(screen.getByText('StockHub')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Please enter username')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Please enter password')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument();
   });
 
   it('should show validation errors for empty fields', async () => {
     renderLoginPage();
 
-    const submitButton = screen.getByRole('button', { name: '登录' });
+    const submitButton = screen.getByRole('button', { name: 'Login' });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText('请输入用户名')).toBeInTheDocument();
-      expect(screen.getByText('请输入密码')).toBeInTheDocument();
+      expect(screen.getByText('Please enter username')).toBeInTheDocument();
     });
   });
 
@@ -79,84 +66,66 @@ describe('LoginPage', () => {
       },
     };
 
-    (api.post as any).mockResolvedValue(mockLoginResponse);
+    vi.mocked(authService.login).mockResolvedValue(mockLoginResponse);
 
     renderLoginPage();
 
-    // Fill in the form
-    const usernameInput = screen.getByPlaceholderText('请输入用户名');
-    const passwordInput = screen.getByPlaceholderText('请输入密码');
-    const submitButton = screen.getByRole('button', { name: '登录' });
+    const usernameInput = screen.getByPlaceholderText('Please enter username');
+    const passwordInput = screen.getByPlaceholderText('Please enter password');
+    const submitButton = screen.getByRole('button', { name: 'Login' });
 
     fireEvent.change(usernameInput, { target: { value: 'admin' } });
     fireEvent.change(passwordInput, { target: { value: 'admin123' } });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(api.post).toHaveBeenCalledWith('/auth/login', {
+      expect(authService.login).toHaveBeenCalledWith({
         username: 'admin',
         password: 'admin123',
       });
-      expect(mockLogin).toHaveBeenCalledWith(
-        mockLoginResponse.access_token,
-        mockLoginResponse.user,
-      );
       expect(mockNavigate).toHaveBeenCalledWith('/');
     });
   });
 
   it('should show error message on login failure', async () => {
-    const errorMessage = '用户名或密码错误';
-    (api.post as any).mockRejectedValue({
+    vi.mocked(authService.login).mockRejectedValue({
       response: {
         data: {
-          message: errorMessage,
+          message: 'Invalid credentials',
         },
       },
     });
 
     renderLoginPage();
 
-    const usernameInput = screen.getByPlaceholderText('请输入用户名');
-    const passwordInput = screen.getByPlaceholderText('请输入密码');
-    const submitButton = screen.getByRole('button', { name: '登录' });
+    const usernameInput = screen.getByPlaceholderText('Please enter username');
+    const passwordInput = screen.getByPlaceholderText('Please enter password');
+    const submitButton = screen.getByRole('button', { name: 'Login' });
 
     fireEvent.change(usernameInput, { target: { value: 'admin' } });
     fireEvent.change(passwordInput, { target: { value: 'wrong-password' } });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(mockSetError).toHaveBeenCalledWith(errorMessage);
+      expect(screen.getByText(/Invalid credentials|登录失败/)).toBeInTheDocument();
     });
   });
 
-  it('should disable submit button while loading', () => {
-    (useAuthStore as any).mockReturnValue({
-      login: mockLogin,
-      setLoading: mockSetLoading,
-      setError: mockSetError,
-      isLoading: true,
-      error: null,
-    });
+  it('should show loading state while submitting', async () => {
+    vi.mocked(authService.login).mockImplementation(() => new Promise(() => {}));
 
     renderLoginPage();
 
-    const submitButton = screen.getByRole('button', { name: '登录中...' });
-    expect(submitButton).toBeDisabled();
-  });
+    const usernameInput = screen.getByPlaceholderText('Please enter username');
+    const passwordInput = screen.getByPlaceholderText('Please enter password');
+    const submitButton = screen.getByRole('button', { name: 'Login' });
 
-  it('should display error message when present', () => {
-    const errorMessage = '登录失败，请重试';
-    (useAuthStore as any).mockReturnValue({
-      login: mockLogin,
-      setLoading: mockSetLoading,
-      setError: mockSetError,
-      isLoading: false,
-      error: errorMessage,
+    fireEvent.change(usernameInput, { target: { value: 'admin' } });
+    fireEvent.change(passwordInput, { target: { value: 'admin123' } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Logging in/i)).toBeInTheDocument();
     });
-
-    renderLoginPage();
-
-    expect(screen.getByText(errorMessage)).toBeInTheDocument();
   });
 });

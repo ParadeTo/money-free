@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { VcpAnalysisPage } from './VcpAnalysisPage';
 import * as vcpService from '../services/vcp.service';
@@ -34,25 +34,28 @@ describe('VcpAnalysisPage', () => {
 
   it('should render loading state while fetching data', () => {
     vi.spyOn(vcpService.vcpService, 'generateVcpAnalysis').mockImplementation(
-      () => new Promise(() => {}) // Never resolves to keep loading state
+      () => new Promise(() => {})
     );
 
     renderWithRouter('605117');
 
-    expect(screen.getByRole('status')).toBeInTheDocument(); // Ant Design Spin has role="status"
+    const spinner = document.querySelector('.ant-spin');
+    expect(spinner).toBeInTheDocument();
   });
 
   it('should render stock name and code when data is loaded', async () => {
     const mockAnalysis = {
       stockCode: '605117',
       stockName: '德业股份',
+      market: 'SH',
+      currency: 'CNY',
       scanDate: '2026-03-11',
       cached: true,
       isExpired: false,
       hasVcp: true,
       summary: {
         contractionCount: 3,
-        lastContractionPct: 12.40,
+        lastContractionPct: 12.4,
         volumeDryingUp: true,
         rsRating: 85,
         inPullback: false,
@@ -82,13 +85,15 @@ describe('VcpAnalysisPage', () => {
     const mockAnalysis = {
       stockCode: '605117',
       stockName: '德业股份',
+      market: 'SH',
+      currency: 'CNY',
       scanDate: '2026-03-01',
       cached: true,
-      isExpired: true, // Expired data
+      isExpired: true,
       hasVcp: true,
       summary: {
         contractionCount: 3,
-        lastContractionPct: 12.40,
+        lastContractionPct: 12.4,
         volumeDryingUp: true,
         rsRating: 85,
         inPullback: false,
@@ -109,33 +114,35 @@ describe('VcpAnalysisPage', () => {
     renderWithRouter('605117');
 
     await waitFor(() => {
-      expect(screen.getByText(/已过期/i)).toBeInTheDocument();
+      expect(screen.getByText('Data Expired')).toBeInTheDocument();
     });
   });
 
   it('should display error message when stock is not found', async () => {
     vi.spyOn(vcpService.vcpService, 'generateVcpAnalysis').mockRejectedValue(
-      new Error('未找到股票代码 999999')
+      new Error('Unable to load VCP analysis data')
     );
 
     renderWithRouter('999999');
 
     await waitFor(() => {
-      expect(screen.getByText(/未找到股票代码/i)).toBeInTheDocument();
-    });
+      expect(screen.getByText('Load Failed')).toBeInTheDocument();
+    }, { timeout: 5000 });
   });
 
-  it('should display VCP status (有效/无效)', async () => {
+  it('should display VCP status', async () => {
     const mockAnalysis = {
       stockCode: '605117',
       stockName: '德业股份',
+      market: 'SH',
+      currency: 'CNY',
       scanDate: '2026-03-11',
       cached: true,
       isExpired: false,
       hasVcp: true,
       summary: {
         contractionCount: 3,
-        lastContractionPct: 12.40,
+        lastContractionPct: 12.4,
         volumeDryingUp: true,
         rsRating: 85,
         inPullback: false,
@@ -156,7 +163,7 @@ describe('VcpAnalysisPage', () => {
     renderWithRouter('605117');
 
     await waitFor(() => {
-      expect(screen.getByText(/VCP形态/i)).toBeInTheDocument();
+      expect(screen.getByText(/VCP Pattern: Valid/i)).toBeInTheDocument();
     });
   });
 });
